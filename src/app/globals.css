@@ -1,26 +1,33 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-paper: #faf9f6;
+  --color-ink-navy: #14213d;
+  --color-coral-signal: #ff5a3c;
+  --color-waypoint-gold: #ffb627;
+  --color-trail-teal: #2ec4b6;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-paper: var(--color-paper);
+  --color-ink-navy: var(--color-ink-navy);
+  --color-coral-signal: var(--color-coral-signal);
+  --color-waypoint-gold: var(--color-waypoint-gold);
+  --color-trail-teal: var(--color-trail-teal);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /*
+   * Clash Display and General Sans are Fontshare exclusives (not on Google
+   * Fonts), so their actual font files aren't wired up yet. These fall back
+   * to system stacks that approximate the intended feel until the licensed
+   * font files are added via next/font/local.
+   */
+  --font-display: "Clash Display", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "General Sans", var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink-navy);
+  font-family: var(--font-sans);
 }

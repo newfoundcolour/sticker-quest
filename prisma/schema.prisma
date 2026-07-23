@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+enum StickerType {
+  VINYL
+  HOLOGRAPHIC
+  CHROME
+  CLEAR
+  ECONOMY
+  STICKER_SHEETS
+  LABEL_SHEETS
+}
+
+enum CutType {
+  KISS
+  DIE
+}
+
+enum Shape {
+  SQUARE
+  CIRCLE
+  RECTANGLE
+  OVAL
+  CUSTOM
+}
+
+enum Finish {
+  MATTE
+  GLOSS
+}
+
+enum OrderStatus {
+  AWAITING_PROOF
+  APPROVED
+  PRINTING
+  SHIPPED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(STAFF)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+/// Base material rate for one sticker type, in cents per square cm. Price is
+/// computed as area x rate (see src/lib/pricing.ts), not looked up directly —
+/// this table just holds the editable rate inputs to that formula, so rates
+/// can change without a deploy.
+model PricingRule {
+  id          String      @id @default(cuid())
+  stickerType StickerType @unique
+  ratePerSqCm Decimal     @db.Decimal(6, 2)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+/// Bulk discount curve applied to the per-unit price, relative to the
+/// 50-unit baseline (no discount). Editable data, not hardcoded percentages.
+model QuantityDiscountTier {
+  id              String   @id @default(cuid())
+  minQuantity     Int      @unique
+  discountPercent Decimal  @db.Decimal(5, 2)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+/// Single global pricing knobs that aren't per-type or per-quantity-tier,
+/// e.g. the white ink rate and lamination surcharge. See PRICING_SETTING_KEYS
+/// in src/lib/pricing.ts for the keys the formula reads.
+model PricingSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Decimal  @db.Decimal(6, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id     String      @id @default(cuid())
+  status OrderStatus @default(AWAITING_PROOF)
+
+  customerName    String
+  email           String
+  phone           String
+  shippingAddress String
+
+  stickerType StickerType
+  cutType     CutType
+  shape       Shape
+  finish      Finish
+  /// Size label as offered in the configurator, e.g. `2"`, `3"`, or a custom dimension.
+  size        String
+  quantity    Int
+
+  artworkUrl      String
+  trackingNumber  String?
+  notes           String?
+  totalPrice      Decimal @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
