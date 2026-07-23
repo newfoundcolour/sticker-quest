@@ -1,6 +1,6 @@
-export function SizeIcon({ inches, className }: { inches: number; className?: string }) {
-  // Scale the circle within the icon so 2"–5" visibly grow relative to each other.
-  const r = 6 + (inches - 2) * 3;
+export function SizeIcon({ cm, className }: { cm: number; className?: string }) {
+  // Scale the circle within the icon so preset sizes visibly grow relative to each other.
+  const r = 6 + (cm - 5.08) * (3 / 2.54);
   return (
     <svg viewBox="0 0 48 48" className={className} fill="none">
       <circle cx="24" cy="24" r={r} stroke="currentColor" strokeWidth="2.5" strokeDasharray="4 3" />

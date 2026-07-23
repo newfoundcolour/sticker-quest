@@ -5,21 +5,24 @@ import type { DiscountTier, PricingConfig } from "@/lib/pricing";
 export const MIN_QUANTITY = 50;
 export const MAX_QUANTITY = 5000;
 
-export const MIN_SIZE_INCHES = 0.5;
-export const MAX_SIZE_INCHES = 14;
+export function inchesToCm(inches: number): number {
+  return inches * 2.54;
+}
+
+// All customer-facing sizing is in cm. The 0.5"-14" printer limits are the
+// underlying constraint (see CLAUDE.md — "up to max printer width"),
+// converted once here rather than re-derived at each call site.
+export const MIN_SIZE_CM = inchesToCm(0.5);
+export const MAX_SIZE_CM = inchesToCm(14);
 
 export function clampQuantity(quantity: number): number {
   if (Number.isNaN(quantity)) return MIN_QUANTITY;
   return Math.min(MAX_QUANTITY, Math.max(MIN_QUANTITY, Math.round(quantity)));
 }
 
-export function clampSizeInches(inches: number): number {
-  if (Number.isNaN(inches)) return MIN_SIZE_INCHES;
-  return Math.min(MAX_SIZE_INCHES, Math.max(MIN_SIZE_INCHES, inches));
-}
-
-export function inchesToCm(inches: number): number {
-  return inches * 2.54;
+export function clampSizeCm(cm: number): number {
+  if (Number.isNaN(cm)) return MIN_SIZE_CM;
+  return Math.min(MAX_SIZE_CM, Math.max(MIN_SIZE_CM, cm));
 }
 
 /** The discount tier in effect for a quantity: the highest minQuantity at or below it. */
@@ -40,8 +43,8 @@ export type StickerPricingInput = {
   isHolographic: boolean;
   whiteInk: boolean;
   lamination: boolean;
-  widthInches: number;
-  heightInches: number;
+  widthCm: number;
+  heightCm: number;
   quantity: number;
 };
 
@@ -64,10 +67,9 @@ export type StickerPricingResult = {
 export function calculateStickerPricing(
   input: StickerPricingInput,
 ): StickerPricingResult {
-  const { config, isHolographic, whiteInk, lamination, widthInches, heightInches, quantity } =
-    input;
+  const { config, isHolographic, whiteInk, lamination, widthCm, heightCm, quantity } = input;
 
-  const areaCm2 = inchesToCm(widthInches) * inchesToCm(heightInches);
+  const areaCm2 = widthCm * heightCm;
 
   let rate = config.ratePerSqCm;
   if (isHolographic) {

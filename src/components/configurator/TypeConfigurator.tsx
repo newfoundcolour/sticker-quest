@@ -6,11 +6,12 @@ import type { PricingConfig } from "@/lib/pricing";
 import {
   MIN_QUANTITY,
   MAX_QUANTITY,
-  MIN_SIZE_INCHES,
-  MAX_SIZE_INCHES,
+  MIN_SIZE_CM,
+  MAX_SIZE_CM,
   clampQuantity,
-  clampSizeInches,
+  clampSizeCm,
   calculateStickerPricing,
+  inchesToCm,
 } from "@/lib/pricingUtils";
 import { WaypointLine, type WaypointStep } from "./WaypointLine";
 import { StepCard, ChoiceChip } from "./StepCard";
@@ -41,11 +42,17 @@ const FINISHES: { value: Finish; label: string }[] = [
   { value: "GLOSS", label: "Gloss" },
 ];
 
-const SIZE_PRESETS: { key: string; label: string; inches: number }[] = [
-  { key: "small", label: 'Small (2")', inches: 2 },
-  { key: "medium", label: 'Medium (3")', inches: 3 },
-  { key: "large", label: 'Large (4")', inches: 4 },
-  { key: "xlarge", label: 'X-Large (5")', inches: 5 },
+function formatCm(cm: number): string {
+  return `${cm.toFixed(1)} cm`;
+}
+
+// Canonical product sizes are defined in inches (2"/3"/4"/5" printer presets)
+// and converted to cm here — the customer never sees inches.
+const SIZE_PRESETS: { key: string; label: string; cm: number }[] = [
+  { key: "small", label: `Small (${formatCm(inchesToCm(2))})`, cm: inchesToCm(2) },
+  { key: "medium", label: `Medium (${formatCm(inchesToCm(3))})`, cm: inchesToCm(3) },
+  { key: "large", label: `Large (${formatCm(inchesToCm(4))})`, cm: inchesToCm(4) },
+  { key: "xlarge", label: `X-Large (${formatCm(inchesToCm(5))})`, cm: inchesToCm(5) },
 ];
 
 const QUANTITY_PRESETS = [100, 200, 300, 500, 1000, 3000];
@@ -87,8 +94,8 @@ export function TypeConfigurator({
     sizeChoice === "custom" && !Number.isNaN(customWidth) && !Number.isNaN(customHeight);
   const hasSize = !!preset || hasCustomSize;
 
-  const widthInches = preset ? preset.inches : clampSizeInches(customWidth || 0);
-  const heightInches = preset ? preset.inches : clampSizeInches(customHeight || 0);
+  const widthCm = preset ? preset.cm : clampSizeCm(customWidth || 0);
+  const heightCm = preset ? preset.cm : clampSizeCm(customHeight || 0);
 
   const customQuantity = parseInt(customQuantityInput, 10);
   const quantity =
@@ -104,8 +111,8 @@ export function TypeConfigurator({
         isHolographic,
         whiteInk,
         lamination,
-        widthInches,
-        heightInches,
+        widthCm,
+        heightCm,
         quantity,
       })
     : null;
@@ -220,8 +227,8 @@ export function TypeConfigurator({
           done={completed[2]}
           description={
             sizeChoice === "custom"
-              ? `Both dimensions must be between ${MIN_SIZE_INCHES}" and ${MAX_SIZE_INCHES}".`
-              : "Preset sizes are treated as a square — e.g. Medium is 3\" x 3\"."
+              ? `Both dimensions must be between ${formatCm(MIN_SIZE_CM)} and ${formatCm(MAX_SIZE_CM)}.`
+              : `Preset sizes are treated as a square — e.g. Medium is ${formatCm(inchesToCm(3))} x ${formatCm(inchesToCm(3))}.`
           }
         >
           <div className="flex flex-wrap gap-3">
@@ -232,7 +239,7 @@ export function TypeConfigurator({
                 selected={sizeChoice === p.key}
                 onClick={() => setSizeChoice(p.key)}
               >
-                <SizeIcon inches={p.inches} className="h-full w-full" />
+                <SizeIcon cm={p.cm} className="h-full w-full" />
               </ChoiceChip>
             ))}
             <ChoiceChip
@@ -247,33 +254,33 @@ export function TypeConfigurator({
           {sizeChoice === "custom" && (
             <div className="mt-4 flex gap-4">
               <label className="flex flex-col gap-1 text-sm text-ink-navy/70">
-                Height (in)
+                Height (cm)
                 <input
                   type="number"
-                  min={MIN_SIZE_INCHES}
-                  max={MAX_SIZE_INCHES}
+                  min={MIN_SIZE_CM}
+                  max={MAX_SIZE_CM}
                   step={0.1}
                   value={customHeightInput}
                   onChange={(e) => setCustomHeightInput(e.target.value)}
                   onBlur={() => {
                     const n = parseFloat(customHeightInput);
-                    if (!Number.isNaN(n)) setCustomHeightInput(String(clampSizeInches(n)));
+                    if (!Number.isNaN(n)) setCustomHeightInput(String(clampSizeCm(n)));
                   }}
                   className="w-28 rounded-lg border border-ink-navy/15 px-3 py-2 font-mono text-sm outline-none focus:border-coral-signal"
                 />
               </label>
               <label className="flex flex-col gap-1 text-sm text-ink-navy/70">
-                Width (in)
+                Width (cm)
                 <input
                   type="number"
-                  min={MIN_SIZE_INCHES}
-                  max={MAX_SIZE_INCHES}
+                  min={MIN_SIZE_CM}
+                  max={MAX_SIZE_CM}
                   step={0.1}
                   value={customWidthInput}
                   onChange={(e) => setCustomWidthInput(e.target.value)}
                   onBlur={() => {
                     const n = parseFloat(customWidthInput);
-                    if (!Number.isNaN(n)) setCustomWidthInput(String(clampSizeInches(n)));
+                    if (!Number.isNaN(n)) setCustomWidthInput(String(clampSizeCm(n)));
                   }}
                   className="w-28 rounded-lg border border-ink-navy/15 px-3 py-2 font-mono text-sm outline-none focus:border-coral-signal"
                 />
@@ -295,8 +302,8 @@ export function TypeConfigurator({
                     isHolographic,
                     whiteInk,
                     lamination,
-                    widthInches,
-                    heightInches,
+                    widthCm,
+                    heightCm,
                     quantity: q,
                   })
                 : null;
