@@ -24,8 +24,7 @@ import { SizeIcon, CustomSizeIcon } from "@/components/icons/SizeIcon";
 import { UploadIcon } from "@/components/icons/UploadIcon";
 import { STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
 import { formatCurrency } from "@/lib/pricingUtils";
-import { uploadArtworkAction } from "@/app/actions/upload";
-import { MAX_ARTWORK_BYTES } from "@/lib/uploadConstants";
+import { MAX_ARTWORK_BYTES, type UploadArtworkResult } from "@/lib/uploadConstants";
 
 const CUT_TYPES: { value: CutType; label: string; hint: string }[] = [
   { value: "DIE", label: "Die Cut", hint: "Through the backing" },
@@ -60,6 +59,42 @@ const SIZE_PRESETS: { key: string; label: string; cm: number }[] = [
 
 const QUANTITY_PRESETS = [100, 200, 300, 500, 1000, 3000];
 
+/**
+ * XMLHttpRequest rather than fetch so we get real upload-progress events —
+ * fetch's request-body streaming progress isn't reliably supported.
+ */
+function uploadWithProgress(
+  file: File,
+  onProgress: (percent: number) => void,
+): Promise<UploadArtworkResult> {
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/upload");
+    // Backstop for a stalled connection — the server times out its own
+    // Cloudinary call well before this fires under normal conditions.
+    xhr.timeout = 45_000;
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+
+    xhr.onload = () => {
+      try {
+        resolve(JSON.parse(xhr.responseText) as UploadArtworkResult);
+      } catch {
+        resolve({ ok: false, error: "Upload failed — please try again." });
+      }
+    };
+
+    xhr.onerror = () => resolve({ ok: false, error: "Upload failed — please try again." });
+    xhr.ontimeout = () => resolve({ ok: false, error: "Upload timed out — please try again." });
+
+    const formData = new FormData();
+    formData.append("file", file);
+    xhr.send(formData);
+  });
+}
+
 const STEPS: readonly WaypointStep[] = [
   { key: "shapeCut", label: "Shape & Cut" },
   { key: "material", label: "Material" },
@@ -92,8 +127,11 @@ export function TypeConfigurator({
 
   const [artworkUrl, setArtworkUrl] = useState<string | undefined>();
   const [artworkFilename, setArtworkFilename] = useState<string | undefined>();
-  const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "error">("idle");
+  const [uploadStatus, setUploadStatus] = useState<
+    "idle" | "uploading" | "error" | "tooLarge"
+  >("idle");
   const [uploadError, setUploadError] = useState<string | undefined>();
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -144,17 +182,16 @@ export function TypeConfigurator({
 
   async function handleFile(file: File) {
     if (file.size > MAX_ARTWORK_BYTES) {
-      setUploadStatus("error");
-      setUploadError(`"${file.name}" is too large — max ${MAX_ARTWORK_BYTES / 1024 / 1024}MB.`);
+      setUploadStatus("tooLarge");
+      setUploadError(undefined);
       return;
     }
 
     setUploadStatus("uploading");
     setUploadError(undefined);
+    setUploadProgress(0);
 
-    const formData = new FormData();
-    formData.append("file", file);
-    const result = await uploadArtworkAction(formData);
+    const result = await uploadWithProgress(file, setUploadProgress);
 
     if (result.ok) {
       setArtworkUrl(result.url);
@@ -457,7 +494,28 @@ export function TypeConfigurator({
             {uploadStatus === "uploading" ? (
               <>
                 <UploadIcon className="h-10 w-10 animate-pulse text-ink-navy/40" />
-                <p className="text-sm text-ink-navy/60">Uploading…</p>
+                <p className="text-sm text-ink-navy/60">
+                  {uploadProgress >= 100 ? "Finishing up…" : `Uploading… ${uploadProgress}%`}
+                </p>
+                <div className="h-2 w-full max-w-xs overflow-hidden rounded-full bg-ink-navy/10">
+                  <div
+                    className={[
+                      "h-full rounded-full bg-coral-signal transition-[width] duration-150",
+                      uploadProgress >= 100 ? "animate-pulse" : "",
+                    ].join(" ")}
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              </>
+            ) : uploadStatus === "tooLarge" ? (
+              <>
+                <span className="text-3xl" role="img" aria-label="Warning">
+                  ⚠️
+                </span>
+                <p className="font-medium text-coral-signal">File Too Large</p>
+                <p className="max-w-sm text-sm text-ink-navy/60">
+                  Please compress your image or use a smaller file (max 25MB)
+                </p>
               </>
             ) : artworkUrl ? (
               <>

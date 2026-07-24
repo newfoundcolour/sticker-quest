@@ -15,6 +15,12 @@ export class ArtworkTooLargeError extends Error {
   }
 }
 
+// The browser->server leg can finish (and show 100%) well before Cloudinary
+// acks the server->Cloudinary leg. Without a timeout, a stalled Cloudinary
+// connection leaves the upload_stream callback never firing and the client
+// waiting forever.
+const CLOUDINARY_UPLOAD_TIMEOUT_MS = 30_000;
+
 /**
  * Uploads customer artwork to Cloudinary and returns the resulting secure
  * URL. resource_type "auto" so this accepts images as well as PDFs/vectors,
@@ -30,6 +36,10 @@ export async function uploadArtwork(
 
   const result = await new Promise<{ secure_url: string; public_id: string }>(
     (resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(new Error("Cloudinary upload timed out"));
+      }, CLOUDINARY_UPLOAD_TIMEOUT_MS);
+
       const stream = cloudinary.uploader.upload_stream(
         {
           folder: "sticker-quest/artwork",
@@ -39,6 +49,7 @@ export async function uploadArtwork(
           unique_filename: true,
         },
         (error, result) => {
+          clearTimeout(timer);
           if (error || !result) reject(error ?? new Error("Cloudinary upload failed"));
           else resolve(result);
         },
