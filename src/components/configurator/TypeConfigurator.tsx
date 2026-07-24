@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import type { CutType, Finish, Shape, StickerType } from "@/generated/prisma/client";
 import type { PricingConfig } from "@/lib/pricing";
@@ -24,6 +24,8 @@ import { SizeIcon, CustomSizeIcon } from "@/components/icons/SizeIcon";
 import { UploadIcon } from "@/components/icons/UploadIcon";
 import { STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
 import { formatCurrency } from "@/lib/pricingUtils";
+import { uploadArtworkAction } from "@/app/actions/upload";
+import { MAX_ARTWORK_BYTES } from "@/lib/uploadConstants";
 
 const CUT_TYPES: { value: CutType; label: string; hint: string }[] = [
   { value: "DIE", label: "Die Cut", hint: "Through the backing" },
@@ -88,6 +90,13 @@ export function TypeConfigurator({
   const [customQuantityInput, setCustomQuantityInput] = useState("");
   const [quantityTouched, setQuantityTouched] = useState(false);
 
+  const [artworkUrl, setArtworkUrl] = useState<string | undefined>();
+  const [artworkFilename, setArtworkFilename] = useState<string | undefined>();
+  const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "error">("idle");
+  const [uploadError, setUploadError] = useState<string | undefined>();
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const preset = SIZE_PRESETS.find((p) => p.key === sizeChoice);
   const customWidth = parseFloat(customWidthInput);
   const customHeight = parseFloat(customHeightInput);
@@ -123,7 +132,7 @@ export function TypeConfigurator({
     !!finish,
     hasSize,
     quantityTouched,
-    false,
+    !!artworkUrl,
   ];
   const activeIndex = completed.findIndex((c) => !c);
   const currentStep = activeIndex === -1 ? STEPS.length - 1 : activeIndex;
@@ -131,6 +140,30 @@ export function TypeConfigurator({
   function selectQuantity(q: number) {
     setQuantityChoice(q);
     setQuantityTouched(true);
+  }
+
+  async function handleFile(file: File) {
+    if (file.size > MAX_ARTWORK_BYTES) {
+      setUploadStatus("error");
+      setUploadError(`"${file.name}" is too large — max ${MAX_ARTWORK_BYTES / 1024 / 1024}MB.`);
+      return;
+    }
+
+    setUploadStatus("uploading");
+    setUploadError(undefined);
+
+    const formData = new FormData();
+    formData.append("file", file);
+    const result = await uploadArtworkAction(formData);
+
+    if (result.ok) {
+      setArtworkUrl(result.url);
+      setArtworkFilename(result.filename);
+      setUploadStatus("idle");
+    } else {
+      setUploadStatus("error");
+      setUploadError(result.error);
+    }
   }
 
   return (
@@ -393,13 +426,70 @@ export function TypeConfigurator({
         </StepCard>
 
         <StepCard title="Upload" done={completed[4]}>
-          <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-ink-navy/20 px-6 py-10 text-center text-ink-navy/60">
-            <UploadIcon className="h-10 w-10 text-ink-navy/40" />
-            <p className="max-w-sm text-sm">
-              Drag or click to upload your file. All formats support, we recommend image files
-              without cutlines. 25MB Max &bull; 1 Design Max
-            </p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (file) handleFile(file);
+            }}
+          />
+          <div
+            onClick={() => uploadStatus !== "uploading" && fileInputRef.current?.click()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDraggingOver(true);
+            }}
+            onDragLeave={() => setIsDraggingOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsDraggingOver(false);
+              const file = e.dataTransfer.files?.[0];
+              if (file) handleFile(file);
+            }}
+            className={[
+              "flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed px-6 py-10 text-center transition-colors",
+              isDraggingOver ? "border-coral-signal bg-coral-signal/5" : "border-ink-navy/20",
+            ].join(" ")}
+          >
+            {uploadStatus === "uploading" ? (
+              <>
+                <UploadIcon className="h-10 w-10 animate-pulse text-ink-navy/40" />
+                <p className="text-sm text-ink-navy/60">Uploading…</p>
+              </>
+            ) : artworkUrl ? (
+              <>
+                <svg
+                  viewBox="0 0 20 20"
+                  className="h-8 w-8 text-trail-teal"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M4 10.5l4 4 8-9" />
+                </svg>
+                <p className="max-w-sm text-sm text-ink-navy">
+                  <span className="font-medium">{artworkFilename}</span> uploaded
+                </p>
+                <p className="text-xs text-ink-navy/50">Click or drop a file to replace it</p>
+              </>
+            ) : (
+              <>
+                <UploadIcon className="h-10 w-10 text-ink-navy/40" />
+                <p className="max-w-sm text-sm text-ink-navy/60">
+                  Drag or click to upload your file. All formats support, we recommend image
+                  files without cutlines. 25MB Max &bull; 1 Design Max
+                </p>
+              </>
+            )}
           </div>
+          {uploadStatus === "error" && uploadError && (
+            <p className="mt-3 text-sm text-coral-signal">{uploadError}</p>
+          )}
         </StepCard>
       </div>
     </div>
