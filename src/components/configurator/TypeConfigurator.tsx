@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import type { CutType, Finish, Shape, StickerType } from "@/generated/prisma/client";
 import type { PricingConfig } from "@/lib/pricing";
+import { addToCartAction } from "@/app/actions/cart";
 import {
   MIN_QUANTITY,
   MAX_QUANTITY,
@@ -174,6 +175,28 @@ export function TypeConfigurator({
   ];
   const activeIndex = completed.findIndex((c) => !c);
   const currentStep = activeIndex === -1 ? STEPS.length - 1 : activeIndex;
+  const allComplete = completed.every(Boolean);
+
+  const [isAddingToCart, startAddToCart] = useTransition();
+
+  function handleAddToCart() {
+    if (!cutType || !shape || !finish || !artworkUrl || !artworkFilename) return;
+    startAddToCart(async () => {
+      await addToCartAction({
+        stickerType,
+        cutType,
+        shape,
+        finish,
+        whiteInk,
+        lamination,
+        widthCm,
+        heightCm,
+        quantity,
+        artworkUrl,
+        artworkFilename,
+      });
+    });
+  }
 
   function selectQuantity(q: number) {
     setQuantityChoice(q);
@@ -408,7 +431,7 @@ export function TypeConfigurator({
                   ].join(" ")}
                 >
                   <span className="block font-mono text-sm font-medium text-ink-navy">
-                    {q.toLocaleString()}
+                    {q.toLocaleString("en-ZA")}
                   </span>
                   {preview && (
                     <>
@@ -549,6 +572,15 @@ export function TypeConfigurator({
             <p className="mt-3 text-sm text-coral-signal">{uploadError}</p>
           )}
         </StepCard>
+
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          disabled={!allComplete || isAddingToCart}
+          className="rounded-xl bg-coral-signal px-6 py-3.5 text-center font-medium text-paper transition-colors hover:bg-coral-signal/90 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {isAddingToCart ? "Adding to cart…" : "Add to cart"}
+        </button>
       </div>
     </div>
   );

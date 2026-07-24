@@ -14,7 +14,7 @@ import {
 } from "@/lib/stickerTypeSlug";
 import type { StickerType } from "@/generated/prisma/client";
 
-export function NavBar() {
+export function NavBar({ cartCount }: { cartCount: number }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -118,13 +118,18 @@ export function NavBar() {
           )}
         </div>
 
-        <button
-          type="button"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink-navy transition-colors hover:bg-ink-navy/5"
-          aria-label="Cart"
+        <Link
+          href="/cart"
+          className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink-navy transition-colors hover:bg-ink-navy/5"
+          aria-label={`Cart${cartCount > 0 ? `, ${cartCount} item${cartCount === 1 ? "" : "s"}` : ""}`}
         >
           <CartIcon className="h-5 w-5" />
-        </button>
+          {cartCount > 0 && (
+            <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-coral-signal px-1 text-[10px] font-semibold text-paper">
+              {cartCount}
+            </span>
+          )}
+        </Link>
       </div>
     </header>
   );

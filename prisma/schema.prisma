@@ -105,21 +105,45 @@ model Order {
   phone           String
   shippingAddress String
 
-  stickerType StickerType
-  cutType     CutType
-  shape       Shape
-  finish      Finish
-  /// Size label as offered in the configurator, e.g. `2"`, `3"`, or a custom dimension.
-  size        String
-  quantity    Int
+  items OrderItem[]
 
-  artworkUrl      String
-  trackingNumber  String?
-  notes           String?
-  totalPrice      Decimal @db.Decimal(10, 2)
+  trackingNumber String?
+  notes          String?
+  /// Sum of each item's totalPrice, captured at checkout.
+  totalPrice     Decimal @db.Decimal(10, 2)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([status])
+}
+
+/// One configured sticker line within an order — a cart line item that
+/// survived checkout. pricePerUnit/totalPrice are captured at checkout time
+/// (from the live PricingRule data), not recomputed later, so historic
+/// orders stay accurate if rates change.
+model OrderItem {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  stickerType StickerType
+  cutType     CutType
+  shape       Shape
+  finish      Finish
+  whiteInk    Boolean @default(false)
+  lamination  Boolean @default(false)
+  widthCm     Decimal @db.Decimal(6, 2)
+  heightCm    Decimal @db.Decimal(6, 2)
+  quantity    Int
+
+  artworkUrl      String
+  artworkFilename String?
+
+  pricePerUnit Decimal @db.Decimal(10, 2)
+  totalPrice   Decimal @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, JetBrains_Mono } from "next/font/google";
 import { NavBar } from "@/components/NavBar";
+import { getCart } from "@/lib/cart";
 import "./globals.css";
 
 // Stands in for General Sans (Fontshare) until the licensed font files are
@@ -21,18 +22,20 @@ export const metadata: Metadata = {
   description: "Custom stickers and labels, configured and ordered online.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cart = await getCart();
+
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-paper text-ink-navy">
-        <NavBar />
+        <NavBar cartCount={cart.length} />
         {children}
       </body>
     </html>
