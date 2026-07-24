@@ -52,13 +52,15 @@ enum OrderStatus {
   SHIPPED
 }
 
-model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  role         Role     @default(STAFF)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+/// Mirrors a Supabase Auth user (auth.users) 1:1 — id is that user's uuid,
+/// not a locally generated id. Supabase Auth owns credentials; this table
+/// only holds the app-specific role.
+model Profile {
+  id        String   @id
+  email     String   @unique
+  role      Role     @default(STAFF)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 /// Base material rate for one sticker type, in cents per square cm. Price is
