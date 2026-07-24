@@ -19,7 +19,7 @@ export function PriceReadout({
         <p className="text-sm text-paper/60">
           {status === "empty"
             ? "Pick your options to see live pricing"
-            : `Total for ${quantity.toLocaleString()} stickers`}
+            : `Total for ${quantity.toLocaleString("en-ZA")} stickers`}
         </p>
         <p className="font-mono text-3xl font-semibold tabular-nums">
           {status === "ready" && totalPrice !== null ? formatCurrency(totalPrice) : "—"}
