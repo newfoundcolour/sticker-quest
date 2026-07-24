@@ -27,3 +27,25 @@ export const STICKER_TYPE_LABELS: Record<StickerType, string> = {
   STICKER_SHEETS: "Sticker Sheets",
   LABEL_SHEETS: "Label Sheets",
 };
+
+export const STICKER_TYPE_DESCRIPTIONS: Record<StickerType, string> = {
+  VINYL: "Durable, all-purpose stickers for indoor or outdoor use.",
+  HOLOGRAPHIC: "Rainbow-shift finish that catches the light.",
+  CHROME: "Mirror-like metallic finish.",
+  CLEAR: "Transparent background — the print shows through.",
+  ECONOMY: "Budget-friendly, built for short runs and testing.",
+  STICKER_SHEETS: "Several sticker designs cut from one sheet.",
+  LABEL_SHEETS: "Rectangular labels, sheet-fed for packaging and jars.",
+};
+
+/** Shared with the nav bar's search dropdown, which mirrors this grouping. */
+export const STICKER_TYPE_GROUPS: { title: string; types: StickerType[] }[] = [
+  {
+    title: "Individually cut",
+    types: ["VINYL", "HOLOGRAPHIC", "CHROME", "CLEAR", "ECONOMY"],
+  },
+  {
+    title: "Sheets",
+    types: ["STICKER_SHEETS", "LABEL_SHEETS"],
+  },
+];

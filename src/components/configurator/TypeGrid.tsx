@@ -1,31 +1,15 @@
 import Link from "next/link";
-import type { StickerType } from "@/generated/prisma/client";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
-import { STICKER_TYPE_LABELS, STICKER_TYPE_SLUGS } from "@/lib/stickerTypeSlug";
-
-const TYPE_DESCRIPTIONS: Record<StickerType, string> = {
-  VINYL: "Durable, all-purpose stickers for indoor or outdoor use.",
-  HOLOGRAPHIC: "Rainbow-shift finish that catches the light.",
-  CHROME: "Mirror-like metallic finish.",
-  CLEAR: "Transparent background — the print shows through.",
-  ECONOMY: "Budget-friendly, built for short runs and testing.",
-  STICKER_SHEETS: "Several sticker designs cut from one sheet.",
-  LABEL_SHEETS: "Rectangular labels, sheet-fed for packaging and jars.",
-};
-
-const TYPE_ORDER: StickerType[] = [
-  "VINYL",
-  "HOLOGRAPHIC",
-  "CHROME",
-  "CLEAR",
-  "ECONOMY",
-  "STICKER_SHEETS",
-  "LABEL_SHEETS",
-];
+import {
+  STICKER_TYPE_DESCRIPTIONS,
+  STICKER_TYPE_GROUPS,
+  STICKER_TYPE_LABELS,
+  STICKER_TYPE_SLUGS,
+} from "@/lib/stickerTypeSlug";
 
 export function TypeGrid() {
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-10">
+    <div className="mx-auto w-full max-w-4xl px-4 py-10">
       <p className="font-mono text-sm uppercase tracking-wide text-coral-signal">
         Start your quest
       </p>
@@ -36,21 +20,30 @@ export function TypeGrid() {
         This is the core choice — everything else is configured on the next page.
       </p>
 
-      <div className="mt-8 flex flex-col gap-3">
-        {TYPE_ORDER.map((type) => (
-          <Link
-            key={type}
-            href={`/configure/${STICKER_TYPE_SLUGS[type]}`}
-            className="flex items-center gap-4 rounded-2xl border border-ink-navy/10 bg-white/70 p-4 transition-colors hover:border-coral-signal"
-          >
-            <MaterialIcon material={type} className="h-12 w-12 shrink-0 text-ink-navy" />
-            <div>
-              <p className="font-display text-lg font-semibold text-ink-navy">
-                {STICKER_TYPE_LABELS[type]}
-              </p>
-              <p className="text-sm text-ink-navy/60">{TYPE_DESCRIPTIONS[type]}</p>
+      <div className="mt-8 grid gap-8 md:grid-cols-2">
+        {STICKER_TYPE_GROUPS.map((group) => (
+          <div key={group.title}>
+            <h2 className="font-display text-lg font-semibold text-ink-navy">
+              {group.title}
+            </h2>
+            <div className="mt-3 flex flex-col gap-3">
+              {group.types.map((type) => (
+                <Link
+                  key={type}
+                  href={`/configure/${STICKER_TYPE_SLUGS[type]}`}
+                  className="flex items-center gap-4 rounded-2xl border border-ink-navy/10 bg-white/70 p-4 transition-colors hover:border-coral-signal"
+                >
+                  <MaterialIcon material={type} className="h-12 w-12 shrink-0 text-ink-navy" />
+                  <div>
+                    <p className="font-display text-lg font-semibold text-ink-navy">
+                      {STICKER_TYPE_LABELS[type]}
+                    </p>
+                    <p className="text-sm text-ink-navy/60">{STICKER_TYPE_DESCRIPTIONS[type]}</p>
+                  </div>
+                </Link>
+              ))}
             </div>
-          </Link>
+          </div>
         ))}
       </div>
     </div>

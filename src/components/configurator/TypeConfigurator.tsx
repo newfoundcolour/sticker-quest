@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { CutType, Finish, Shape, StickerType } from "@/generated/prisma/client";
 import type { PricingConfig } from "@/lib/pricing";
 import {
@@ -134,9 +135,25 @@ export function TypeConfigurator({
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
-      <p className="font-mono text-sm uppercase tracking-wide text-coral-signal">
-        {STICKER_TYPE_LABELS[stickerType]}
-      </p>
+      <Link
+        href="/"
+        className="group inline-flex items-center gap-1.5 font-mono text-sm uppercase tracking-wide text-coral-signal"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          className="h-4 w-4 origin-center transition-transform duration-150 group-hover:scale-125"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M14 6l-6 6 6 6" />
+        </svg>
+        <span className="origin-left transition-transform duration-150 group-hover:scale-110">
+          {STICKER_TYPE_LABELS[stickerType]}
+        </span>
+      </Link>
       <h1 className="mt-2 font-display text-4xl font-bold text-ink-navy">
         Build your stickers
       </h1>

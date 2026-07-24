@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, JetBrains_Mono } from "next/font/google";
+import { NavBar } from "@/components/NavBar";
 import "./globals.css";
 
 // Stands in for General Sans (Fontshare) until the licensed font files are
@@ -31,6 +32,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-paper text-ink-navy">
+        <NavBar />
         {children}
       </body>
     </html>
