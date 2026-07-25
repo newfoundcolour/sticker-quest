@@ -60,3 +60,17 @@ export async function uploadArtwork(
 
   return { url: result.secure_url, publicId: result.public_id };
 }
+
+/**
+ * A plain `download` attribute is ignored by browsers for cross-origin
+ * assets, so a link straight to `secure_url` just opens the file in-tab.
+ * Cloudinary's bare fl_attachment flag sets Content-Disposition: attachment
+ * on its own response, forcing a real download regardless of origin — and
+ * it already returns the correct original filename on its own, since upload
+ * used `use_filename: true`. Do NOT append `:<filename>` here — Cloudinary
+ * chokes on filenames containing a "." (e.g. an extension), responding with
+ * `400 Invalid flag in transformation: <ext>` instead of the file.
+ */
+export function toArtworkDownloadUrl(url: string): string {
+  return url.replace("/upload/", "/upload/fl_attachment/");
+}

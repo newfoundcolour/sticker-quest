@@ -78,6 +78,48 @@ A few things Sticker Shuttle does well that are genuinely good UX, independent o
 
 The homepage's only job is getting people into the configurator fast. Resist the urge to add a traditional marketing hero above it.
 
+## Admin Dashboard UI Inspiration
+
+Structural patterns worth adopting for `/admin`, sourced from a reference admin order-management dashboard screenshot — the *structure* is worth copying, not the reference's own branding or colors. Everything below still runs on Sticker Quest's existing palette (Paper / Ink Navy / Coral Signal / Waypoint Gold / Trail Teal) and type system (Clash Display for the odd headline, General Sans for UI text, mono for anything numeric) — no new colors, no new typefaces.
+
+### Quick Stats row
+
+A row of small cards at the top of `/admin/orders`, one glance at shop health before scrolling to the table:
+
+- Total Orders, Awaiting Proof, Approved, Printing, Shipped Today, Revenue Today, Average Order Value.
+- Each card: a small icon in a muted Ink Navy circle, the number in mono (same "precise readout" logic as configurator pricing), the label in small uppercase Ink Navy/50.
+- A trend indicator only where a day-over-day comparison is actually meaningful — Shipped Today and Revenue Today compare against yesterday; the pipeline-stage counts (Awaiting Proof, Approved, Printing) don't get one, since "up" or "down" doesn't mean good or bad for a queue depth.
+- Trend up = Trail Teal (the success color already reserved for this). Trend down = muted Ink Navy, not Coral Signal — Coral is the CTA/urgent color elsewhere in the system, and using it for "orders dipped" would read as more alarming than an internal stats card should.
+
+### Status pills
+
+Order status renders as a colored pill in the orders table, not plain text — reusing the same four-stage vocabulary as the Waypoint Line rather than inventing a new color per status:
+
+| Status | Pill |
+|---|---|
+| Awaiting Proof | Waypoint Gold (muted) |
+| Approved | Trail Teal (muted) |
+| Printing | Coral Signal (muted) |
+| Shipped | Ink Navy (solid) |
+
+Shipped gets the solid treatment — it's the terminal state, and standing out as "done" is the point.
+
+### Filter pills
+
+`All / Awaiting Proof / Approved / Printing / Shipped` as pill buttons above the table, not a `<select>` — staff narrow the view in one click. Active pill: solid Coral Signal. Inactive: outlined Ink Navy/15. Same pill shape as the status badges, just larger and interactive.
+
+### Customer identity in the table
+
+Each row's customer cell stacks an avatar placeholder (initials in an Ink Navy/10 circle), the name, and the email — not just a bare name — so staff can recognize a repeat customer without opening the order.
+
+### Pagination
+
+Once the table grows past one screen: "Showing 1–20 of 134 orders" plus Prev/Next, numerals in mono. No page-number list — staff work through orders roughly in order, not by jumping to page 7.
+
+### Sidebar navigation (once admin grows beyond Orders)
+
+Today's top nav (`Sticker Quest Admin — Orders — Log out`) is fine for a single section. Once more admin surfaces exist (pricing rules, staff accounts, discount tiers), switch to a left sidebar with labeled groups — e.g. a `COMMERCE` group holding Orders, Pricing Rules, Discount Tiers — small uppercase Ink Navy/40 tracking-wide group labels, current page highlighted with a Coral Signal left border and a light Ink Navy/5 background. Not worth building until there's a second group to justify it.
+
 ## Voice, in the interface
 
 - Plain verbs, active voice: "Upload your artwork," not "Artwork submission."
