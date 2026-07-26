@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, JetBrains_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Geist, JetBrains_Mono } from "next/font/google";
 import { NavBar } from "@/components/NavBar";
 import { getCart } from "@/lib/cart";
 import "./globals.css";
@@ -8,6 +8,14 @@ import "./globals.css";
 // self-hosted via next/font/local — see the note in globals.css.
 const geistSans = Geist({
   variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+// Stands in for Clash Display (Fontshare) — same bold/geometric/playful
+// brief, but freely licensed so it actually renders today. Swap for the
+// licensed Clash Display files via next/font/local if/when they're bought.
+const bricolageGrotesque = Bricolage_Grotesque({
+  variable: "--font-bricolage-grotesque",
   subsets: ["latin"],
 });
 
@@ -32,7 +40,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${bricolageGrotesque.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-paper text-ink-navy">
         <NavBar cartCount={cart.length} />

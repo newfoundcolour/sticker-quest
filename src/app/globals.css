@@ -17,11 +17,12 @@
 
   /*
    * Clash Display and General Sans are Fontshare exclusives (not on Google
-   * Fonts), so their actual font files aren't wired up yet. These fall back
-   * to system stacks that approximate the intended feel until the licensed
-   * font files are added via next/font/local.
+   * Fonts). Bricolage Grotesque stands in for Clash Display — same bold,
+   * geometric, slightly playful brief, freely licensed. General Sans still
+   * falls back to Geist until the licensed files are self-hosted via
+   * next/font/local.
    */
-  --font-display: "Clash Display", ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage-grotesque), "Clash Display", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "General Sans", var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", monospace;
 }
@@ -30,4 +31,23 @@ body {
   background: var(--color-paper);
   color: var(--color-ink-navy);
   font-family: var(--font-sans);
+}
+
+/* Quality floor: visible keyboard focus everywhere, matching the brand's
+   coral signal color rather than each browser's default outline. */
+:focus-visible {
+  outline: 2px solid var(--color-coral-signal);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
