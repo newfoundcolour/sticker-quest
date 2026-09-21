@@ -9,12 +9,13 @@ import { addToCartAction } from "@/app/actions/cart";
 import {
   MIN_QUANTITY,
   MAX_QUANTITY,
-  MIN_SIZE_CM,
-  MAX_SIZE_CM,
+  MIN_SIZE_MM,
+  MAX_SIZE_MM,
   clampQuantity,
-  clampSizeCm,
+  clampSizeMm,
   calculateStickerPricing,
-  inchesToCm,
+  formatMmValue,
+  mmToCm,
 } from "@/lib/pricingUtils";
 import { StepCard, OptionTile } from "./StepCard";
 import { PriceReadout } from "./PriceReadout";
@@ -40,23 +41,13 @@ const FINISHES: { value: Finish; label: string; icon: string }[] = [
   { value: "GLOSS", label: "Gloss", icon: "/icons/gloss.svg" },
 ];
 
-function formatCm(cm: number): string {
-  return `${cm.toFixed(1)} cm`;
-}
-
-/** "5.1" not "5.10" — drops a trailing .0 so whole sizes read cleanly. */
-function formatDimension(cm: number): string {
-  return cm.toFixed(1).replace(/\.0$/, "");
-}
-
-// Canonical product sizes are defined in inches (2"/3"/4"/5" printer presets)
-// and converted to cm here — the customer never sees inches. `previewPx` is
-// the size of the little square drawn on the tile, from the Figma.
-const SIZE_PRESETS: { key: string; label: string; cm: number; previewPx: number }[] = [
-  { key: "small", label: "Small", cm: inchesToCm(2), previewPx: 24 },
-  { key: "medium", label: "Medium", cm: inchesToCm(3), previewPx: 32 },
-  { key: "large", label: "Large", cm: inchesToCm(4), previewPx: 42 },
-  { key: "xlarge", label: "X-Large", cm: inchesToCm(5), previewPx: 52 },
+// Preset sizes are square, in mm. `previewPx` is the size of the little square
+// drawn on the tile, from the Figma.
+const SIZE_PRESETS: { key: string; label: string; mm: number; previewPx: number }[] = [
+  { key: "small", label: "Small", mm: 50, previewPx: 24 },
+  { key: "medium", label: "Medium", mm: 75, previewPx: 32 },
+  { key: "large", label: "Large", mm: 100, previewPx: 42 },
+  { key: "xlarge", label: "X-Large", mm: 125, previewPx: 52 },
 ];
 
 const QUANTITY_PRESETS = [50, 100, 200, 300, 500, 1000];
@@ -142,8 +133,9 @@ export function TypeConfigurator({
     sizeChoice === "custom" && !Number.isNaN(customWidth) && !Number.isNaN(customHeight);
   const hasSize = !!preset || hasCustomSize;
 
-  const widthCm = preset ? preset.cm : clampSizeCm(customWidth || 0);
-  const heightCm = preset ? preset.cm : clampSizeCm(customHeight || 0);
+  // Inputs and presets are in mm; pricing and the cart work in cm.
+  const widthCm = mmToCm(preset ? preset.mm : clampSizeMm(customWidth || 0));
+  const heightCm = mmToCm(preset ? preset.mm : clampSizeMm(customHeight || 0));
 
   const customQuantity = parseInt(customQuantityInput, 10);
   const quantity =
@@ -386,7 +378,7 @@ export function TypeConfigurator({
                       <span className="text-center">
                         <span className="block text-xs font-black">{p.label}</span>
                         <span className="block text-[10px] font-normal">
-                          {formatDimension(p.cm)} × {formatDimension(p.cm)} cm
+                          {formatMmValue(p.mm)} × {formatMmValue(p.mm)} mm
                         </span>
                       </span>
                     </OptionTile>
@@ -410,33 +402,33 @@ export function TypeConfigurator({
               {sizeChoice === "custom" && (
                 <div className="mt-4 flex gap-4">
                   <label className="flex flex-col gap-1 text-xs font-black text-quiet">
-                    Height (cm)
+                    Height (mm)
                     <input
                       type="number"
-                      min={MIN_SIZE_CM}
-                      max={MAX_SIZE_CM}
-                      step={0.1}
+                      min={MIN_SIZE_MM}
+                      max={MAX_SIZE_MM}
+                      step={0.5}
                       value={customHeightInput}
                       onChange={(e) => setCustomHeightInput(e.target.value)}
                       onBlur={() => {
                         const n = parseFloat(customHeightInput);
-                        if (!Number.isNaN(n)) setCustomHeightInput(String(clampSizeCm(n)));
+                        if (!Number.isNaN(n)) setCustomHeightInput(String(clampSizeMm(n)));
                       }}
                       className={`w-full ${inputClass}`}
                     />
                   </label>
                   <label className="flex flex-col gap-1 text-xs font-black text-quiet">
-                    Width (cm)
+                    Width (mm)
                     <input
                       type="number"
-                      min={MIN_SIZE_CM}
-                      max={MAX_SIZE_CM}
-                      step={0.1}
+                      min={MIN_SIZE_MM}
+                      max={MAX_SIZE_MM}
+                      step={0.5}
                       value={customWidthInput}
                       onChange={(e) => setCustomWidthInput(e.target.value)}
                       onBlur={() => {
                         const n = parseFloat(customWidthInput);
-                        if (!Number.isNaN(n)) setCustomWidthInput(String(clampSizeCm(n)));
+                        if (!Number.isNaN(n)) setCustomWidthInput(String(clampSizeMm(n)));
                       }}
                       className={`w-full ${inputClass}`}
                     />
@@ -446,7 +438,7 @@ export function TypeConfigurator({
 
               <p className="mt-3 text-xs text-quiet">
                 {sizeChoice === "custom"
-                  ? `Both dimensions must be between ${formatCm(MIN_SIZE_CM)} and ${formatCm(MAX_SIZE_CM)}.`
+                  ? `Both dimensions must be between ${MIN_SIZE_MM} mm and ${MAX_SIZE_MM} mm.`
                   : "Preset sizes are treated as a square."}
               </p>
             </div>

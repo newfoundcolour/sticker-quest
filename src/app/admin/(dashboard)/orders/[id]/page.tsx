@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { formatCurrency } from "@/lib/pricingUtils";
+import { formatCurrency, formatSizeMm } from "@/lib/pricingUtils";
 import { STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
 import {
   CUT_TYPE_LABELS,
@@ -114,7 +114,7 @@ export default async function AdminOrderDetailPage({
                     {FINISH_LABELS[item.finish]}
                   </p>
                   <p className="text-sm text-ink-navy/60">
-                    {Number(item.widthCm).toFixed(1)} x {Number(item.heightCm).toFixed(1)} cm
+                    {formatSizeMm(Number(item.widthCm))} x {formatSizeMm(Number(item.heightCm))}
                     {addOns && ` · ${addOns}`}
                   </p>
                   <p className="mt-1 text-sm text-ink-navy/60">

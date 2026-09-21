@@ -2,7 +2,7 @@ import { removeFromCartAction, updateCartItemQuantityAction } from "@/app/action
 import { STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
 import { CUT_TYPE_LABELS, FINISH_LABELS, SHAPE_LABELS } from "@/lib/orderLabels";
 import { formatCurrency } from "@/lib/pricingUtils";
-import { MIN_QUANTITY, MAX_QUANTITY } from "@/lib/pricingUtils";
+import { MIN_QUANTITY, MAX_QUANTITY, formatSizeMm } from "@/lib/pricingUtils";
 import type { PricedCartItem } from "@/lib/cartPricing";
 
 /** Shared between /cart (editable) and the /checkout summary (read-only). */
@@ -31,7 +31,7 @@ export function CartLineItem({
           {SHAPE_LABELS[item.shape]} · {CUT_TYPE_LABELS[item.cutType]} · {FINISH_LABELS[item.finish]}
         </p>
         <p className="text-sm text-ink-navy/60">
-          {item.widthCm.toFixed(1)} x {item.heightCm.toFixed(1)} cm
+          {formatSizeMm(item.widthCm)} x {formatSizeMm(item.heightCm)}
           {addOns && ` · ${addOns}`}
         </p>
         <p className="mt-1 truncate text-xs text-ink-navy/40">{item.artworkFilename}</p>

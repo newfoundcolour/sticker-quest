@@ -8,6 +8,7 @@ import {
   ORDER_STATUS_VALUES,
   SHAPE_LABELS,
 } from "@/lib/orderLabels";
+import { formatSizeMm } from "@/lib/pricingUtils";
 import { getOrderStats } from "@/lib/orderStats";
 import { QuickStats } from "@/components/admin/QuickStats";
 import { OrderStatusSelect } from "@/components/admin/OrderStatusSelect";
@@ -114,7 +115,7 @@ export default async function AdminOrdersPage({
                       .join(" · ")
                   : "";
                 const sizeLine = item
-                  ? `${Number(item.widthCm).toFixed(1)} x ${Number(item.heightCm).toFixed(1)} cm${addOns ? ` · ${addOns}` : ""}`
+                  ? `${formatSizeMm(Number(item.widthCm))} x ${formatSizeMm(Number(item.heightCm))}${addOns ? ` · ${addOns}` : ""}`
                   : "";
 
                 return (

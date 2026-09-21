@@ -9,11 +9,43 @@ export function inchesToCm(inches: number): number {
   return inches * 2.54;
 }
 
-// All customer-facing sizing is in cm. The 0.5"-14" printer limits are the
-// underlying constraint (see CLAUDE.md — "up to max printer width"),
-// converted once here rather than re-derived at each call site.
+// Sizes are stored and priced in cm (OrderItem.widthCm / heightCm) but shown
+// and entered in mm, rounded to the nearest 0.5 mm. The 0.5"-14" printer
+// limits are the underlying constraint (see CLAUDE.md — "up to max printer
+// width"), converted once here rather than re-derived at each call site.
 export const MIN_SIZE_CM = inchesToCm(0.5);
 export const MAX_SIZE_CM = inchesToCm(14);
+
+export function roundToHalfMm(mm: number): number {
+  return Math.round(mm * 2) / 2;
+}
+
+/** Rounded up / down to a whole half-mm so the range never exceeds the printer limits. */
+export const MIN_SIZE_MM = Math.ceil(MIN_SIZE_CM * 20) / 2;
+export const MAX_SIZE_MM = Math.floor(MAX_SIZE_CM * 20) / 2;
+
+export function cmToMm(cm: number): number {
+  return roundToHalfMm(cm * 10);
+}
+
+export function mmToCm(mm: number): number {
+  return mm / 10;
+}
+
+export function clampSizeMm(mm: number): number {
+  if (Number.isNaN(mm)) return MIN_SIZE_MM;
+  return Math.min(MAX_SIZE_MM, Math.max(MIN_SIZE_MM, roundToHalfMm(mm)));
+}
+
+/** "51" or "101.5" — a mm value without a trailing ".0" (no unit). */
+export function formatMmValue(mm: number): string {
+  return Number.isInteger(mm) ? String(mm) : mm.toFixed(1);
+}
+
+/** A stored cm size as customers and staff see it, e.g. "101.5 mm". */
+export function formatSizeMm(cm: number): string {
+  return `${formatMmValue(cmToMm(cm))} mm`;
+}
 
 export function clampQuantity(quantity: number): number {
   if (Number.isNaN(quantity)) return MIN_QUANTITY;
