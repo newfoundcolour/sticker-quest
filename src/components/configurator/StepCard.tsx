@@ -44,10 +44,28 @@ export function StepCard({
 }
 
 const SELECTED_TONES = {
-  blaze: "border-blaze bg-blaze text-white",
-  grape: "border-grape bg-grape text-white",
-  zap: "border-zap bg-zap text-ink",
+  blaze: "border-blaze bg-blaze text-white shadow-pop-blaze",
+  grape: "border-grape bg-grape text-white shadow-pop-grape",
+  zap: "border-zap bg-zap text-ink shadow-pop-zap",
 } as const;
+
+/** Every option lifts a couple of pixels on hover (skipped for reduced motion). */
+export const LIFT_ON_HOVER = "enabled:motion-safe:hover:-translate-y-0.5";
+
+/** The same lift for things that aren't buttons (e.g. a checkbox label). */
+export const LIFT_ON_HOVER_ANY =
+  "transition-[translate] duration-150 motion-safe:hover:-translate-y-0.5";
+
+/**
+ * For an image inside a `group` tile: pivots clockwise about its bottom-right
+ * corner, so the top-left corner swings up and to the right.
+ */
+export const TILT_ON_HOVER =
+  "origin-bottom-right transition-transform duration-200 motion-safe:group-hover:rotate-[5deg]";
+
+/** Transition set shared by everything that lifts, recolours or gains a shadow. */
+export const OPTION_TRANSITION =
+  "transition-[color,background-color,border-color,box-shadow,translate] duration-150";
 
 /** A selectable tile — grey when idle, filled with the step's accent when chosen. */
 export function OptionTile({
@@ -72,7 +90,9 @@ export function OptionTile({
       aria-pressed={selected}
       disabled={disabled}
       className={[
-        "flex flex-col items-center justify-center rounded-xl border transition-colors disabled:cursor-not-allowed disabled:opacity-40",
+        "group flex flex-col items-center justify-center rounded-xl border disabled:cursor-not-allowed disabled:opacity-40",
+        OPTION_TRANSITION,
+        LIFT_ON_HOVER,
         selected
           ? SELECTED_TONES[tone]
           : "border-transparent bg-mist text-quiet hover:border-ink/20",

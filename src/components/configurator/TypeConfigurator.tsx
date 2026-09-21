@@ -17,8 +17,16 @@ import {
   formatMmValue,
   mmToCm,
 } from "@/lib/pricingUtils";
-import { StepCard, OptionTile } from "./StepCard";
+import {
+  StepCard,
+  OptionTile,
+  LIFT_ON_HOVER,
+  LIFT_ON_HOVER_ANY,
+  OPTION_TRANSITION,
+  TILT_ON_HOVER,
+} from "./StepCard";
 import { PriceReadout } from "./PriceReadout";
+import { ShapeImage } from "./ShapeImage";
 import { STICKER_TYPE_DESCRIPTIONS, STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
 import { formatCurrency } from "@/lib/pricingUtils";
 import { MAX_ARTWORK_BYTES, type UploadArtworkResult } from "@/lib/uploadConstants";
@@ -102,19 +110,19 @@ export function TypeConfigurator({
   pricingConfig: PricingConfig;
 }) {
   const [cutType, setCutType] = useState<CutType | undefined>();
-  const [shape, setShape] = useState<Shape | undefined>();
+  const [shape, setShape] = useState<Shape | undefined>("CUSTOM");
 
-  const [finish, setFinish] = useState<Finish | undefined>();
+  const [finish, setFinish] = useState<Finish | undefined>("MATTE");
   const [whiteInk, setWhiteInk] = useState(false);
   const [lamination, setLamination] = useState(false);
 
-  const [sizeChoice, setSizeChoice] = useState<string | undefined>(); // preset key | 'custom'
+  const [sizeChoice, setSizeChoice] = useState<string | undefined>("medium"); // preset key | 'custom'
   const [customWidthInput, setCustomWidthInput] = useState("");
   const [customHeightInput, setCustomHeightInput] = useState("");
 
-  const [quantityChoice, setQuantityChoice] = useState<number | "custom" | undefined>();
+  const [quantityChoice, setQuantityChoice] = useState<number | "custom" | undefined>(100);
   const [customQuantityInput, setCustomQuantityInput] = useState("");
-  const [quantityTouched, setQuantityTouched] = useState(false);
+  const [quantityTouched, setQuantityTouched] = useState(true);
 
   const [artworkUrl, setArtworkUrl] = useState<string | undefined>();
   const [artworkFilename, setArtworkFilename] = useState<string | undefined>();
@@ -249,9 +257,11 @@ export function TypeConfigurator({
                     onClick={() => setCutType(c.value)}
                     aria-pressed={cutType === c.value}
                     className={[
-                      "flex flex-1 flex-col items-center rounded-lg py-2 transition-colors",
+                      "flex flex-1 flex-col items-center rounded-lg py-2",
+                      OPTION_TRANSITION,
+                      LIFT_ON_HOVER,
                       cutType === c.value
-                        ? "bg-white text-ink shadow-[0_1px_2px_rgba(32,31,32,0.06),0_6px_12px_rgba(32,31,32,0.07)]"
+                        ? "bg-white text-ink shadow-pop-blaze"
                         : "text-quiet hover:text-ink",
                     ].join(" ")}
                   >
@@ -272,7 +282,7 @@ export function TypeConfigurator({
                       className="col-span-2 py-5"
                     >
                       <span className="flex items-center gap-3">
-                        <Image src={s.image} alt="" width={64} height={64} className="size-16" />
+                        <ShapeImage src={s.image} kissCut={cutType === "KISS"} />
                         <span className="text-sm font-black">{s.label}</span>
                       </span>
                     </OptionTile>
@@ -284,7 +294,7 @@ export function TypeConfigurator({
                       tone="blaze"
                       className="gap-2 py-5"
                     >
-                      <Image src={s.image} alt="" width={64} height={64} className="size-16" />
+                      <ShapeImage src={s.image} kissCut={cutType === "KISS"} />
                       <span className="text-xs font-black">{s.label}</span>
                     </OptionTile>
                   ),
@@ -313,7 +323,7 @@ export function TypeConfigurator({
                         height={40}
                         // The gloss icon is drawn white for the selected tile;
                         // invert it so it stays visible on the idle grey one.
-                        className={["h-10 w-8", f.value === "GLOSS" && !selected ? "invert" : ""].join(" ")}
+                        className={["h-10 w-8", TILT_ON_HOVER, f.value === "GLOSS" && !selected ? "invert" : ""].join(" ")}
                       />
                       <span className="text-sm font-black">{f.label}</span>
                     </OptionTile>
@@ -322,7 +332,9 @@ export function TypeConfigurator({
               </div>
 
               <div className="mt-4 flex flex-col gap-3 border-t border-ink/[0.09] pt-4">
-                <label className="flex items-center gap-3 text-sm font-black text-ink">
+                <label
+                  className={`flex w-fit cursor-pointer items-center gap-3 text-sm font-black text-ink ${LIFT_ON_HOVER_ANY}`}
+                >
                   <input
                     type="checkbox"
                     checked={whiteInk}
@@ -338,7 +350,9 @@ export function TypeConfigurator({
                     )}
                   </span>
                 </label>
-                <label className="flex items-center gap-3 text-sm font-black text-ink">
+                <label
+                  className={`flex w-fit cursor-pointer items-center gap-3 text-sm font-black text-ink ${LIFT_ON_HOVER_ANY}`}
+                >
                   <input
                     type="checkbox"
                     checked={lamination}
@@ -454,9 +468,11 @@ export function TypeConfigurator({
                 }}
                 aria-pressed={quantityChoice === "custom"}
                 className={[
-                  "flex items-center justify-between rounded-xl border p-3 text-sm font-black transition-colors",
+                  "flex items-center justify-between rounded-xl border p-3 text-sm font-black",
+                  OPTION_TRANSITION,
+                  LIFT_ON_HOVER,
                   quantityChoice === "custom"
-                    ? "border-blaze bg-blaze text-white"
+                    ? "border-blaze bg-blaze text-white shadow-pop-blaze"
                     : "border-transparent text-quiet hover:bg-mist",
                 ].join(" ")}
               >
@@ -504,9 +520,11 @@ export function TypeConfigurator({
                     disabled={!hasSize}
                     aria-pressed={selected}
                     className={[
-                      "flex items-center justify-between rounded-xl border p-3 text-sm font-black transition-colors disabled:cursor-not-allowed disabled:opacity-40",
+                      "flex items-center justify-between rounded-xl border p-3 text-sm font-black disabled:cursor-not-allowed disabled:opacity-40",
+                      OPTION_TRANSITION,
+                      LIFT_ON_HOVER,
                       selected
-                        ? "border-blaze bg-blaze text-white"
+                        ? "border-blaze bg-blaze text-white shadow-pop-blaze"
                         : "border-transparent text-quiet enabled:hover:bg-mist",
                     ].join(" ")}
                   >
