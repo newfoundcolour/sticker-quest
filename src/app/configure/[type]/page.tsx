@@ -15,7 +15,7 @@ export default async function ConfigureTypePage({
   const pricingConfig = await getPricingConfig(stickerType);
 
   return (
-    <main className="flex min-h-screen flex-col items-center">
+    <main className="flex flex-1 flex-col bg-night">
       <TypeConfigurator stickerType={stickerType} pricingConfig={pricingConfig} />
     </main>
   );

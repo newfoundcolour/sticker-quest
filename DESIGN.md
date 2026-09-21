@@ -2,6 +2,26 @@
 
 This is a starting direction, not final branding. Swap the palette once the logo is locked — everything below is built to be easy to update in the Tailwind config without restructuring the design.
 
+## Configurator redesign (current direction)
+
+The configurator was redesigned in Figma ("Sticker Quest 1.0", desktop frame `1:2`, vinyl page) and that design is the look and layout going forward. Where it conflicts with the sections below (palette, type, Waypoint Line/Mascot on the configurator), **the Figma wins**; the older sections still describe pages not yet migrated (home, cart, checkout, admin).
+
+- **Shell:** dark `night` page, full-width nav (logo, pill search "Select sticker type...", cart with count badge), gradient header banner, dark footer.
+- **Layout:** four white cards in a row — 1 Shape & Cut, 2 Material, 3 Size, 4 Quantity (with the total box at its foot) — then a full-width 5 Upload card. Numbered step badges replace the Waypoint Line on this page.
+- **Selected state:** an idle tile is `mist` grey; a chosen tile fills with its step's accent (Shape & Quantity `blaze`, Material `grape`, Size `zap`).
+- **Type:** Urbanist only — Black (900) for labels, prices and headings, Regular for hints. Prices are no longer set in mono.
+
+| Token | Hex | Use |
+|---|---|---|
+| `night` | `#16122a` | Page, nav and footer background |
+| `blaze` | `#f05932` | Primary accent, CTA, selected shape/quantity |
+| `grape` | `#685ea8` | Selected material, per-unit price pill |
+| `zap` | `#d6de23` | Selected size, savings badges (`zap-ink` `#7a7200` for badge text) |
+| `ink` / `quiet` | `#201f20` / `#7a7879` | Text / secondary text |
+| `mist` | `#eceaf0` | Idle tiles and inset panels |
+
+Tokens live in `globals.css` next to the original palette. Don't claim things in the UI that the business doesn't offer yet (store credit, satisfaction guarantee, testimonials) — the Figma mock contains them, the build deliberately doesn't.
+
 ## Signature element: the Waypoint Line + the Mascot
 
 Two devices, working together, reused everywhere so customers learn them once and recognize them everywhere.

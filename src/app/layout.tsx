@@ -1,8 +1,16 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Geist, JetBrains_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Geist, JetBrains_Mono, Urbanist } from "next/font/google";
 import { NavBar } from "@/components/NavBar";
+import { Footer } from "@/components/Footer";
 import { getCart } from "@/lib/cart";
 import "./globals.css";
+
+// The redesigned UI face (Figma). A variable font, so every weight the design
+// uses (Regular through Black) comes from one file.
+const urbanist = Urbanist({
+  variable: "--font-urbanist",
+  subsets: ["latin"],
+});
 
 // Stands in for General Sans (Fontshare) until the licensed font files are
 // self-hosted via next/font/local — see the note in globals.css.
@@ -40,11 +48,12 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${bricolageGrotesque.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${urbanist.variable} ${geistSans.variable} ${bricolageGrotesque.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-paper text-ink-navy">
         <NavBar cartCount={cart.length} />
         {children}
+        <Footer />
       </body>
     </html>
   );

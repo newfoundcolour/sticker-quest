@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import type { CutType, Finish, Shape, StickerType } from "@/generated/prisma/client";
 import type { PricingConfig } from "@/lib/pricing";
@@ -15,15 +16,9 @@ import {
   calculateStickerPricing,
   inchesToCm,
 } from "@/lib/pricingUtils";
-import { WaypointLine, type WaypointStep } from "./WaypointLine";
-import { StepCard, ChoiceChip } from "./StepCard";
+import { StepCard, OptionTile } from "./StepCard";
 import { PriceReadout } from "./PriceReadout";
-import { CutIcon } from "@/components/icons/CutIcon";
-import { ShapeIcon } from "@/components/icons/ShapeIcon";
-import { FinishIcon } from "@/components/icons/FinishIcon";
-import { SizeIcon, CustomSizeIcon } from "@/components/icons/SizeIcon";
-import { UploadIcon } from "@/components/icons/UploadIcon";
-import { STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
+import { STICKER_TYPE_DESCRIPTIONS, STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
 import { formatCurrency } from "@/lib/pricingUtils";
 import { MAX_ARTWORK_BYTES, type UploadArtworkResult } from "@/lib/uploadConstants";
 
@@ -32,33 +27,39 @@ const CUT_TYPES: { value: CutType; label: string; hint: string }[] = [
   { value: "KISS", label: "Kiss Cut", hint: "On a backing square" },
 ];
 
-const SHAPES: { value: Shape; label: string }[] = [
-  { value: "CUSTOM", label: "Custom Shape" },
-  { value: "CIRCLE", label: "Circle" },
-  { value: "OVAL", label: "Oval" },
-  { value: "SQUARE", label: "Square" },
-  { value: "RECTANGLE", label: "Rectangle" },
+const SHAPES: { value: Shape; label: string; image: string }[] = [
+  { value: "CUSTOM", label: "Custom Shape", image: "/configurator/shapes/custom.png" },
+  { value: "CIRCLE", label: "Circle", image: "/configurator/shapes/circle.png" },
+  { value: "OVAL", label: "Oval", image: "/configurator/shapes/oval.png" },
+  { value: "SQUARE", label: "Square", image: "/configurator/shapes/square.png" },
+  { value: "RECTANGLE", label: "Rectangle", image: "/configurator/shapes/rectangle.png" },
 ];
 
-const FINISHES: { value: Finish; label: string }[] = [
-  { value: "MATTE", label: "Matte" },
-  { value: "GLOSS", label: "Gloss" },
+const FINISHES: { value: Finish; label: string; icon: string }[] = [
+  { value: "MATTE", label: "Matte", icon: "/icons/matte.svg" },
+  { value: "GLOSS", label: "Gloss", icon: "/icons/gloss.svg" },
 ];
 
 function formatCm(cm: number): string {
   return `${cm.toFixed(1)} cm`;
 }
 
+/** "5.1" not "5.10" — drops a trailing .0 so whole sizes read cleanly. */
+function formatDimension(cm: number): string {
+  return cm.toFixed(1).replace(/\.0$/, "");
+}
+
 // Canonical product sizes are defined in inches (2"/3"/4"/5" printer presets)
-// and converted to cm here — the customer never sees inches.
-const SIZE_PRESETS: { key: string; label: string; cm: number }[] = [
-  { key: "small", label: `Small (${formatCm(inchesToCm(2))})`, cm: inchesToCm(2) },
-  { key: "medium", label: `Medium (${formatCm(inchesToCm(3))})`, cm: inchesToCm(3) },
-  { key: "large", label: `Large (${formatCm(inchesToCm(4))})`, cm: inchesToCm(4) },
-  { key: "xlarge", label: `X-Large (${formatCm(inchesToCm(5))})`, cm: inchesToCm(5) },
+// and converted to cm here — the customer never sees inches. `previewPx` is
+// the size of the little square drawn on the tile, from the Figma.
+const SIZE_PRESETS: { key: string; label: string; cm: number; previewPx: number }[] = [
+  { key: "small", label: "Small", cm: inchesToCm(2), previewPx: 24 },
+  { key: "medium", label: "Medium", cm: inchesToCm(3), previewPx: 32 },
+  { key: "large", label: "Large", cm: inchesToCm(4), previewPx: 42 },
+  { key: "xlarge", label: "X-Large", cm: inchesToCm(5), previewPx: 52 },
 ];
 
-const QUANTITY_PRESETS = [100, 200, 300, 500, 1000, 3000];
+const QUANTITY_PRESETS = [50, 100, 200, 300, 500, 1000];
 
 /**
  * XMLHttpRequest rather than fetch so we get real upload-progress events —
@@ -96,13 +97,11 @@ function uploadWithProgress(
   });
 }
 
-const STEPS: readonly WaypointStep[] = [
-  { key: "shapeCut", label: "Shape & Cut" },
-  { key: "material", label: "Material" },
-  { key: "size", label: "Size" },
-  { key: "quantity", label: "Quantity" },
-  { key: "upload", label: "Upload" },
-];
+/** "Vinyl" → "Vinyl Stickers"; the sheet types already say what they are. */
+function pageTitle(stickerType: StickerType): string {
+  const label = STICKER_TYPE_LABELS[stickerType];
+  return label.endsWith("Sheets") ? label : `${label} Stickers`;
+}
 
 export function TypeConfigurator({
   stickerType,
@@ -173,8 +172,6 @@ export function TypeConfigurator({
     quantityTouched,
     !!artworkUrl,
   ];
-  const activeIndex = completed.findIndex((c) => !c);
-  const currentStep = activeIndex === -1 ? STEPS.length - 1 : activeIndex;
   const allComplete = completed.every(Boolean);
 
   const [isAddingToCart, startAddToCart] = useTransition();
@@ -226,361 +223,455 @@ export function TypeConfigurator({
     }
   }
 
+  const inputClass =
+    "rounded-lg border border-ink/[0.09] bg-white px-3 py-2 text-sm font-black text-ink outline-none focus:border-blaze";
+
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-10">
-      <Link
-        href="/"
-        className="group inline-flex items-center gap-1.5 font-mono text-sm uppercase tracking-wide text-coral-signal"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          className="h-4 w-4 origin-center transition-transform duration-150 group-hover:scale-125"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M14 6l-6 6 6 6" />
-        </svg>
-        <span className="origin-left transition-transform duration-150 group-hover:scale-110">
-          {STICKER_TYPE_LABELS[stickerType]}
-        </span>
-      </Link>
-      <h1 className="mt-2 font-display text-4xl font-bold text-ink-navy">
-        Build your stickers
-      </h1>
+    <div className="mx-auto w-full max-w-[1600px] px-10 pb-8 pt-4">
+      <div className="min-h-[140px] rounded-[20px] bg-linear-[173.6deg] from-zap via-blaze via-55% to-grape px-7 py-6">
+        <div className="max-w-[512px]">
+          <Link
+            href="/"
+            className="text-xs font-black uppercase tracking-[1.2px] text-white/60 transition-colors hover:text-white"
+          >
+            ← All Products
+          </Link>
+          <h1 className="pt-1.5 text-[30px] font-black leading-tight text-white">
+            {pageTitle(stickerType)}
+          </h1>
+          <p className="pt-1 text-sm leading-[1.625] text-white/75">
+            {STICKER_TYPE_DESCRIPTIONS[stickerType]}
+          </p>
+        </div>
+      </div>
 
-      <WaypointLine steps={STEPS} completed={completed} activeIndex={currentStep} />
+      <div className="mt-4 flex flex-col gap-3">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.5fr_1fr_1.2fr_1.4fr]">
+          <StepCard step={1} title="Shape & Cut">
+            <div className="flex flex-col gap-3 p-4">
+              <div className="flex gap-2 rounded-xl border border-ink/[0.09] bg-mist p-1">
+                {CUT_TYPES.map((c) => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onClick={() => setCutType(c.value)}
+                    aria-pressed={cutType === c.value}
+                    className={[
+                      "flex flex-1 flex-col items-center rounded-lg py-2 transition-colors",
+                      cutType === c.value
+                        ? "bg-white text-ink shadow-[0_1px_2px_rgba(32,31,32,0.06),0_6px_12px_rgba(32,31,32,0.07)]"
+                        : "text-quiet hover:text-ink",
+                    ].join(" ")}
+                  >
+                    <span className="text-xs font-black">{c.label}</span>
+                    <span className="pt-0.5 text-[10px] text-quiet">{c.hint}</span>
+                  </button>
+                ))}
+              </div>
 
-      <PriceReadout
-        totalPrice={pricing?.totalPrice ?? null}
-        pricePerUnit={pricing?.pricePerUnit ?? null}
-        quantity={quantity}
-        savingsPercent={pricing?.discountPercent ?? 0}
-        status={hasSize ? "ready" : "empty"}
-      />
-
-      <div className="mt-10 flex flex-col gap-6">
-        <StepCard title="Shape & Cut" done={completed[0]}>
-          <p className="mb-2 text-sm font-medium text-ink-navy/70">Cut type</p>
-          <div className="flex flex-wrap gap-3">
-            {CUT_TYPES.map((c) => (
-              <ChoiceChip
-                key={c.value}
-                label={c.label}
-                hint={c.hint}
-                selected={cutType === c.value}
-                onClick={() => setCutType(c.value)}
-              >
-                <CutIcon cut={c.value} className="h-full w-full" />
-              </ChoiceChip>
-            ))}
-          </div>
-
-          <p className="mt-6 mb-2 text-sm font-medium text-ink-navy/70">Shape</p>
-          <div className="flex flex-wrap gap-3">
-            {SHAPES.map((s) => (
-              <ChoiceChip
-                key={s.value}
-                label={s.label}
-                selected={shape === s.value}
-                onClick={() => setShape(s.value)}
-              >
-                <ShapeIcon shape={s.value} className="h-full w-full" />
-              </ChoiceChip>
-            ))}
-          </div>
-        </StepCard>
-
-        <StepCard title="Material" done={completed[1]}>
-          <div className="flex flex-wrap gap-3">
-            {FINISHES.map((f) => (
-              <ChoiceChip
-                key={f.value}
-                label={f.label}
-                selected={finish === f.value}
-                onClick={() => setFinish(f.value)}
-              >
-                <FinishIcon finish={f.value} className="h-full w-full" />
-              </ChoiceChip>
-            ))}
-          </div>
-
-          <div className="mt-5 flex flex-col gap-3">
-            <label className="flex items-center gap-3 text-sm text-ink-navy">
-              <input
-                type="checkbox"
-                checked={whiteInk}
-                onChange={(e) => setWhiteInk(e.target.checked)}
-                className="h-4 w-4 accent-coral-signal"
-              />
-              White ink
-              {isHolographic && (
-                <span className="text-xs text-ink-navy/45">(no effect on holographic)</span>
-              )}
-            </label>
-            <label className="flex items-center gap-3 text-sm text-ink-navy">
-              <input
-                type="checkbox"
-                checked={lamination}
-                onChange={(e) => setLamination(e.target.checked)}
-                className="h-4 w-4 accent-coral-signal"
-              />
-              Lamination
-            </label>
-          </div>
-        </StepCard>
-
-        <StepCard
-          title="Size"
-          done={completed[2]}
-          description={
-            sizeChoice === "custom"
-              ? `Both dimensions must be between ${formatCm(MIN_SIZE_CM)} and ${formatCm(MAX_SIZE_CM)}.`
-              : `Preset sizes are treated as a square — e.g. Medium is ${formatCm(inchesToCm(3))} x ${formatCm(inchesToCm(3))}.`
-          }
-        >
-          <div className="flex flex-wrap gap-3">
-            {SIZE_PRESETS.map((p) => (
-              <ChoiceChip
-                key={p.key}
-                label={p.label}
-                selected={sizeChoice === p.key}
-                onClick={() => setSizeChoice(p.key)}
-              >
-                <SizeIcon cm={p.cm} className="h-full w-full" />
-              </ChoiceChip>
-            ))}
-            <ChoiceChip
-              label="Custom size"
-              selected={sizeChoice === "custom"}
-              onClick={() => setSizeChoice("custom")}
-            >
-              <CustomSizeIcon className="h-full w-full" />
-            </ChoiceChip>
-          </div>
-
-          {sizeChoice === "custom" && (
-            <div className="mt-4 flex gap-4">
-              <label className="flex flex-col gap-1 text-sm text-ink-navy/70">
-                Height (cm)
-                <input
-                  type="number"
-                  min={MIN_SIZE_CM}
-                  max={MAX_SIZE_CM}
-                  step={0.1}
-                  value={customHeightInput}
-                  onChange={(e) => setCustomHeightInput(e.target.value)}
-                  onBlur={() => {
-                    const n = parseFloat(customHeightInput);
-                    if (!Number.isNaN(n)) setCustomHeightInput(String(clampSizeCm(n)));
-                  }}
-                  className="w-28 rounded-lg border border-ink-navy/15 px-3 py-2 font-mono text-sm outline-none focus:border-coral-signal"
-                />
-              </label>
-              <label className="flex flex-col gap-1 text-sm text-ink-navy/70">
-                Width (cm)
-                <input
-                  type="number"
-                  min={MIN_SIZE_CM}
-                  max={MAX_SIZE_CM}
-                  step={0.1}
-                  value={customWidthInput}
-                  onChange={(e) => setCustomWidthInput(e.target.value)}
-                  onBlur={() => {
-                    const n = parseFloat(customWidthInput);
-                    if (!Number.isNaN(n)) setCustomWidthInput(String(clampSizeCm(n)));
-                  }}
-                  className="w-28 rounded-lg border border-ink-navy/15 px-3 py-2 font-mono text-sm outline-none focus:border-coral-signal"
-                />
-              </label>
-            </div>
-          )}
-        </StepCard>
-
-        <StepCard
-          title="Quantity"
-          done={completed[3]}
-          description={!hasSize ? "Pick a size first to see pricing per quantity." : undefined}
-        >
-          <div className="flex flex-wrap gap-3">
-            {QUANTITY_PRESETS.map((q) => {
-              const preview = hasSize
-                ? calculateStickerPricing({
-                    config: pricingConfig,
-                    isHolographic,
-                    whiteInk,
-                    lamination,
-                    widthCm,
-                    heightCm,
-                    quantity: q,
-                  })
-                : null;
-              return (
-                <button
-                  key={q}
-                  type="button"
-                  onClick={() => selectQuantity(q)}
-                  disabled={!hasSize}
-                  className={[
-                    "rounded-xl border-2 px-4 py-2 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-40",
-                    quantityChoice === q
-                      ? "border-coral-signal bg-coral-signal/5"
-                      : "border-ink-navy/10 hover:border-ink-navy/30",
-                  ].join(" ")}
-                >
-                  <span className="block font-mono text-sm font-medium text-ink-navy">
-                    {q.toLocaleString("en-ZA")}
-                  </span>
-                  {preview && (
-                    <>
-                      <span className="block font-mono text-xs text-ink-navy/60">
-                        {formatCurrency(preview.totalPrice)}
+              <div className="grid grid-cols-2 gap-2">
+                {SHAPES.map((s) =>
+                  s.value === "CUSTOM" ? (
+                    <OptionTile
+                      key={s.value}
+                      selected={shape === s.value}
+                      onClick={() => setShape(s.value)}
+                      tone="blaze"
+                      className="col-span-2 py-5"
+                    >
+                      <span className="flex items-center gap-3">
+                        <Image src={s.image} alt="" width={64} height={64} className="size-16" />
+                        <span className="text-sm font-black">{s.label}</span>
                       </span>
-                      {preview.discountPercent > 0 && (
-                        <span className="block text-xs font-semibold text-trail-teal">
-                          Save {preview.discountPercent}%
+                    </OptionTile>
+                  ) : (
+                    <OptionTile
+                      key={s.value}
+                      selected={shape === s.value}
+                      onClick={() => setShape(s.value)}
+                      tone="blaze"
+                      className="gap-2 py-5"
+                    >
+                      <Image src={s.image} alt="" width={64} height={64} className="size-16" />
+                      <span className="text-xs font-black">{s.label}</span>
+                    </OptionTile>
+                  ),
+                )}
+              </div>
+            </div>
+          </StepCard>
+
+          <StepCard step={2} title="Material">
+            <div className="p-4">
+              <div className="grid grid-cols-2 gap-2">
+                {FINISHES.map((f) => {
+                  const selected = finish === f.value;
+                  return (
+                    <OptionTile
+                      key={f.value}
+                      selected={selected}
+                      onClick={() => setFinish(f.value)}
+                      tone="grape"
+                      className="gap-3 py-7"
+                    >
+                      <Image
+                        src={f.icon}
+                        alt=""
+                        width={32}
+                        height={40}
+                        // The gloss icon is drawn white for the selected tile;
+                        // invert it so it stays visible on the idle grey one.
+                        className={["h-10 w-8", f.value === "GLOSS" && !selected ? "invert" : ""].join(" ")}
+                      />
+                      <span className="text-sm font-black">{f.label}</span>
+                    </OptionTile>
+                  );
+                })}
+              </div>
+
+              <div className="mt-4 flex flex-col gap-3 border-t border-ink/[0.09] pt-4">
+                <label className="flex items-center gap-3 text-sm font-black text-ink">
+                  <input
+                    type="checkbox"
+                    checked={whiteInk}
+                    onChange={(e) => setWhiteInk(e.target.checked)}
+                    className="size-4 accent-grape"
+                  />
+                  <span>
+                    White ink
+                    {isHolographic && (
+                      <span className="block text-xs font-normal text-quiet">
+                        (no effect on holographic)
+                      </span>
+                    )}
+                  </span>
+                </label>
+                <label className="flex items-center gap-3 text-sm font-black text-ink">
+                  <input
+                    type="checkbox"
+                    checked={lamination}
+                    onChange={(e) => setLamination(e.target.checked)}
+                    className="size-4 accent-grape"
+                  />
+                  Lamination
+                </label>
+              </div>
+            </div>
+          </StepCard>
+
+          <StepCard step={3} title="Size">
+            <div className="p-4">
+              <div className="grid grid-cols-2 gap-2">
+                {SIZE_PRESETS.map((p) => {
+                  const selected = sizeChoice === p.key;
+                  return (
+                    <OptionTile
+                      key={p.key}
+                      selected={selected}
+                      onClick={() => setSizeChoice(p.key)}
+                      tone="zap"
+                      className="min-h-[110px] gap-2 px-2 py-4"
+                    >
+                      <span className="flex h-14 items-center justify-center">
+                        <span
+                          className={[
+                            "rounded-md border",
+                            selected
+                              ? "border-ink/25 bg-ink/15"
+                              : "border-ink/[0.09] bg-mist",
+                          ].join(" ")}
+                          style={{ width: p.previewPx, height: p.previewPx }}
+                        />
+                      </span>
+                      <span className="text-center">
+                        <span className="block text-xs font-black">{p.label}</span>
+                        <span className="block text-[10px] font-normal">
+                          {formatDimension(p.cm)} × {formatDimension(p.cm)} cm
                         </span>
-                      )}
-                    </>
-                  )}
-                </button>
-              );
-            })}
-            <button
-              type="button"
-              onClick={() => {
-                setQuantityChoice("custom");
-                setQuantityTouched(true);
+                      </span>
+                    </OptionTile>
+                  );
+                })}
+                <OptionTile
+                  selected={sizeChoice === "custom"}
+                  onClick={() => setSizeChoice("custom")}
+                  tone="zap"
+                  className="col-span-2 min-h-16 px-2 py-4"
+                >
+                  <span className="flex items-center gap-2 text-sm font-black">
+                    <span aria-hidden className="text-lg font-normal">
+                      ✎
+                    </span>
+                    Custom size
+                  </span>
+                </OptionTile>
+              </div>
+
+              {sizeChoice === "custom" && (
+                <div className="mt-4 flex gap-4">
+                  <label className="flex flex-col gap-1 text-xs font-black text-quiet">
+                    Height (cm)
+                    <input
+                      type="number"
+                      min={MIN_SIZE_CM}
+                      max={MAX_SIZE_CM}
+                      step={0.1}
+                      value={customHeightInput}
+                      onChange={(e) => setCustomHeightInput(e.target.value)}
+                      onBlur={() => {
+                        const n = parseFloat(customHeightInput);
+                        if (!Number.isNaN(n)) setCustomHeightInput(String(clampSizeCm(n)));
+                      }}
+                      className={`w-full ${inputClass}`}
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1 text-xs font-black text-quiet">
+                    Width (cm)
+                    <input
+                      type="number"
+                      min={MIN_SIZE_CM}
+                      max={MAX_SIZE_CM}
+                      step={0.1}
+                      value={customWidthInput}
+                      onChange={(e) => setCustomWidthInput(e.target.value)}
+                      onBlur={() => {
+                        const n = parseFloat(customWidthInput);
+                        if (!Number.isNaN(n)) setCustomWidthInput(String(clampSizeCm(n)));
+                      }}
+                      className={`w-full ${inputClass}`}
+                    />
+                  </label>
+                </div>
+              )}
+
+              <p className="mt-3 text-xs text-quiet">
+                {sizeChoice === "custom"
+                  ? `Both dimensions must be between ${formatCm(MIN_SIZE_CM)} and ${formatCm(MAX_SIZE_CM)}.`
+                  : "Preset sizes are treated as a square."}
+              </p>
+            </div>
+          </StepCard>
+
+          <StepCard step={4} title="Quantity">
+            <div className="flex flex-col gap-0.5 px-3 pt-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setQuantityChoice("custom");
+                  setQuantityTouched(true);
+                }}
+                aria-pressed={quantityChoice === "custom"}
+                className={[
+                  "flex items-center justify-between rounded-xl border p-3 text-sm font-black transition-colors",
+                  quantityChoice === "custom"
+                    ? "border-blaze bg-blaze text-white"
+                    : "border-transparent text-quiet hover:bg-mist",
+                ].join(" ")}
+              >
+                Custom
+              </button>
+
+              {quantityChoice === "custom" && (
+                <input
+                  type="number"
+                  min={MIN_QUANTITY}
+                  max={MAX_QUANTITY}
+                  value={customQuantityInput}
+                  onChange={(e) => {
+                    setCustomQuantityInput(e.target.value);
+                    setQuantityTouched(true);
+                  }}
+                  onBlur={() => {
+                    const n = parseInt(customQuantityInput, 10);
+                    setCustomQuantityInput(String(clampQuantity(Number.isNaN(n) ? MIN_QUANTITY : n)));
+                  }}
+                  placeholder={`Enter custom amount. Minimum ${MIN_QUANTITY}`}
+                  aria-label="Custom quantity"
+                  className={`my-1 w-full ${inputClass}`}
+                />
+              )}
+
+              {QUANTITY_PRESETS.map((q) => {
+                const preview = hasSize
+                  ? calculateStickerPricing({
+                      config: pricingConfig,
+                      isHolographic,
+                      whiteInk,
+                      lamination,
+                      widthCm,
+                      heightCm,
+                      quantity: q,
+                    })
+                  : null;
+                const selected = quantityChoice === q;
+                return (
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => selectQuantity(q)}
+                    disabled={!hasSize}
+                    aria-pressed={selected}
+                    className={[
+                      "flex items-center justify-between rounded-xl border p-3 text-sm font-black transition-colors disabled:cursor-not-allowed disabled:opacity-40",
+                      selected
+                        ? "border-blaze bg-blaze text-white"
+                        : "border-transparent text-quiet enabled:hover:bg-mist",
+                    ].join(" ")}
+                  >
+                    <span>{q.toLocaleString("en-ZA")}</span>
+                    {preview && (
+                      <span className="flex items-center gap-1.5">
+                        <span>{formatCurrency(preview.totalPrice)}</span>
+                        {preview.discountPercent > 0 && (
+                          <span
+                            className={[
+                              "rounded-md px-1.5 py-0.5 text-[10px]",
+                              selected ? "bg-white/25 text-white" : "bg-zap/20 text-zap-ink",
+                            ].join(" ")}
+                          >
+                            Save {preview.discountPercent}%
+                          </span>
+                        )}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+
+              {!hasSize && (
+                <p className="px-1 pt-1 pb-3 text-xs text-quiet">
+                  Pick a size first to see pricing per quantity.
+                </p>
+              )}
+            </div>
+
+            <div className="mt-auto pt-3">
+              <PriceReadout
+                totalPrice={pricing?.totalPrice ?? null}
+                pricePerUnit={pricing?.pricePerUnit ?? null}
+                savingsPercent={quantityChoice === "custom" ? (pricing?.discountPercent ?? 0) : 0}
+                status={hasSize ? "ready" : "empty"}
+              />
+            </div>
+          </StepCard>
+        </div>
+
+        <StepCard step={5} title="Upload">
+          <div className="p-5">
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (file) handleFile(file);
+              }}
+            />
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => uploadStatus !== "uploading" && fileInputRef.current?.click()}
+              onKeyDown={(e) => {
+                if ((e.key === "Enter" || e.key === " ") && uploadStatus !== "uploading") {
+                  e.preventDefault();
+                  fileInputRef.current?.click();
+                }
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDraggingOver(true);
+              }}
+              onDragLeave={() => setIsDraggingOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDraggingOver(false);
+                const file = e.dataTransfer.files?.[0];
+                if (file) handleFile(file);
               }}
               className={[
-                "rounded-xl border-2 px-4 py-2 text-left transition-colors",
-                quantityChoice === "custom"
-                  ? "border-coral-signal bg-coral-signal/5"
-                  : "border-ink-navy/10 hover:border-ink-navy/30",
+                "flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed px-6 py-12 text-center transition-colors",
+                isDraggingOver ? "border-blaze bg-blaze/5" : "border-ink/[0.09] bg-mist",
               ].join(" ")}
             >
-              <span className="block font-mono text-sm font-medium text-ink-navy">Custom</span>
-            </button>
-          </div>
-
-          {quantityChoice === "custom" && (
-            <input
-              type="number"
-              min={MIN_QUANTITY}
-              max={MAX_QUANTITY}
-              value={customQuantityInput}
-              onChange={(e) => {
-                setCustomQuantityInput(e.target.value);
-                setQuantityTouched(true);
-              }}
-              onBlur={() => {
-                const n = parseInt(customQuantityInput, 10);
-                setCustomQuantityInput(String(clampQuantity(Number.isNaN(n) ? MIN_QUANTITY : n)));
-              }}
-              placeholder="Enter custom amount. Minimum 50"
-              className="mt-4 w-64 rounded-lg border border-ink-navy/15 px-3 py-2 font-mono text-sm outline-none focus:border-coral-signal"
-            />
-          )}
-        </StepCard>
-
-        <StepCard title="Upload" done={completed[4]}>
-          <input
-            ref={fileInputRef}
-            type="file"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              e.target.value = "";
-              if (file) handleFile(file);
-            }}
-          />
-          <div
-            onClick={() => uploadStatus !== "uploading" && fileInputRef.current?.click()}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setIsDraggingOver(true);
-            }}
-            onDragLeave={() => setIsDraggingOver(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setIsDraggingOver(false);
-              const file = e.dataTransfer.files?.[0];
-              if (file) handleFile(file);
-            }}
-            className={[
-              "flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed px-6 py-10 text-center transition-colors",
-              isDraggingOver ? "border-coral-signal bg-coral-signal/5" : "border-ink-navy/20",
-            ].join(" ")}
-          >
-            {uploadStatus === "uploading" ? (
-              <>
-                <UploadIcon className="h-10 w-10 animate-pulse text-ink-navy/40" />
-                <p className="text-sm text-ink-navy/60">
-                  {uploadProgress >= 100 ? "Finishing up…" : `Uploading… ${uploadProgress}%`}
-                </p>
-                <div className="h-2 w-full max-w-xs overflow-hidden rounded-full bg-ink-navy/10">
-                  <div
-                    className={[
-                      "h-full rounded-full bg-coral-signal transition-[width] duration-150",
-                      uploadProgress >= 100 ? "animate-pulse" : "",
-                    ].join(" ")}
-                    style={{ width: `${uploadProgress}%` }}
-                  />
-                </div>
-              </>
-            ) : uploadStatus === "tooLarge" ? (
-              <>
-                <span className="text-3xl" role="img" aria-label="Warning">
-                  ⚠️
-                </span>
-                <p className="font-medium text-coral-signal">File Too Large</p>
-                <p className="max-w-sm text-sm text-ink-navy/60">
-                  Please compress your image or use a smaller file (max 25MB)
-                </p>
-              </>
-            ) : artworkUrl ? (
-              <>
-                <svg
-                  viewBox="0 0 20 20"
-                  className="h-8 w-8 text-trail-teal"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M4 10.5l4 4 8-9" />
-                </svg>
-                <p className="max-w-sm text-sm text-ink-navy">
-                  <span className="font-medium">{artworkFilename}</span> uploaded
-                </p>
-                <p className="text-xs text-ink-navy/50">Click or drop a file to replace it</p>
-              </>
-            ) : (
-              <>
-                <UploadIcon className="h-10 w-10 text-ink-navy/40" />
-                <p className="max-w-sm text-sm text-ink-navy/60">
-                  Drag or click to upload your file. All formats support, we recommend image
-                  files without cutlines. 25MB Max &bull; 1 Design Max
-                </p>
-              </>
+              {uploadStatus === "uploading" ? (
+                <>
+                  <span aria-hidden className="animate-pulse text-2xl">
+                    ⬆️
+                  </span>
+                  <p className="text-sm font-black text-ink">
+                    {uploadProgress >= 100 ? "Finishing up…" : `Uploading… ${uploadProgress}%`}
+                  </p>
+                  <div className="h-2 w-full max-w-xs overflow-hidden rounded-full bg-ink/10">
+                    <div
+                      className={[
+                        "h-full rounded-full bg-blaze transition-[width] duration-150",
+                        uploadProgress >= 100 ? "animate-pulse" : "",
+                      ].join(" ")}
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                </>
+              ) : uploadStatus === "tooLarge" ? (
+                <>
+                  <span className="text-3xl" role="img" aria-label="Warning">
+                    ⚠️
+                  </span>
+                  <p className="font-black text-blaze">File Too Large</p>
+                  <p className="max-w-sm text-sm text-quiet">
+                    Please compress your image or use a smaller file (max 25MB)
+                  </p>
+                </>
+              ) : artworkUrl ? (
+                <>
+                  <svg
+                    viewBox="0 0 20 20"
+                    className="h-8 w-8 text-trail-teal"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <path d="M4 10.5l4 4 8-9" />
+                  </svg>
+                  <p className="max-w-sm text-sm text-ink">
+                    <span className="font-black">{artworkFilename}</span> uploaded
+                  </p>
+                  <p className="text-xs text-quiet">Click or drop a file to replace it</p>
+                </>
+              ) : (
+                <>
+                  <span aria-hidden className="text-2xl">
+                    ⬆️
+                  </span>
+                  <p className="text-base font-black text-ink">Drag or click to upload your file</p>
+                  <p className="text-sm text-quiet">
+                    All formats supported. 25MB max · 1 design max
+                  </p>
+                </>
+              )}
+            </div>
+            {uploadStatus === "error" && uploadError && (
+              <p className="mt-3 text-sm font-black text-blaze">{uploadError}</p>
             )}
           </div>
-          {uploadStatus === "error" && uploadError && (
-            <p className="mt-3 text-sm text-coral-signal">{uploadError}</p>
-          )}
         </StepCard>
 
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          disabled={!allComplete || isAddingToCart}
-          className="rounded-xl bg-coral-signal px-6 py-3.5 text-center font-medium text-paper transition-colors hover:bg-coral-signal/90 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {isAddingToCart ? "Adding to cart…" : "Add to cart"}
-        </button>
+        <div className="flex items-center justify-end gap-4">
+          {!allComplete && (
+            <p className="text-sm text-white/60">Finish all five steps to add to cart</p>
+          )}
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={!allComplete || isAddingToCart}
+            className="rounded-xl bg-blaze px-8 py-3.5 text-base font-black text-white transition-colors hover:bg-blaze/90 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {isAddingToCart ? "Adding to cart…" : "Add to cart"}
+          </button>
+        </div>
       </div>
     </div>
   );

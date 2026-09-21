@@ -1,0 +1,12 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Cart Icon" clip-path="url(#clip0_0_9)">
+<path id="Cart Icon Path" d="M7.5 18.3333C7.96024 18.3333 8.33333 17.9602 8.33333 17.5C8.33333 17.0398 7.96024 16.6667 7.5 16.6667C7.03976 16.6667 6.66667 17.0398 6.66667 17.5C6.66667 17.9602 7.03976 18.3333 7.5 18.3333Z" stroke="white" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Cart Icon Path 2" d="M16.6667 18.3333C17.1269 18.3333 17.5 17.9602 17.5 17.5C17.5 17.0398 17.1269 16.6667 16.6667 16.6667C16.2064 16.6667 15.8333 17.0398 15.8333 17.5C15.8333 17.9602 16.2064 18.3333 16.6667 18.3333Z" stroke="white" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Cart Icon Path 3" d="M0.833334 0.833334H4.16667L6.4 11.9917C6.47595 12.3739 6.68345 12.7174 6.98642 12.9625C7.28938 13.2077 7.66867 13.3389 8.05833 13.3333H16.1583C16.548 13.3389 16.9273 13.2077 17.2302 12.9625C17.5332 12.7174 17.7407 12.3739 17.8167 11.9917L19.1667 5H5" stroke="white" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<defs>
+<clipPath id="clip0_0_9">
+<rect width="20" height="20" fill="white"/>
+</clipPath>
+</defs>
+</svg>

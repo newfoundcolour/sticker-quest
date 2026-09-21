@@ -1,50 +1,68 @@
 import type { ReactNode } from "react";
 
+// Badge colours follow the Figma: orange, purple, lime, orange, purple.
+const BADGE_TONES = [
+  "bg-blaze text-white",
+  "bg-grape text-white",
+  "bg-zap text-ink",
+  "bg-blaze text-white",
+  "bg-grape text-white",
+];
+
 export function StepCard({
+  step,
   title,
-  description,
-  done,
+  className = "",
   children,
 }: {
+  step: number;
   title: string;
-  description?: string;
-  done: boolean;
+  className?: string;
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-ink-navy/10 bg-white/70 p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-display text-lg font-semibold text-ink-navy">{title}</h3>
-        {done && (
-          <span className="flex items-center gap-1 text-sm font-medium text-trail-teal">
-            <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 10.5l4 4 8-9" />
-            </svg>
-            Selected
-          </span>
-        )}
+    <section
+      className={[
+        "flex flex-col overflow-hidden rounded-[20px] bg-white shadow-card",
+        className,
+      ].join(" ")}
+    >
+      <div className="flex items-center gap-2.5 border-b border-ink/[0.09] px-5 py-4">
+        <span
+          className={[
+            "flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-black",
+            BADGE_TONES[(step - 1) % BADGE_TONES.length],
+          ].join(" ")}
+        >
+          {step}
+        </span>
+        <h2 className="text-base font-black text-ink">{title}</h2>
       </div>
-      {description && <p className="mb-4 text-sm text-ink-navy/60">{description}</p>}
       {children}
     </section>
   );
 }
 
-export function ChoiceChip({
+const SELECTED_TONES = {
+  blaze: "border-blaze bg-blaze text-white",
+  grape: "border-grape bg-grape text-white",
+  zap: "border-zap bg-zap text-ink",
+} as const;
+
+/** A selectable tile — grey when idle, filled with the step's accent when chosen. */
+export function OptionTile({
   selected,
   onClick,
-  label,
-  hint,
-  sublabel,
+  tone,
+  disabled,
+  className = "",
   children,
 }: {
   selected: boolean;
   onClick: () => void;
-  label: string;
-  /** Neutral descriptive subtext, e.g. "Through the backing". */
-  hint?: string;
-  /** Positive-styled subtext, e.g. a savings badge. */
-  sublabel?: string;
+  tone: keyof typeof SELECTED_TONES;
+  disabled?: boolean;
+  className?: string;
   children: ReactNode;
 }) {
   return (
@@ -52,17 +70,16 @@ export function ChoiceChip({
       type="button"
       onClick={onClick}
       aria-pressed={selected}
+      disabled={disabled}
       className={[
-        "flex min-w-[92px] flex-col items-center gap-2 rounded-xl border-2 p-3 text-center transition-colors",
+        "flex flex-col items-center justify-center rounded-xl border transition-colors disabled:cursor-not-allowed disabled:opacity-40",
         selected
-          ? "border-coral-signal bg-coral-signal/5"
-          : "border-ink-navy/10 hover:border-ink-navy/30",
+          ? SELECTED_TONES[tone]
+          : "border-transparent bg-mist text-quiet hover:border-ink/20",
+        className,
       ].join(" ")}
     >
-      <span className="h-12 w-12 text-ink-navy">{children}</span>
-      <span className="text-xs font-medium text-ink-navy/80">{label}</span>
-      {hint && <span className="text-[11px] text-ink-navy/45">{hint}</span>}
-      {sublabel && <span className="text-[11px] text-trail-teal font-semibold">{sublabel}</span>}
+      {children}
     </button>
   );
 }

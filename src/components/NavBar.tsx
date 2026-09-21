@@ -1,11 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
-import { Mascot } from "@/components/configurator/Mascot";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
-import { CartIcon } from "@/components/icons/CartIcon";
 import {
   STICKER_TYPE_DESCRIPTIONS,
   STICKER_TYPE_GROUPS,
@@ -37,26 +36,23 @@ export function NavBar({ cartCount }: { cartCount: number }) {
   }
 
   return (
-    <header className="flex justify-center border-b border-ink-navy/10 bg-paper px-4 py-3">
-      <div className="flex w-full max-w-3xl items-center gap-4">
-        <Link href="/" className="group flex shrink-0 items-center gap-2">
-          <Mascot className="h-9 w-9 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-12" />
-          <span className="font-display text-lg font-bold text-ink-navy">Sticker Quest</span>
-        </Link>
+    <header className="flex items-center gap-4 bg-night px-8 py-3">
+      <Link href="/" className="shrink-0" aria-label="Sticker Quest home">
+        <Image
+          src="/brand/logo-sticker-quest.png"
+          alt=""
+          width={94}
+          height={56}
+          priority
+          className="h-14 w-auto transition-transform duration-200 hover:scale-105"
+        />
+      </Link>
 
-        <div className="relative flex-1">
-          <svg
-            viewBox="0 0 24 24"
-            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-navy/40"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="11" cy="11" r="7" />
-            <path d="M21 21l-4.3-4.3" />
-          </svg>
+      <div className="relative flex-1">
+        <div className="flex items-center gap-3 rounded-full border border-white/[0.08] bg-white/[0.12] px-[22px] py-[11px]">
+          <span aria-hidden className="text-sm font-extrabold text-zap">
+            ✦
+          </span>
           <input
             ref={inputRef}
             type="text"
@@ -71,66 +67,69 @@ export function NavBar({ cartCount }: { cartCount: number }) {
               if (e.key === "Enter" && groups[0]?.types[0]) goToType(groups[0].types[0]);
               if (e.key === "Escape") setOpen(false);
             }}
-            placeholder="Choose sticker type..."
-            className="w-full rounded-full border border-ink-navy/15 bg-white/70 py-2 pl-10 pr-4 text-sm text-ink-navy outline-none focus:border-coral-signal"
+            placeholder="Select sticker type..."
+            aria-label="Select sticker type"
+            className="min-w-0 flex-1 bg-transparent text-sm font-extrabold text-white outline-none placeholder:text-white"
           />
-
-          {open && (
-            <div className="absolute left-0 right-0 top-full z-10 mt-2 overflow-hidden rounded-2xl border border-ink-navy/10 bg-white shadow-lg">
-              {groups.length === 0 ? (
-                <p className="px-4 py-3 text-sm text-ink-navy/50">No matching sticker types.</p>
-              ) : (
-                <div className="grid grid-cols-2 gap-1 p-2">
-                  {groups.map((group) => (
-                    <div key={group.title}>
-                      <p className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-ink-navy/45">
-                        {group.title}
-                      </p>
-                      <div className="flex flex-col">
-                        {group.types.map((type) => (
-                          <button
-                            key={type}
-                            type="button"
-                            onMouseDown={(e) => e.preventDefault()}
-                            onClick={() => goToType(type)}
-                            className="flex items-start gap-2 rounded-lg p-2 text-left transition-colors hover:bg-coral-signal/5"
-                          >
-                            <MaterialIcon
-                              material={type}
-                              className="h-8 w-8 shrink-0 text-ink-navy"
-                            />
-                            <span>
-                              <span className="block text-sm font-medium text-ink-navy">
-                                {STICKER_TYPE_LABELS[type]}
-                              </span>
-                              <span className="line-clamp-2 block text-xs text-ink-navy/55">
-                                {STICKER_TYPE_DESCRIPTIONS[type]}
-                              </span>
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          <Image
+            src="/icons/dropdown.svg"
+            alt=""
+            width={14}
+            height={14}
+            className={["transition-transform duration-150", open ? "rotate-180" : ""].join(" ")}
+          />
         </div>
 
-        <Link
-          href="/cart"
-          className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink-navy transition-colors hover:bg-ink-navy/5"
-          aria-label={`Cart${cartCount > 0 ? `, ${cartCount} item${cartCount === 1 ? "" : "s"}` : ""}`}
-        >
-          <CartIcon className="h-5 w-5" />
-          {cartCount > 0 && (
-            <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-coral-signal px-1 text-[10px] font-semibold text-paper">
-              {cartCount}
-            </span>
-          )}
-        </Link>
+        {open && (
+          <div className="absolute left-0 right-0 top-full z-10 mt-2 overflow-hidden rounded-[20px] bg-white shadow-card">
+            {groups.length === 0 ? (
+              <p className="px-4 py-3 text-sm text-quiet">No matching sticker types.</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-1 p-2">
+                {groups.map((group) => (
+                  <div key={group.title}>
+                    <p className="px-2 py-1 text-xs font-black uppercase tracking-wide text-quiet">
+                      {group.title}
+                    </p>
+                    <div className="flex flex-col">
+                      {group.types.map((type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => goToType(type)}
+                          className="flex items-start gap-2 rounded-xl p-2 text-left transition-colors hover:bg-mist"
+                        >
+                          <MaterialIcon material={type} className="h-8 w-8 shrink-0 text-ink" />
+                          <span>
+                            <span className="block text-sm font-black text-ink">
+                              {STICKER_TYPE_LABELS[type]}
+                            </span>
+                            <span className="line-clamp-2 block text-xs text-quiet">
+                              {STICKER_TYPE_DESCRIPTIONS[type]}
+                            </span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
+
+      <Link
+        href="/cart"
+        className="relative flex h-9 w-9 shrink-0 items-center justify-center"
+        aria-label={`Cart${cartCount > 0 ? `, ${cartCount} item${cartCount === 1 ? "" : "s"}` : ""}`}
+      >
+        <Image src="/icons/cart.svg" alt="" width={20} height={20} />
+        <span className="absolute -top-1 left-6 flex size-4 items-center justify-center rounded-full bg-blaze text-[9px] font-black text-white">
+          {cartCount}
+        </span>
+      </Link>
     </header>
   );
 }

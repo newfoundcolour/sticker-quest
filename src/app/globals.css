@@ -6,6 +6,16 @@
   --color-coral-signal: #ff5a3c;
   --color-waypoint-gold: #ffb627;
   --color-trail-teal: #2ec4b6;
+
+  /* Figma redesign palette — see "Configurator redesign" in DESIGN.md. */
+  --color-night: #16122a;
+  --color-blaze: #f05932;
+  --color-grape: #685ea8;
+  --color-zap: #d6de23;
+  --color-zap-ink: #7a7200;
+  --color-ink: #201f20;
+  --color-quiet: #7a7879;
+  --color-mist: #eceaf0;
 }
 
 @theme inline {
@@ -15,6 +25,17 @@
   --color-waypoint-gold: var(--color-waypoint-gold);
   --color-trail-teal: var(--color-trail-teal);
 
+  --color-night: var(--color-night);
+  --color-blaze: var(--color-blaze);
+  --color-grape: var(--color-grape);
+  --color-zap: var(--color-zap);
+  --color-zap-ink: var(--color-zap-ink);
+  --color-ink: var(--color-ink);
+  --color-quiet: var(--color-quiet);
+  --color-mist: var(--color-mist);
+
+  --shadow-card: 0 1px 4px rgba(32, 31, 32, 0.06), 0 6px 24px rgba(32, 31, 32, 0.07);
+
   /*
    * Clash Display and General Sans are Fontshare exclusives (not on Google
    * Fonts). Bricolage Grotesque stands in for Clash Display — same bold,
@@ -23,7 +44,7 @@
    * next/font/local.
    */
   --font-display: var(--font-bricolage-grotesque), "Clash Display", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "General Sans", var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-urbanist), "General Sans", var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", monospace;
 }
 

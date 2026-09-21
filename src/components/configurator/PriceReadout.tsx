@@ -3,38 +3,58 @@ import { formatCurrency } from "@/lib/pricingUtils";
 export function PriceReadout({
   totalPrice,
   pricePerUnit,
-  quantity,
   savingsPercent,
   status,
 }: {
   totalPrice: number | null;
   pricePerUnit: number | null;
-  quantity: number;
+  /** Only pass for quantities the tier list doesn't already badge (custom amounts). */
   savingsPercent: number;
   status: "empty" | "ready";
 }) {
+  const ready = status === "ready" && totalPrice !== null;
+
   return (
-    <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-ink-navy/10 bg-ink-navy px-6 py-5 text-paper">
-      <div>
-        <p className="text-sm text-paper/60">
-          {status === "empty"
-            ? "Pick your options to see live pricing"
-            : `Total for ${quantity.toLocaleString("en-ZA")} stickers`}
-        </p>
-        <p className="font-mono text-3xl font-semibold tabular-nums">
-          {status === "ready" && totalPrice !== null ? formatCurrency(totalPrice) : "—"}
-        </p>
-        {status === "ready" && pricePerUnit !== null && (
-          <p className="font-mono text-xs text-paper/50">
-            {formatCurrency(pricePerUnit)} / sticker
+    <div className="border-t border-ink/[0.09] p-4">
+      <div className="rounded-xl border border-ink/[0.09] bg-mist p-4">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-lg font-black text-ink">
+            Total: {ready ? formatCurrency(totalPrice) : "—"}
           </p>
-        )}
+          <div className="flex items-center gap-1.5">
+            {ready && savingsPercent > 0 && (
+              <span className="rounded-full bg-zap px-2 py-1 text-xs font-black text-ink">
+                Save {savingsPercent}%
+              </span>
+            )}
+            {ready && pricePerUnit !== null && (
+              <span className="rounded-full bg-grape px-2 py-1 text-xs font-black text-white">
+                {formatCurrency(pricePerUnit)}/ea.
+              </span>
+            )}
+          </div>
+        </div>
+        <p className="mt-2 text-xs text-quiet">
+          {ready
+            ? "🚀 Ships 3–5 working days after proof approval"
+            : "Pick a size to see live pricing"}
+        </p>
       </div>
-      {status === "ready" && savingsPercent > 0 && (
-        <span className="rounded-full bg-waypoint-gold px-4 py-1.5 text-sm font-semibold text-ink-navy">
-          Save {savingsPercent}%
-        </span>
-      )}
+
+      <ul className="mt-3 flex flex-col gap-1.5 text-xs text-quiet">
+        <li className="flex items-center gap-2">
+          <span aria-hidden className="text-sm text-ink">
+            📝
+          </span>
+          We send a proof for your approval before printing
+        </li>
+        <li className="flex items-center gap-2">
+          <span aria-hidden className="text-sm text-ink">
+            🔒
+          </span>
+          Secure checkout
+        </li>
+      </ul>
     </div>
   );
 }
