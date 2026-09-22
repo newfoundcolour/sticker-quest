@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { CutType, Finish, Shape, StickerType } from "@/generated/prisma/client";
 import type { PricingConfig } from "@/lib/pricing";
 import { addToCartAction } from "@/app/actions/cart";
+import { Container } from "@/components/Container";
 import {
   MIN_QUANTITY,
   MAX_QUANTITY,
@@ -236,7 +237,7 @@ export function TypeConfigurator({
   const [headlineTop, headlineBottom] = heroLines(stickerType);
 
   return (
-    <div className="w-full px-6 pb-8 pt-4 sm:px-10 md:px-14 lg:px-20 xl:px-24">
+    <Container className="pb-8 pt-4">
       <div className="flex items-center gap-6 overflow-hidden rounded-[20px] bg-linear-[167deg] from-zap via-blaze via-55% to-grape px-5 py-6 sm:px-8 md:px-11 md:py-9 lg:px-14 lg:py-12">
         <Image
           src="/mascot/knight-helmet.png"
@@ -722,6 +723,6 @@ export function TypeConfigurator({
           </button>
         </div>
       </div>
-    </div>
+    </Container>
   );
 }
