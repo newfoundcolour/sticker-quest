@@ -36,21 +36,21 @@ export function NavBar({ cartCount }: { cartCount: number }) {
   }
 
   return (
-    <header className="flex items-center gap-4 bg-night px-8 py-3">
+    <header className="flex items-center gap-3 bg-night px-6 py-3 sm:gap-5 sm:px-10 sm:py-3.5 md:px-14 lg:px-20 xl:px-24">
       <Link href="/" className="shrink-0" aria-label="Sticker Quest home">
         <Image
           src="/brand/logo-sticker-quest.png"
           alt=""
-          width={94}
-          height={56}
+          width={98}
+          height={58}
           priority
-          className="h-14 w-auto transition-transform duration-200 hover:scale-105"
+          className="h-9 w-auto transition-transform duration-200 hover:scale-105 sm:h-12 md:h-[58px]"
         />
       </Link>
 
-      <div className="relative flex-1">
-        <div className="flex items-center gap-3 rounded-full border border-white/[0.08] bg-white/[0.12] px-[22px] py-[11px]">
-          <span aria-hidden className="text-sm font-extrabold text-zap">
+      <div className="relative min-w-0 flex-1">
+        <div className="flex h-11 items-center gap-2 rounded-full border-2 border-white/[0.19] bg-white/[0.08] px-3.5 sm:h-[46px] sm:gap-3 sm:px-[22px]">
+          <span aria-hidden className="text-base font-black text-zap">
             ✦
           </span>
           <input
@@ -69,19 +69,20 @@ export function NavBar({ cartCount }: { cartCount: number }) {
             }}
             placeholder="Select sticker type..."
             aria-label="Select sticker type"
-            className="min-w-0 flex-1 bg-transparent text-sm font-extrabold text-white outline-none placeholder:text-white"
+            className="min-w-0 flex-1 bg-transparent text-base font-bold text-white outline-none placeholder:text-white"
           />
-          <Image
-            src="/icons/dropdown.svg"
-            alt=""
-            width={14}
-            height={14}
-            className={["transition-transform duration-150", open ? "rotate-180" : ""].join(" ")}
-          />
+          <span
+            aria-hidden
+            className={["text-sm text-white/50 transition-transform duration-150", open ? "rotate-180" : ""].join(
+              " ",
+            )}
+          >
+            ⌄
+          </span>
         </div>
 
         {open && (
-          <div className="absolute left-0 right-0 top-full z-10 mt-2 overflow-hidden rounded-[20px] bg-white shadow-card">
+          <div className="absolute left-0 right-0 top-full z-10 mt-2 overflow-hidden rounded-[20px] border-[1.5px] border-grape bg-sand shadow-card">
             {groups.length === 0 ? (
               <p className="px-4 py-3 text-sm text-quiet">No matching sticker types.</p>
             ) : (
@@ -98,11 +99,11 @@ export function NavBar({ cartCount }: { cartCount: number }) {
                           type="button"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => goToType(type)}
-                          className="flex items-start gap-2 rounded-xl p-2 text-left transition-colors hover:bg-mist"
+                          className="flex items-start gap-2 rounded-xl p-2 text-left transition-colors hover:bg-zap/20"
                         >
-                          <MaterialIcon material={type} className="h-8 w-8 shrink-0 text-ink" />
+                          <MaterialIcon material={type} className="h-8 w-8 shrink-0 text-night" />
                           <span>
-                            <span className="block text-sm font-black text-ink">
+                            <span className="block text-sm font-black text-night">
                               {STICKER_TYPE_LABELS[type]}
                             </span>
                             <span className="line-clamp-2 block text-xs text-quiet">
@@ -122,11 +123,11 @@ export function NavBar({ cartCount }: { cartCount: number }) {
 
       <Link
         href="/cart"
-        className="relative flex h-9 w-9 shrink-0 items-center justify-center"
+        className="relative flex size-11 shrink-0 flex-col items-center justify-center"
         aria-label={`Cart${cartCount > 0 ? `, ${cartCount} item${cartCount === 1 ? "" : "s"}` : ""}`}
       >
-        <Image src="/icons/cart.svg" alt="" width={20} height={20} />
-        <span className="absolute -top-1 left-6 flex size-4 items-center justify-center rounded-full bg-blaze text-[9px] font-black text-white">
+        <Image src="/icons/cart.svg" alt="" width={23} height={23} />
+        <span className="absolute left-7 top-0 flex size-[17px] items-center justify-center rounded-full bg-blaze text-[10px] font-black text-white">
           {cartCount}
         </span>
       </Link>

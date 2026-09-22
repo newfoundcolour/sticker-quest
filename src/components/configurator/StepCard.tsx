@@ -1,14 +1,10 @@
 import type { ReactNode } from "react";
 
-// Badge colours follow the Figma: orange, purple, lime, orange, purple.
-const BADGE_TONES = [
-  "bg-blaze text-white",
-  "bg-grape text-white",
-  "bg-zap text-ink",
-  "bg-blaze text-white",
-  "bg-grape text-white",
-];
-
+/**
+ * A step's card: cream body, thick grape border, a solid grape header bar
+ * with a lime step badge. Every step uses the same colours now — only the
+ * step number changes.
+ */
 export function StepCard({
   step,
   title,
@@ -23,31 +19,20 @@ export function StepCard({
   return (
     <section
       className={[
-        "flex flex-col overflow-hidden rounded-[20px] bg-white shadow-card",
+        "flex flex-col overflow-hidden rounded-[20px] border-[1.5px] border-grape bg-sand",
         className,
       ].join(" ")}
     >
-      <div className="flex items-center gap-2.5 border-b border-ink/[0.09] px-5 py-4">
-        <span
-          className={[
-            "flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-black",
-            BADGE_TONES[(step - 1) % BADGE_TONES.length],
-          ].join(" ")}
-        >
+      <div className="flex h-[60px] shrink-0 items-center gap-2.5 bg-grape px-[18px] shadow-pop-grape-soft">
+        <span className="flex size-[30px] shrink-0 items-center justify-center rounded-full border-[1.5px] border-night bg-zap text-xs font-black text-night">
           {step}
         </span>
-        <h2 className="text-base font-black text-ink">{title}</h2>
+        <h2 className="text-lg font-black text-white">{title}</h2>
       </div>
       {children}
     </section>
   );
 }
-
-const SELECTED_TONES = {
-  blaze: "border-blaze bg-blaze text-white shadow-pop-blaze",
-  grape: "border-grape bg-grape text-white shadow-pop-grape",
-  zap: "border-zap bg-zap text-ink shadow-pop-zap",
-} as const;
 
 /** Every option lifts a couple of pixels on hover (skipped for reduced motion). */
 export const LIFT_ON_HOVER = "enabled:motion-safe:hover:-translate-y-0.5";
@@ -67,18 +52,25 @@ export const TILT_ON_HOVER =
 export const OPTION_TRANSITION =
   "transition-[color,background-color,border-color,box-shadow,translate] duration-150";
 
-/** A selectable tile — grey when idle, filled with the step's accent when chosen. */
+/**
+ * Cream and grape-bordered when idle, lime with an olive hard shadow when
+ * chosen — every step shares this one look now. Exported so hand-rolled
+ * controls (cut-mode buttons, quantity rows) that don't fit OptionTile's
+ * shape can reuse the same colours.
+ */
+export const SELECTED_CLASSES = "border-[#595c10] bg-zap text-night shadow-pop-zap";
+export const IDLE_CLASSES = "border-grape bg-sand text-night hover:border-night/40";
+
+/** A selectable tile — every step now shares one selected look (lime + hard shadow). */
 export function OptionTile({
   selected,
   onClick,
-  tone,
   disabled,
   className = "",
   children,
 }: {
   selected: boolean;
   onClick: () => void;
-  tone: keyof typeof SELECTED_TONES;
   disabled?: boolean;
   className?: string;
   children: ReactNode;
@@ -90,12 +82,10 @@ export function OptionTile({
       aria-pressed={selected}
       disabled={disabled}
       className={[
-        "group flex flex-col items-center justify-center rounded-xl border disabled:cursor-not-allowed disabled:opacity-40",
+        "group flex flex-col items-center justify-center rounded-[14px] border disabled:cursor-not-allowed disabled:opacity-40",
         OPTION_TRANSITION,
         LIFT_ON_HOVER,
-        selected
-          ? SELECTED_TONES[tone]
-          : "border-transparent bg-mist text-quiet hover:border-ink/20",
+        selected ? SELECTED_CLASSES : IDLE_CLASSES,
         className,
       ].join(" ")}
     >

@@ -15,43 +15,37 @@ export function PriceReadout({
   const ready = status === "ready" && totalPrice !== null;
 
   return (
-    <div className="border-t border-ink/[0.09] p-4">
-      <div className="rounded-xl border border-ink/[0.09] bg-mist p-4">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-lg font-black text-ink">
+    <div className="border-t border-grape">
+      <div className="flex flex-col items-center gap-2 bg-zap/[0.19] px-4 py-3.5 text-center">
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <p className="text-[30px] font-black text-night">
             Total: {ready ? formatCurrency(totalPrice) : "—"}
           </p>
-          <div className="flex items-center gap-1.5">
-            {ready && savingsPercent > 0 && (
-              <span className="rounded-full bg-zap px-2 py-1 text-xs font-black text-ink">
-                Save {savingsPercent}%
-              </span>
-            )}
-            {ready && pricePerUnit !== null && (
-              <span className="rounded-full bg-grape px-2 py-1 text-xs font-black text-white">
-                {formatCurrency(pricePerUnit)}/ea.
-              </span>
-            )}
-          </div>
+          {ready && savingsPercent > 0 && (
+            <span className="rounded-full bg-white/70 px-2 py-1 text-base font-black text-night">
+              Save {savingsPercent}%
+            </span>
+          )}
+          {ready && pricePerUnit !== null && (
+            <span className="rounded-full border border-grape bg-grape px-3 py-1 text-sm font-black text-white shadow-pop-grape-soft">
+              {formatCurrency(pricePerUnit)}/ea.
+            </span>
+          )}
         </div>
-        <p className="mt-2 text-xs text-quiet">
+        <p className="text-xs text-night/60">
           {ready
             ? "🚀 Ships 3–5 working days after proof approval"
             : "Pick a size to see live pricing"}
         </p>
       </div>
 
-      <ul className="mt-3 flex flex-col gap-1.5 text-xs text-quiet">
+      <ul className="flex flex-col gap-[5px] px-4 py-3.5 text-xs text-night/55">
         <li className="flex items-center gap-2">
-          <span aria-hidden className="text-sm text-ink">
-            📝
-          </span>
+          <span aria-hidden>📝</span>
           We send a proof for your approval before printing
         </li>
         <li className="flex items-center gap-2">
-          <span aria-hidden className="text-sm text-ink">
-            🔒
-          </span>
+          <span aria-hidden>🔒</span>
           Secure checkout
         </li>
       </ul>

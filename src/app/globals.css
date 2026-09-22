@@ -16,11 +16,11 @@
   --color-ink: #201f20;
   --color-quiet: #7a7879;
   --color-mist: #eceaf0;
+  --color-sand: #f5f0e8;
 
-  /* Darker shades of the accents, used for the selected-option shadow. */
-  --color-blaze-deep: #b42f0e;
-  --color-grape-deep: #40396a;
-  --color-zap-deep: #929617;
+  /* Darker shades of the accents, used for a selected option's hard shadow. */
+  --color-blaze-deep: #4d1e12;
+  --color-zap-deep: #595c10;
 }
 
 @theme inline {
@@ -38,14 +38,17 @@
   --color-ink: var(--color-ink);
   --color-quiet: var(--color-quiet);
   --color-mist: var(--color-mist);
+  --color-sand: var(--color-sand);
   --color-blaze-deep: var(--color-blaze-deep);
-  --color-grape-deep: var(--color-grape-deep);
   --color-zap-deep: var(--color-zap-deep);
 
-  /* Hard, un-blurred bottom-right shadow marking a chosen option, in a darker shade of its step's accent. */
+  /* Hard, un-blurred bottom-right shadow marking a chosen option (always lime)
+     or the "Add to cart" CTA (orange). */
   --shadow-pop-blaze: 3px 3px 0 0 var(--color-blaze-deep);
-  --shadow-pop-grape: 3px 3px 0 0 var(--color-grape-deep);
   --shadow-pop-zap: 3px 3px 0 0 var(--color-zap-deep);
+  /* Same device, softer and always-on — a step header's bottom edge and the
+     upload drop zone's resting state. */
+  --shadow-pop-grape-soft: 3px 3px 0 0 rgba(104, 94, 168, 0.4);
 
   --shadow-card: 0 1px 4px rgba(32, 31, 32, 0.06), 0 6px 24px rgba(32, 31, 32, 0.07);
 
