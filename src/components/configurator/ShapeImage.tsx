@@ -13,8 +13,8 @@ export function ShapeImage({
   kissCut,
 }: {
   src: string;
-  /** Shapes render at two sizes in the Figma: 48px for Custom Shape, 52px for the grid. */
-  size: 48 | 52;
+  /** Rendered edge length in px (64 for every shape option). */
+  size: number;
   kissCut: boolean;
 }) {
   return (

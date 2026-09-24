@@ -104,13 +104,6 @@ function pageTitle(stickerType: StickerType): string {
   return label.endsWith("Sheets") ? label : `${label} Stickers`;
 }
 
-/** The hero's two-line stacked wordmark: "Vinyl Stickers" → ["VINYL", "STICKERS"]. */
-function heroLines(stickerType: StickerType): [string, string] {
-  const words = pageTitle(stickerType).toUpperCase().split(" ");
-  const last = words.pop() ?? "";
-  return [words.join(" "), last];
-}
-
 export function TypeConfigurator({
   stickerType,
   pricingConfig,
@@ -234,39 +227,37 @@ export function TypeConfigurator({
 
   const inputClass =
     "rounded-lg border border-grape bg-white px-3 py-2 text-sm font-black text-night outline-none focus:border-blaze";
-  const [headlineTop, headlineBottom] = heroLines(stickerType);
 
   return (
     <Container className="pb-8 pt-4">
-      <div className="flex items-center gap-6 overflow-hidden rounded-[20px] bg-linear-[167deg] from-zap via-blaze via-55% to-grape px-5 py-6 sm:px-8 md:px-11 md:py-9 lg:px-14 lg:py-12">
+      <div className="flex items-center gap-5 overflow-hidden rounded-[20px] bg-linear-[167deg] from-zap via-blaze via-55% to-grape px-5 py-4 sm:px-8 md:h-[208px] md:py-0 lg:px-12">
         <Image
           src="/mascot/knight-helmet.png"
           alt=""
           width={615}
           height={880}
-          className="hidden h-32 w-auto shrink-0 drop-shadow-[4px_4px_0_rgba(22,18,42,0.45)] sm:block md:h-40 lg:h-52"
+          className="hidden h-28 w-auto shrink-0 drop-shadow-[4px_4px_0_rgba(22,18,42,0.45)] sm:block md:h-40"
         />
-        <div className="max-w-[560px]">
-          <Link
-            href="/"
-            className={`inline-block -rotate-2 rounded-full border-[2.5px] border-night bg-white px-4 py-[7px] text-base font-black uppercase text-night ${OPTION_TRANSITION} ${LIFT_ON_HOVER_ANY}`}
-          >
-            ← All Products
-          </Link>
-          <h1 className="max-w-full break-words pt-4 text-[36px] font-black leading-[0.85] text-sand uppercase lg:text-[88px]">
-            <span className="block">{headlineTop}</span>
-            <span className="block">{headlineBottom}</span>
+        <div className="min-w-0 flex-1">
+          <h1 className="break-words text-[28px] font-black leading-none text-sand uppercase lg:text-[40px] xl:text-[64px]">
+            {pageTitle(stickerType)}
           </h1>
-          <p className="pt-4 text-base leading-[1.5] text-sand">
+          <p className="pt-3 text-sm leading-[1.5] text-sand md:text-base">
             {STICKER_TYPE_DESCRIPTIONS[stickerType]}
           </p>
         </div>
+        <Link
+          href="/"
+          className={`shrink-0 -rotate-2 rounded-full border-[2.5px] border-night bg-white px-4 py-[7px] text-sm font-black uppercase text-night md:text-base ${OPTION_TRANSITION} ${LIFT_ON_HOVER_ANY}`}
+        >
+          ← All Products
+        </Link>
       </div>
 
       <div className="mt-6 flex flex-col gap-6">
-        <div className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-[1.5fr_1fr_1.2fr_1.8fr]">
-          <StepCard step={1} title="Shape & Cut">
-            <div className="flex flex-col gap-2.5 p-3.5">
+        <div className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1.5fr]">
+          <StepCard step={1} title="Shape & Cut" className="xl:min-h-[780px]">
+            <div className="flex flex-1 flex-col gap-2.5 p-6">
               <div className="flex gap-1 rounded-[14px] border border-grape bg-grape/25 p-1">
                 {CUT_TYPES.map((c) => {
                   const selected = cutType === c.value;
@@ -292,6 +283,8 @@ export function TypeConfigurator({
                 })}
               </div>
 
+              {/* Custom spans both columns; every row is 148px so all five options match. */}
+              <div className="grid auto-rows-[148px] grid-cols-2 gap-2.5">
               {(() => {
                 const custom = SHAPES[0];
                 const customSelected = shape === custom.value;
@@ -301,27 +294,26 @@ export function TypeConfigurator({
                     onClick={() => setShape(custom.value)}
                     aria-pressed={customSelected}
                     className={[
-                      "group flex h-[72px] items-center justify-center gap-3.5 rounded-[14px] border px-5",
+                      "group col-span-2 flex items-center justify-center gap-4 rounded-[14px] border px-5",
                       OPTION_TRANSITION,
                       LIFT_ON_HOVER,
                       customSelected ? SELECTED_CLASSES : IDLE_CLASSES,
                     ].join(" ")}
                   >
-                    <ShapeImage src={custom.image} size={48} kissCut={cutType === "KISS"} />
+                    <ShapeImage src={custom.image} size={64} kissCut={cutType === "KISS"} />
                     <span className="text-sm font-black">{custom.label}</span>
                   </button>
                 );
               })()}
 
-              <div className="grid grid-cols-2 gap-2.5">
                 {SHAPES.slice(1).map((s) => (
                   <OptionTile
                     key={s.value}
                     selected={shape === s.value}
                     onClick={() => setShape(s.value)}
-                    className="h-[120px] gap-2"
+                    className="gap-2"
                   >
-                    <ShapeImage src={s.image} size={52} kissCut={cutType === "KISS"} />
+                    <ShapeImage src={s.image} size={64} kissCut={cutType === "KISS"} />
                     <span className="text-sm font-black">{s.label}</span>
                   </OptionTile>
                 ))}
@@ -329,24 +321,24 @@ export function TypeConfigurator({
             </div>
           </StepCard>
 
-          <StepCard step={2} title="Material">
-            <div className="p-3.5">
+          <StepCard step={2} title="Material" className="xl:min-h-[780px]">
+            <div className="flex flex-1 flex-col p-6">
               <div className="grid grid-cols-2 gap-2.5">
                 {FINISHES.map((f) => (
                   <OptionTile
                     key={f.value}
                     selected={finish === f.value}
                     onClick={() => setFinish(f.value)}
-                    className="min-h-[155px] gap-2 pb-3.5"
+                    className="h-[148px] gap-2"
                   >
                     <Image
                       src={f.icon}
                       alt=""
-                      width={32}
-                      height={40}
+                      width={48}
+                      height={60}
                       // Both icons are drawn in light strokes for a dark background —
                       // invert so they stay visible on this design's light tiles.
-                      className={`h-10 w-8 invert ${TILT_ON_HOVER}`}
+                      className={`h-15 w-12 invert ${TILT_ON_HOVER}`}
                     />
                     <span className="text-sm font-black">{f.label}</span>
                   </OptionTile>
@@ -387,8 +379,8 @@ export function TypeConfigurator({
             </div>
           </StepCard>
 
-          <StepCard step={3} title="Size">
-            <div className="p-3.5">
+          <StepCard step={3} title="Size" className="xl:min-h-[780px]">
+            <div className="flex flex-1 flex-col p-6">
               <div className="grid grid-cols-2 gap-2">
                 {SIZE_PRESETS.map((p) => {
                   const selected = sizeChoice === p.key;
@@ -397,11 +389,11 @@ export function TypeConfigurator({
                       key={p.key}
                       selected={selected}
                       onClick={() => setSizeChoice(p.key)}
-                      className="h-[128px] gap-1.5 px-2"
+                      className="h-[148px] gap-2 px-2"
                     >
                       <span
                         className={[
-                          "h-[22px] w-[26px] rounded-[5px] border-night",
+                          "h-[30px] w-9 rounded-[6px] border-night",
                           selected ? "border-[1.5px] bg-night/15" : "border",
                         ].join(" ")}
                       />
@@ -488,9 +480,9 @@ export function TypeConfigurator({
             </div>
           </StepCard>
 
-          <StepCard step={4} title="Quantity">
+          <StepCard step={4} title="Quantity" className="xl:min-h-[780px]">
             <div className="flex flex-1 flex-col justify-between">
-              <div className="flex flex-col gap-1.5 px-3 pt-3 pb-3">
+              <div className="flex flex-col gap-1.5 p-6">
                 <button
                   type="button"
                   onClick={() => {
@@ -581,7 +573,7 @@ export function TypeConfigurator({
                 })}
 
                 {!hasSize && (
-                  <p className="px-1 pt-1 pb-3 text-xs text-quiet">
+                  <p className="px-1 pt-1 text-xs text-quiet">
                     Pick a size first to see pricing per quantity.
                   </p>
                 )}

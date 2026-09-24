@@ -16,7 +16,7 @@ export function PriceReadout({
 
   return (
     <div className="border-t border-grape">
-      <div className="flex flex-col items-center gap-2 bg-zap/[0.19] px-4 py-3.5 text-center">
+      <div className="flex flex-col items-center gap-2 bg-zap/[0.19] px-6 py-3.5 text-center">
         <div className="flex flex-wrap items-center justify-center gap-2">
           <p className="text-[30px] font-black text-night">
             Total: {ready ? formatCurrency(totalPrice) : "—"}
@@ -39,7 +39,7 @@ export function PriceReadout({
         </p>
       </div>
 
-      <ul className="flex flex-col gap-[5px] px-4 py-3.5 text-xs text-night/55">
+      <ul className="flex flex-col gap-[5px] px-6 py-3.5 text-xs text-night/55">
         <li className="flex items-center gap-2">
           <span aria-hidden>📝</span>
           We send a proof for your approval before printing
