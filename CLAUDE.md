@@ -25,7 +25,7 @@ Customers configure a product with these options, and price recalculates live as
 - **Shape:** square, circle, rectangle, oval, custom
 - **Finish:** matte or gloss
 - **Size:** 50, 75, 100 or 125 mm (square presets), or custom in mm rounded to the nearest 0.5 (up to max printer width). Stored and priced in cm.
-- **Quantity:** minimum 100, up to 5000
+- **Quantity:** minimum 50, no upper limit
 
 Pricing is driven by a pricing rules table, not hardcoded — exact pricing tables are still being finalized, so avoid baking specific prices into code.
 

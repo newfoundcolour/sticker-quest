@@ -1,8 +1,8 @@
 import { removeFromCartAction, updateCartItemQuantityAction } from "@/app/actions/cart";
 import { STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
-import { CUT_TYPE_LABELS, FINISH_LABELS, SHAPE_LABELS } from "@/lib/orderLabels";
+import { CUT_TYPE_LABELS, FINISH_LABELS, SHAPE_LABELS, formatAddOns } from "@/lib/orderLabels";
 import { formatCurrency } from "@/lib/pricingUtils";
-import { MIN_QUANTITY, MAX_QUANTITY, formatSizeMm } from "@/lib/pricingUtils";
+import { MIN_QUANTITY, formatSizeMm } from "@/lib/pricingUtils";
 import type { PricedCartItem } from "@/lib/cartPricing";
 
 /** Shared between /cart (editable) and the /checkout summary (read-only). */
@@ -13,9 +13,7 @@ export function CartLineItem({
   item: PricedCartItem;
   editable: boolean;
 }) {
-  const addOns = [item.whiteInk && "White ink", item.lamination && "Lamination"]
-    .filter(Boolean)
-    .join(" · ");
+  const addOns = formatAddOns(item);
 
   return (
     <div className="flex items-start gap-4 rounded-xl border border-ink-navy/10 p-4">
@@ -47,8 +45,7 @@ export function CartLineItem({
                 name="quantity"
                 defaultValue={item.quantity}
                 min={MIN_QUANTITY}
-                max={MAX_QUANTITY}
-                className="w-20 rounded-lg border border-ink-navy/15 px-2 py-1 font-mono text-sm outline-none focus:border-coral-signal"
+                className="w-28 rounded-lg border border-ink-navy/15 px-2 py-1 font-mono text-sm outline-none focus:border-coral-signal"
               />
               <button
                 type="submit"

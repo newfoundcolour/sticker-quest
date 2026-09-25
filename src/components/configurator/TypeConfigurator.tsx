@@ -9,7 +9,6 @@ import { addToCartAction } from "@/app/actions/cart";
 import { Container } from "@/components/Container";
 import {
   MIN_QUANTITY,
-  MAX_QUANTITY,
   MIN_SIZE_MM,
   MAX_SIZE_MM,
   clampQuantity,
@@ -60,7 +59,16 @@ const SIZE_PRESETS: { key: string; label: string; mm: number }[] = [
   { key: "xlarge", label: "X-Large", mm: 125 },
 ];
 
-const QUANTITY_PRESETS = [50, 100, 200, 300, 500, 1000];
+const QUANTITY_PRESETS = [50, 100, 200, 300, 500, 1000, 2000];
+
+// What a fresh configurator starts on.
+const DEFAULT_CUT_TYPE: CutType = "DIE";
+const DEFAULT_SHAPE: Shape = "CUSTOM";
+const DEFAULT_ROUNDED_CORNERS = true;
+const DEFAULT_FINISH: Finish = "MATTE";
+const DEFAULT_LAMINATION = false;
+const DEFAULT_SIZE = "medium";
+const DEFAULT_QUANTITY = 100;
 
 /**
  * XMLHttpRequest rather than fetch so we get real upload-progress events —
@@ -98,6 +106,54 @@ function uploadWithProgress(
   });
 }
 
+/** A question answered with a full-width pair of Yes / No pills. */
+function YesNoQuestion({
+  question,
+  hint,
+  value,
+  onChange,
+  className = "",
+}: {
+  question: string;
+  hint?: string;
+  value: boolean;
+  onChange: (value: boolean) => void;
+  className?: string;
+}) {
+  return (
+    <div className={`flex flex-col gap-2.5 ${className}`}>
+      <div>
+        <p className="text-sm font-black text-night">{question}</p>
+        {hint && <p className="text-[10px] text-quiet">{hint}</p>}
+      </div>
+      <div className="flex gap-2.5">
+        {[
+          { answer: true, label: "Yes" },
+          { answer: false, label: "No" },
+        ].map((o) => {
+          const selected = value === o.answer;
+          return (
+            <button
+              key={o.label}
+              type="button"
+              onClick={() => onChange(o.answer)}
+              aria-pressed={selected}
+              className={[
+                "flex-1 rounded-full border px-5 py-1.5 text-sm font-black",
+                OPTION_TRANSITION,
+                LIFT_ON_HOVER,
+                selected ? SELECTED_CLASSES : IDLE_CLASSES,
+              ].join(" ")}
+            >
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /** "Vinyl" → "Vinyl Stickers"; the sheet types already say what they are. */
 function pageTitle(stickerType: StickerType): string {
   const label = STICKER_TYPE_LABELS[stickerType];
@@ -111,20 +167,20 @@ export function TypeConfigurator({
   stickerType: StickerType;
   pricingConfig: PricingConfig;
 }) {
-  const [cutType, setCutType] = useState<CutType | undefined>("DIE");
-  const [shape, setShape] = useState<Shape | undefined>("CUSTOM");
+  const [cutType, setCutType] = useState<CutType | undefined>(DEFAULT_CUT_TYPE);
+  const [shape, setShape] = useState<Shape | undefined>(DEFAULT_SHAPE);
+  const [roundedCorners, setRoundedCorners] = useState(DEFAULT_ROUNDED_CORNERS);
 
-  const [finish, setFinish] = useState<Finish | undefined>("MATTE");
+  const [finish, setFinish] = useState<Finish | undefined>(DEFAULT_FINISH);
   const [whiteInk, setWhiteInk] = useState(false);
-  const [lamination, setLamination] = useState(false);
+  const [lamination, setLamination] = useState(DEFAULT_LAMINATION);
 
-  const [sizeChoice, setSizeChoice] = useState<string | undefined>("medium"); // preset key | 'custom'
+  const [sizeChoice, setSizeChoice] = useState<string | undefined>(DEFAULT_SIZE); // preset key | 'custom'
   const [customWidthInput, setCustomWidthInput] = useState("");
   const [customHeightInput, setCustomHeightInput] = useState("");
 
-  const [quantityChoice, setQuantityChoice] = useState<number | "custom" | undefined>(100);
+  const [quantityChoice, setQuantityChoice] = useState<number | "custom" | undefined>(DEFAULT_QUANTITY);
   const [customQuantityInput, setCustomQuantityInput] = useState("");
-  const [quantityTouched, setQuantityTouched] = useState(true);
 
   const [artworkUrl, setArtworkUrl] = useState<string | undefined>();
   const [artworkFilename, setArtworkFilename] = useState<string | undefined>();
@@ -153,7 +209,14 @@ export function TypeConfigurator({
       ? clampQuantity(Number.isNaN(customQuantity) ? MIN_QUANTITY : customQuantity)
       : (quantityChoice ?? MIN_QUANTITY);
 
+  // A custom choice only counts once a number has actually been typed in.
+  const hasQuantity =
+    typeof quantityChoice === "number" ||
+    (quantityChoice === "custom" && !Number.isNaN(customQuantity));
+
   const isHolographic = stickerType === "HOLOGRAPHIC";
+  const hasWhiteInkOption = stickerType !== "VINYL";
+  const hasRoundedCornersOption = shape === "SQUARE" || shape === "RECTANGLE";
 
   const pricing = hasSize
     ? calculateStickerPricing({
@@ -171,7 +234,7 @@ export function TypeConfigurator({
     !!cutType && !!shape,
     !!finish,
     hasSize,
-    quantityTouched,
+    hasQuantity,
     !!artworkUrl,
   ];
   const allComplete = completed.every(Boolean);
@@ -186,7 +249,8 @@ export function TypeConfigurator({
         cutType,
         shape,
         finish,
-        whiteInk,
+        roundedCorners: hasRoundedCornersOption && roundedCorners,
+        whiteInk: hasWhiteInkOption && whiteInk,
         lamination,
         widthCm,
         heightCm,
@@ -195,11 +259,6 @@ export function TypeConfigurator({
         artworkFilename,
       });
     });
-  }
-
-  function selectQuantity(q: number) {
-    setQuantityChoice(q);
-    setQuantityTouched(true);
   }
 
   async function handleFile(file: File) {
@@ -230,6 +289,12 @@ export function TypeConfigurator({
 
   return (
     <Container className="pb-8 pt-4">
+      <Link
+        href="/"
+        className="mb-2 inline-block text-base font-bold text-blaze transition-colors hover:text-grape"
+      >
+        &lt; Change Sticker Type
+      </Link>
       <div className="flex items-center gap-5 overflow-hidden rounded-[20px] bg-linear-[167deg] from-zap via-blaze via-55% to-grape px-5 py-4 sm:px-8 md:h-[208px] md:py-0 lg:px-12">
         <Image
           src="/mascot/knight-helmet.png"
@@ -246,12 +311,6 @@ export function TypeConfigurator({
             {STICKER_TYPE_DESCRIPTIONS[stickerType]}
           </p>
         </div>
-        <Link
-          href="/"
-          className={`shrink-0 -rotate-2 rounded-full border-[2.5px] border-night bg-white px-4 py-[7px] text-sm font-black uppercase text-night md:text-base ${OPTION_TRANSITION} ${LIFT_ON_HOVER_ANY}`}
-        >
-          ← All Products
-        </Link>
       </div>
 
       <div className="mt-6 flex flex-col gap-6">
@@ -318,6 +377,15 @@ export function TypeConfigurator({
                   </OptionTile>
                 ))}
               </div>
+
+              {hasRoundedCornersOption && (
+                <YesNoQuestion
+                  question="Rounded corners?"
+                  value={roundedCorners}
+                  onChange={setRoundedCorners}
+                  className="pt-1.5"
+                />
+              )}
             </div>
           </StepCard>
 
@@ -345,36 +413,25 @@ export function TypeConfigurator({
                 ))}
               </div>
 
-              <div className="mt-4 flex flex-col gap-3 border-t border-grape/30 pt-4">
-                <label
-                  className={`flex w-fit cursor-pointer items-center gap-3 text-sm font-black text-night ${LIFT_ON_HOVER_ANY}`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={whiteInk}
-                    onChange={(e) => setWhiteInk(e.target.checked)}
-                    className="size-4 accent-grape"
+              <div className="mt-4 flex flex-col gap-4 border-t border-grape/30 pt-4">
+                {hasWhiteInkOption && (
+                  <YesNoQuestion
+                    question="White ink?"
+                    hint={
+                      isHolographic
+                        ? "No effect on holographic"
+                        : "A white base that makes your colours pop"
+                    }
+                    value={whiteInk}
+                    onChange={setWhiteInk}
                   />
-                  <span>
-                    White ink
-                    {isHolographic && (
-                      <span className="block text-xs font-normal text-quiet">
-                        (no effect on holographic)
-                      </span>
-                    )}
-                  </span>
-                </label>
-                <label
-                  className={`flex w-fit cursor-pointer items-center gap-3 text-sm font-black text-night ${LIFT_ON_HOVER_ANY}`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={lamination}
-                    onChange={(e) => setLamination(e.target.checked)}
-                    className="size-4 accent-grape"
-                  />
-                  Lamination
-                </label>
+                )}
+                <YesNoQuestion
+                  question="Laminated?"
+                  hint="Extra armour against scratches, sun and splashes"
+                  value={lamination}
+                  onChange={setLamination}
+                />
               </div>
             </div>
           </StepCard>
@@ -481,110 +538,101 @@ export function TypeConfigurator({
           </StepCard>
 
           <StepCard step={4} title="Quantity" className="xl:min-h-[780px]">
-            <div className="flex flex-1 flex-col justify-between">
-              <div className="flex flex-col gap-1.5 p-6">
+            <div className="flex flex-col gap-3 p-6">
+              {quantityChoice === "custom" ? (
+                <input
+                  type="number"
+                  min={MIN_QUANTITY}
+                  autoFocus
+                  value={customQuantityInput}
+                  onChange={(e) => setCustomQuantityInput(e.target.value)}
+                  onBlur={() => {
+                    const n = parseInt(customQuantityInput, 10);
+                    if (!Number.isNaN(n)) setCustomQuantityInput(String(clampQuantity(n)));
+                  }}
+                  placeholder={`Enter custom quantity (min ${MIN_QUANTITY})`}
+                  aria-label="Custom quantity"
+                  className={[
+                    // `!` beats the global :focus-visible ring; the lime selected style already shows focus.
+                    "h-12 w-full rounded-[10px] border px-3.5 text-lg font-black outline-none!",
+                    "placeholder:text-sm placeholder:font-bold placeholder:text-quiet",
+                    "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+                    SELECTED_CLASSES,
+                  ].join(" ")}
+                />
+              ) : (
                 <button
                   type="button"
-                  onClick={() => {
-                    setQuantityChoice("custom");
-                    setQuantityTouched(true);
-                  }}
-                  aria-pressed={quantityChoice === "custom"}
+                  onClick={() => setQuantityChoice("custom")}
+                  aria-pressed={false}
                   className={[
                     "flex h-12 items-center justify-between rounded-[10px] border px-3.5 text-lg font-black",
                     OPTION_TRANSITION,
                     LIFT_ON_HOVER,
-                    quantityChoice === "custom" ? SELECTED_CLASSES : IDLE_CLASSES,
+                    IDLE_CLASSES,
                   ].join(" ")}
                 >
                   <span>Custom</span>
-                  {quantityChoice !== "custom" && (
-                    <span className="text-xs font-bold text-grape">Enter qty →</span>
-                  )}
+                  <span className="text-xs font-bold text-grape">Enter qty →</span>
                 </button>
+              )}
 
-                {quantityChoice === "custom" && (
-                  <input
-                    type="number"
-                    min={MIN_QUANTITY}
-                    max={MAX_QUANTITY}
-                    value={customQuantityInput}
-                    onChange={(e) => {
-                      setCustomQuantityInput(e.target.value);
-                      setQuantityTouched(true);
-                    }}
-                    onBlur={() => {
-                      const n = parseInt(customQuantityInput, 10);
-                      setCustomQuantityInput(
-                        String(clampQuantity(Number.isNaN(n) ? MIN_QUANTITY : n)),
-                      );
-                    }}
-                    placeholder={`Enter custom amount. Minimum ${MIN_QUANTITY}`}
-                    aria-label="Custom quantity"
-                    className={`w-full ${inputClass}`}
-                  />
-                )}
+              {QUANTITY_PRESETS.map((q) => {
+                const preview = hasSize
+                  ? calculateStickerPricing({
+                      config: pricingConfig,
+                      isHolographic,
+                      whiteInk,
+                      lamination,
+                      widthCm,
+                      heightCm,
+                      quantity: q,
+                    })
+                  : null;
+                const selected = quantityChoice === q;
+                return (
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => setQuantityChoice(q)}
+                    disabled={!hasSize}
+                    aria-pressed={selected}
+                    className={[
+                      "flex h-12 items-center justify-between rounded-[10px] border px-3.5 text-lg font-black disabled:cursor-not-allowed disabled:opacity-40",
+                      OPTION_TRANSITION,
+                      LIFT_ON_HOVER,
+                      selected ? SELECTED_CLASSES : IDLE_CLASSES,
+                    ].join(" ")}
+                  >
+                    <span>{q.toLocaleString("en-ZA")}</span>
+                    {preview && (
+                      <span className="flex items-center gap-1.5">
+                        <span>{formatCurrency(preview.totalPrice)}</span>
+                        {preview.discountPercent > 0 && (
+                          <span className="text-sm text-grape">
+                            Save {preview.discountPercent}%
+                          </span>
+                        )}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
 
-                {QUANTITY_PRESETS.map((q) => {
-                  const preview = hasSize
-                    ? calculateStickerPricing({
-                        config: pricingConfig,
-                        isHolographic,
-                        whiteInk,
-                        lamination,
-                        widthCm,
-                        heightCm,
-                        quantity: q,
-                      })
-                    : null;
-                  const selected = quantityChoice === q;
-                  return (
-                    <button
-                      key={q}
-                      type="button"
-                      onClick={() => selectQuantity(q)}
-                      disabled={!hasSize}
-                      aria-pressed={selected}
-                      className={[
-                        "flex h-12 items-center justify-between rounded-[10px] border px-3.5 text-lg font-black disabled:cursor-not-allowed disabled:opacity-40",
-                        OPTION_TRANSITION,
-                        LIFT_ON_HOVER,
-                        selected ? SELECTED_CLASSES : IDLE_CLASSES,
-                      ].join(" ")}
-                    >
-                      <span>{q.toLocaleString("en-ZA")}</span>
-                      {preview && (
-                        <span className="flex items-center gap-1.5">
-                          <span>{formatCurrency(preview.totalPrice)}</span>
-                          {preview.discountPercent > 0 && (
-                            <span
-                              className={[
-                                "rounded-full px-2 py-0.5 text-base",
-                                selected ? "bg-white/25 text-night" : "bg-zap/20 text-zap-ink",
-                              ].join(" ")}
-                            >
-                              Save {preview.discountPercent}%
-                            </span>
-                          )}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
+              {!hasSize && (
+                <p className="px-1 pt-1 text-xs text-quiet">
+                  Pick a size first to see pricing per quantity.
+                </p>
+              )}
 
-                {!hasSize && (
-                  <p className="px-1 pt-1 text-xs text-quiet">
-                    Pick a size first to see pricing per quantity.
-                  </p>
-                )}
-              </div>
-
-              <PriceReadout
-                totalPrice={pricing?.totalPrice ?? null}
-                pricePerUnit={pricing?.pricePerUnit ?? null}
-                savingsPercent={quantityChoice === "custom" ? (pricing?.discountPercent ?? 0) : 0}
-                status={hasSize ? "ready" : "empty"}
-              />
+              {hasQuantity && (
+                <PriceReadout
+                  totalPrice={pricing?.totalPrice ?? null}
+                  pricePerUnit={pricing?.pricePerUnit ?? null}
+                  savingsPercent={quantityChoice === "custom" ? (pricing?.discountPercent ?? 0) : 0}
+                  status={hasSize ? "ready" : "empty"}
+                />
+              )}
             </div>
           </StepCard>
         </div>

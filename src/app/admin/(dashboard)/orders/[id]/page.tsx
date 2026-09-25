@@ -9,6 +9,7 @@ import {
   ORDER_STATUS_BADGE_CLASSES,
   ORDER_STATUS_LABELS,
   SHAPE_LABELS,
+  formatAddOns,
 } from "@/lib/orderLabels";
 import { toArtworkDownloadUrl } from "@/lib/cloudinary";
 import { OrderStatusForm } from "@/components/admin/OrderStatusForm";
@@ -91,9 +92,7 @@ export default async function AdminOrderDetailPage({
         </h2>
         <div className="mt-3 flex flex-col gap-4">
           {order.items.map((item) => {
-            const addOns = [item.whiteInk && "White ink", item.lamination && "Lamination"]
-              .filter(Boolean)
-              .join(" · ");
+            const addOns = formatAddOns(item);
             return (
               <div
                 key={item.id}

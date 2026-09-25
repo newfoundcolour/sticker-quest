@@ -7,6 +7,7 @@ import {
   ORDER_STATUS_LABELS,
   ORDER_STATUS_VALUES,
   SHAPE_LABELS,
+  formatAddOns,
 } from "@/lib/orderLabels";
 import { formatSizeMm } from "@/lib/pricingUtils";
 import { getOrderStats } from "@/lib/orderStats";
@@ -109,11 +110,7 @@ export default async function AdminOrdersPage({
 
               return rows.map((item, itemIndex) => {
                 const isFirstRow = itemIndex === 0;
-                const addOns = item
-                  ? [item.whiteInk && "White ink", item.lamination && "Lamination"]
-                      .filter(Boolean)
-                      .join(" · ")
-                  : "";
+                const addOns = item ? formatAddOns(item) : "";
                 const sizeLine = item
                   ? `${formatSizeMm(Number(item.widthCm))} x ${formatSizeMm(Number(item.heightCm))}${addOns ? ` · ${addOns}` : ""}`
                   : "";

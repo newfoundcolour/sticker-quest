@@ -11,6 +11,8 @@ export type CartItem = {
   cutType: CutType;
   shape: Shape;
   finish: Finish;
+  /** Optional so carts saved before the option existed still parse. */
+  roundedCorners?: boolean;
   whiteInk: boolean;
   lamination: boolean;
   widthCm: number;

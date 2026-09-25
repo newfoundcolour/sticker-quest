@@ -63,6 +63,7 @@ export async function submitOrderAction(
           cutType: item.cutType,
           shape: item.shape,
           finish: item.finish,
+          roundedCorners: item.roundedCorners ?? false,
           whiteInk: item.whiteInk,
           lamination: item.lamination,
           widthCm: item.widthCm,

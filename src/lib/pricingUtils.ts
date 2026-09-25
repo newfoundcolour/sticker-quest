@@ -3,7 +3,10 @@ import type { DiscountTier, PricingConfig } from "@/lib/pricing";
 /** Pure, client-safe pricing math — no Prisma import, safe to use in "use client" components. */
 
 export const MIN_QUANTITY = 50;
-export const MAX_QUANTITY = 5000;
+
+// There's no business cap on quantity — this is only the Postgres INTEGER
+// ceiling for OrderItem.quantity, so an absurd entry can't break checkout.
+const QUANTITY_STORAGE_LIMIT = 2_147_483_647;
 
 export function inchesToCm(inches: number): number {
   return inches * 2.54;
@@ -48,8 +51,8 @@ export function formatSizeMm(cm: number): string {
 }
 
 export function clampQuantity(quantity: number): number {
-  if (Number.isNaN(quantity)) return MIN_QUANTITY;
-  return Math.min(MAX_QUANTITY, Math.max(MIN_QUANTITY, Math.round(quantity)));
+  if (!Number.isFinite(quantity)) return MIN_QUANTITY;
+  return Math.min(QUANTITY_STORAGE_LIMIT, Math.max(MIN_QUANTITY, Math.round(quantity)));
 }
 
 export function clampSizeCm(cm: number): number {

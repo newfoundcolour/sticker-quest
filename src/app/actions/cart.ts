@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { addToCart, removeFromCart, updateCartItemQuantity, type CartItem } from "@/lib/cart";
-import { MIN_QUANTITY, MAX_QUANTITY } from "@/lib/pricingUtils";
+import { clampQuantity } from "@/lib/pricingUtils";
 
 /** Called from the configurator once every step is complete. Redirects to the cart on success. */
 export async function addToCartAction(item: Omit<CartItem, "id">): Promise<void> {
@@ -21,10 +21,7 @@ export async function updateCartItemQuantityAction(
   itemId: string,
   formData: FormData,
 ): Promise<void> {
-  const raw = Number(formData.get("quantity"));
-  const quantity = Number.isFinite(raw)
-    ? Math.min(MAX_QUANTITY, Math.max(MIN_QUANTITY, Math.round(raw)))
-    : MIN_QUANTITY;
+  const quantity = clampQuantity(Number(formData.get("quantity")));
   await updateCartItemQuantity(itemId, quantity);
   revalidatePath("/", "layout");
 }

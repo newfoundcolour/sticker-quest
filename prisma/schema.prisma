@@ -127,15 +127,17 @@ model OrderItem {
   orderId String
   order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  stickerType StickerType
-  cutType     CutType
-  shape       Shape
-  finish      Finish
-  whiteInk    Boolean @default(false)
-  lamination  Boolean @default(false)
-  widthCm     Decimal @db.Decimal(6, 2)
-  heightCm    Decimal @db.Decimal(6, 2)
-  quantity    Int
+  stickerType    StickerType
+  cutType        CutType
+  shape          Shape
+  finish         Finish
+  /// Only ever true for square and rectangle stickers.
+  roundedCorners Boolean     @default(false)
+  whiteInk       Boolean     @default(false)
+  lamination     Boolean     @default(false)
+  widthCm        Decimal     @db.Decimal(6, 2)
+  heightCm       Decimal     @db.Decimal(6, 2)
+  quantity       Int
 
   artworkUrl      String
   artworkFilename String?

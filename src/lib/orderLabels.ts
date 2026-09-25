@@ -19,6 +19,24 @@ export const FINISH_LABELS: Record<Finish, string> = {
   GLOSS: "Gloss",
 };
 
+/**
+ * The yes/no extras a customer said yes to, as one " · "-joined line —
+ * anything they said no to is left out. Shared by the cart, checkout and admin.
+ */
+export function formatAddOns(item: {
+  roundedCorners?: boolean;
+  whiteInk: boolean;
+  lamination: boolean;
+}): string {
+  return [
+    item.roundedCorners && "Rounded corners",
+    item.whiteInk && "White ink",
+    item.lamination && "Laminated",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 /** Pipeline order per CLAUDE.md: awaiting_proof -> approved -> printing -> shipped. */
 export const ORDER_STATUS_VALUES: OrderStatus[] = [
   "AWAITING_PROOF",

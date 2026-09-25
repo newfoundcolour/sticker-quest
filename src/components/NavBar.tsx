@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Container } from "@/components/Container";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import {
@@ -16,23 +16,19 @@ import type { StickerType } from "@/generated/prisma/client";
 
 export function NavBar({ cartCount }: { cartCount: number }) {
   const router = useRouter();
-  const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [hovered, setHovered] = useState(false);
+  const showMenu = open || hovered;
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
-  const groups = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return STICKER_TYPE_GROUPS;
-    return STICKER_TYPE_GROUPS.map((group) => ({
-      title: group.title,
-      types: group.types.filter((type) => STICKER_TYPE_LABELS[type].toLowerCase().includes(q)),
-    })).filter((group) => group.types.length > 0);
-  }, [query]);
+  function closeMenu() {
+    setOpen(false);
+    setHovered(false);
+  }
 
   function goToType(type: StickerType) {
-    setQuery("");
-    setOpen(false);
-    inputRef.current?.blur();
+    closeMenu();
+    triggerRef.current?.blur();
     router.push(`/configure/${STICKER_TYPE_SLUGS[type]}`);
   }
 
@@ -50,46 +46,55 @@ export function NavBar({ cartCount }: { cartCount: number }) {
           />
         </Link>
 
-        <div className="relative min-w-0 flex-1">
-          <div className="flex h-11 items-center gap-2 rounded-full border-2 border-white/[0.19] bg-white/[0.08] px-3.5 sm:h-[46px] sm:gap-3 sm:px-[22px]">
+        <div
+          className="relative min-w-0 flex-1"
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          // Close once focus leaves the whole dropdown, so keyboard users can tab into the options.
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") closeMenu();
+          }}
+        >
+          <button
+            ref={triggerRef}
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            aria-expanded={showMenu}
+            aria-haspopup="true"
+            className="flex h-11 w-full items-center gap-2 rounded-full border-2 border-white/[0.19] bg-white/[0.08] px-3.5 text-left outline-none! sm:h-[46px] sm:gap-3 sm:px-[22px]"
+          >
             <span aria-hidden className="text-base font-black text-zap">
               ✦
             </span>
-            <input
-              ref={inputRef}
-              type="text"
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setOpen(true);
-              }}
-              onFocus={() => setOpen(true)}
-              onBlur={() => setTimeout(() => setOpen(false), 100)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && groups[0]?.types[0]) goToType(groups[0].types[0]);
-                if (e.key === "Escape") setOpen(false);
-              }}
-              placeholder="Select sticker type..."
-              aria-label="Select sticker type"
-              className="min-w-0 flex-1 bg-transparent text-base font-bold text-white outline-none placeholder:text-white"
-            />
-            <span
-              aria-hidden
-              className={["text-sm text-white/50 transition-transform duration-150", open ? "rotate-180" : ""].join(
-                " ",
-              )}
-            >
-              ⌄
+            <span className="min-w-0 flex-1 truncate text-base font-bold text-white">
+              Select sticker type...
             </span>
-          </div>
+            <svg
+              aria-hidden
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={[
+                "size-5 shrink-0 text-white/70 transition-transform duration-150",
+                showMenu ? "rotate-180" : "",
+              ].join(" ")}
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
 
-          {open && (
-            <div className="absolute left-0 right-0 top-full z-10 mt-2 overflow-hidden rounded-[20px] border-[1.5px] border-grape bg-sand shadow-card">
-              {groups.length === 0 ? (
-                <p className="px-4 py-3 text-sm text-quiet">No matching sticker types.</p>
-              ) : (
+          {showMenu && (
+            // pt-2 (not mt-2) so the gap below the pill still counts as hovering the menu.
+            <div className="absolute left-0 right-0 top-full z-10 pt-2">
+              <div className="overflow-hidden rounded-[20px] border-[1.5px] border-grape bg-sand shadow-card">
                 <div className="grid grid-cols-2 gap-1 p-2">
-                  {groups.map((group) => (
+                  {STICKER_TYPE_GROUPS.map((group) => (
                     <div key={group.title}>
                       <p className="px-2 py-1 text-xs font-black uppercase tracking-wide text-quiet">
                         {group.title}
@@ -118,7 +123,7 @@ export function NavBar({ cartCount }: { cartCount: number }) {
                     </div>
                   ))}
                 </div>
-              )}
+              </div>
             </div>
           )}
         </div>
