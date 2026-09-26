@@ -55,7 +55,7 @@ const FINISHES: { value: Finish; label: string; icon: string }[] = [
 // Presets without an image fall back to a plain outline until their artwork lands.
 const SIZE_PRESETS: { key: string; label: string; mm: number; image?: string }[] = [
   { key: "small", label: "Small", mm: 50, image: "/icons/size-small.png" },
-  { key: "medium", label: "Medium", mm: 75 },
+  { key: "medium", label: "Medium", mm: 75, image: "/icons/size-medium.png" },
   { key: "large", label: "Large", mm: 100, image: "/icons/size-large.png" },
   { key: "xlarge", label: "X-Large", mm: 125, image: "/icons/size-xlarge.png" },
 ];
