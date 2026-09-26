@@ -1,9 +1,0 @@
-<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="Matte Icon">
-<path id="Matte Icon Path" d="M24.5714 2.85714H7.42857C5.85061 2.85714 4.57143 4.13633 4.57143 5.71429V34.2857C4.57143 35.8637 5.85061 37.1429 7.42857 37.1429H24.5714C26.1494 37.1429 27.4286 35.8637 27.4286 34.2857V5.71429C27.4286 4.13633 26.1494 2.85714 24.5714 2.85714Z" fill="#D0CCC8" stroke="#201F20" stroke-opacity="0.09" stroke-width="1.07143"/>
-<g id="Matte Icon Path 2">
-<path d="M7.42857 10H24.5714ZM7.42857 14.2857H17.4286Z" fill="black"/>
-<path d="M7.42857 10H24.5714M7.42857 14.2857H17.4286" stroke="#BBBBBB" stroke-width="1.07143" stroke-linecap="round"/>
-</g>
-</g>
-</svg>

@@ -132,9 +132,14 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
+const ZAR_FORMAT = new Intl.NumberFormat("en-ZA", {
+  style: "currency",
+  currency: "ZAR",
+});
+
+/** "R 12 345.60" — en-ZA's grouping, but a decimal point rather than its default comma. */
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-ZA", {
-    style: "currency",
-    currency: "ZAR",
-  }).format(amount);
+  return ZAR_FORMAT.formatToParts(amount)
+    .map((part) => (part.type === "decimal" ? "." : part.value))
+    .join("");
 }

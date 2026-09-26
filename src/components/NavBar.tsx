@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Container } from "@/components/Container";
-import { MaterialIcon } from "@/components/icons/MaterialIcon";
+import { StickerTypeImage } from "@/components/StickerTypeImage";
 import {
   STICKER_TYPE_DESCRIPTIONS,
   STICKER_TYPE_GROUPS,
@@ -108,7 +108,7 @@ export function NavBar({ cartCount }: { cartCount: number }) {
                             onClick={() => goToType(type)}
                             className="flex items-start gap-2 rounded-xl p-2 text-left transition-colors hover:bg-zap/20"
                           >
-                            <MaterialIcon material={type} className="h-8 w-8 shrink-0 text-night" />
+                            <StickerTypeImage type={type} className="h-8 w-8 shrink-0 text-night" />
                             <span>
                               <span className="block text-sm font-black text-night">
                                 {STICKER_TYPE_LABELS[type]}

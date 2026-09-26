@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MaterialIcon } from "@/components/icons/MaterialIcon";
+import { StickerTypeImage } from "@/components/StickerTypeImage";
 import {
   STICKER_TYPE_DESCRIPTIONS,
   STICKER_TYPE_GROUPS,
@@ -33,7 +33,7 @@ export function TypeGrid() {
                   href={`/configure/${STICKER_TYPE_SLUGS[type]}`}
                   className="flex items-center gap-4 rounded-2xl border border-ink-navy/10 bg-white/70 p-4 transition-colors hover:border-coral-signal"
                 >
-                  <MaterialIcon material={type} className="h-12 w-12 shrink-0 text-ink-navy" />
+                  <StickerTypeImage type={type} className="h-12 w-12 shrink-0 text-ink-navy" />
                   <div>
                     <p className="font-display text-lg font-semibold text-ink-navy">
                       {STICKER_TYPE_LABELS[type]}

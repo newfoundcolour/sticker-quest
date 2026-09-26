@@ -75,7 +75,6 @@ body {
 :focus-visible {
   outline: 2px solid var(--color-coral-signal);
   outline-offset: 2px;
-  border-radius: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {

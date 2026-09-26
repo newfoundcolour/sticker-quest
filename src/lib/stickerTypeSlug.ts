@@ -38,6 +38,11 @@ export const STICKER_TYPE_DESCRIPTIONS: Record<StickerType, string> = {
   LABEL_SHEETS: "Rectangular labels, sheet-fed for packaging and jars.",
 };
 
+/** Artwork per type; types without an entry render a placeholder until their image lands. */
+export const STICKER_TYPE_IMAGES: Partial<Record<StickerType, string>> = {
+  VINYL: "/mascot/knight-helmet.png",
+};
+
 /** Shared with the nav bar's search dropdown, which mirrors this grouping. */
 export const STICKER_TYPE_GROUPS: { title: string; types: StickerType[] }[] = [
   {

@@ -47,16 +47,17 @@ const SHAPES: { value: Shape; label: string; image: string }[] = [
 ];
 
 const FINISHES: { value: Finish; label: string; icon: string }[] = [
-  { value: "MATTE", label: "Matte", icon: "/icons/matte.svg" },
-  { value: "GLOSS", label: "Gloss", icon: "/icons/gloss.svg" },
+  { value: "MATTE", label: "Matte", icon: "/icons/matte.png" },
+  { value: "GLOSS", label: "Gloss", icon: "/icons/gloss.png" },
 ];
 
 // Preset sizes are square, in mm.
-const SIZE_PRESETS: { key: string; label: string; mm: number }[] = [
-  { key: "small", label: "Small", mm: 50 },
+// Presets without an image fall back to a plain outline until their artwork lands.
+const SIZE_PRESETS: { key: string; label: string; mm: number; image?: string }[] = [
+  { key: "small", label: "Small", mm: 50, image: "/icons/size-small.png" },
   { key: "medium", label: "Medium", mm: 75 },
-  { key: "large", label: "Large", mm: 100 },
-  { key: "xlarge", label: "X-Large", mm: 125 },
+  { key: "large", label: "Large", mm: 100, image: "/icons/size-large.png" },
+  { key: "xlarge", label: "X-Large", mm: 125, image: "/icons/size-xlarge.png" },
 ];
 
 const QUANTITY_PRESETS = [50, 100, 200, 300, 500, 1000, 2000];
@@ -293,7 +294,7 @@ export function TypeConfigurator({
         href="/"
         className="mb-2 inline-block text-base font-bold text-blaze transition-colors hover:text-grape"
       >
-        &lt; Change Sticker Type
+        &lt; {pageTitle(stickerType)}
       </Link>
       <div className="flex items-center gap-5 overflow-hidden rounded-[20px] bg-linear-[167deg] from-zap via-blaze via-55% to-grape px-5 py-4 sm:px-8 md:h-[208px] md:py-0 lg:px-12">
         <Image
@@ -402,11 +403,9 @@ export function TypeConfigurator({
                     <Image
                       src={f.icon}
                       alt=""
-                      width={48}
-                      height={60}
-                      // Both icons are drawn in light strokes for a dark background —
-                      // invert so they stay visible on this design's light tiles.
-                      className={`h-15 w-12 invert ${TILT_ON_HOVER}`}
+                      width={64}
+                      height={64}
+                      className={`size-16 ${TILT_ON_HOVER}`}
                     />
                     <span className="text-sm font-black">{f.label}</span>
                   </OptionTile>
@@ -448,12 +447,22 @@ export function TypeConfigurator({
                       onClick={() => setSizeChoice(p.key)}
                       className="h-[148px] gap-2 px-2"
                     >
-                      <span
-                        className={[
-                          "h-[30px] w-9 rounded-[6px] border-night",
-                          selected ? "border-[1.5px] bg-night/15" : "border",
-                        ].join(" ")}
-                      />
+                      {p.image ? (
+                        <Image
+                          src={p.image}
+                          alt=""
+                          width={64}
+                          height={64}
+                          className={`size-16 ${TILT_ON_HOVER}`}
+                        />
+                      ) : (
+                        <span
+                          className={[
+                            "h-[30px] w-9 rounded-[6px] border-night",
+                            selected ? "border-[1.5px] bg-night/15" : "border",
+                          ].join(" ")}
+                        />
+                      )}
                       <span className="text-center">
                         <span className="block text-sm font-black">{p.label}</span>
                         <span
@@ -482,9 +491,7 @@ export function TypeConfigurator({
                       ].join(" ")}
                     >
                       <span className="flex items-center gap-2 text-sm font-black">
-                        <span aria-hidden className="text-lg font-normal">
-                          ✎
-                        </span>
+                        <Image src="/icons/size-custom.png" alt="" width={48} height={48} className="size-12" />
                         Custom size
                       </span>
                     </button>
