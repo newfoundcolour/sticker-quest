@@ -316,7 +316,7 @@ export function TypeConfigurator({
 
       <div className="mt-6 flex flex-col gap-6">
         <div className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1.5fr]">
-          <StepCard step={1} title="Shape & Cut" className="xl:min-h-[780px]">
+          <StepCard step={1} mobileStep={2} title="Shape & Cut" className="xl:min-h-[780px]">
             <div className="flex flex-1 flex-col gap-2.5 p-6">
               <div className="flex gap-1 rounded-[14px] border border-grape bg-grape/25 p-1">
                 {CUT_TYPES.map((c) => {
@@ -390,7 +390,7 @@ export function TypeConfigurator({
             </div>
           </StepCard>
 
-          <StepCard step={2} title="Material" className="xl:min-h-[780px]">
+          <StepCard step={2} mobileStep={3} title="Material" className="xl:min-h-[780px]">
             <div className="flex flex-1 flex-col p-6">
               <div className="grid grid-cols-2 gap-2.5">
                 {FINISHES.map((f) => (
@@ -435,7 +435,7 @@ export function TypeConfigurator({
             </div>
           </StepCard>
 
-          <StepCard step={3} title="Size" className="xl:min-h-[780px]">
+          <StepCard step={3} mobileStep={4} title="Size" className="xl:min-h-[780px]">
             <div className="flex flex-1 flex-col p-6">
               <div className="grid grid-cols-2 gap-2">
                 {SIZE_PRESETS.map((p) => {
@@ -544,7 +544,7 @@ export function TypeConfigurator({
             </div>
           </StepCard>
 
-          <StepCard step={4} title="Quantity" className="xl:min-h-[780px]">
+          <StepCard step={4} mobileStep={5} title="Quantity" className="xl:min-h-[780px]">
             <div className="flex flex-col gap-3 p-6">
               {quantityChoice === "custom" ? (
                 <input
@@ -644,7 +644,8 @@ export function TypeConfigurator({
           </StepCard>
         </div>
 
-        <StepCard step={5} title="Upload">
+        {/* On mobile, artwork comes first so customers start with their design. */}
+        <StepCard step={5} mobileStep={1} title="Upload" className="max-md:order-first">
           <div className="p-5">
             <input
               ref={fileInputRef}

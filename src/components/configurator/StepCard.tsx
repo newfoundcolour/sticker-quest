@@ -7,11 +7,14 @@ import type { ReactNode } from "react";
  */
 export function StepCard({
   step,
+  mobileStep,
   title,
   className = "",
   children,
 }: {
   step: number;
+  /** Number shown below `md`, for cards that are reordered there. Defaults to `step`. */
+  mobileStep?: number;
   title: string;
   className?: string;
   children: ReactNode;
@@ -25,7 +28,14 @@ export function StepCard({
     >
       <div className="flex h-[60px] shrink-0 items-center gap-2.5 bg-grape px-[18px] shadow-pop-grape-soft">
         <span className="flex size-[30px] shrink-0 items-center justify-center rounded-full border-[1.5px] border-night bg-zap text-xs font-black text-night">
-          {step}
+          {mobileStep === undefined ? (
+            step
+          ) : (
+            <>
+              <span className="md:hidden">{mobileStep}</span>
+              <span className="max-md:hidden">{step}</span>
+            </>
+          )}
         </span>
         <h2 className="text-lg font-black text-white">{title}</h2>
       </div>
