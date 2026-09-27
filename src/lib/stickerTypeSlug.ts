@@ -41,6 +41,7 @@ export const STICKER_TYPE_DESCRIPTIONS: Record<StickerType, string> = {
 /** Artwork per type; types without an entry render a placeholder until their image lands. */
 export const STICKER_TYPE_IMAGES: Partial<Record<StickerType, string>> = {
   VINYL: "/mascot/knight-helmet.png",
+  HOLOGRAPHIC: "/mascot/holo-dragon.png",
 };
 
 /** Shared with the nav bar's search dropdown, which mirrors this grouping. */

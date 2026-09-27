@@ -60,6 +60,27 @@ const SIZE_PRESETS: { key: string; label: string; mm: number; image?: string }[]
   { key: "xlarge", label: "X-Large", mm: 125, image: "/icons/size-xlarge.png" },
 ];
 
+// Holographic swaps in its own option art; anything missing here keeps the default.
+const HOLO_IMAGES: Record<string, string> = {
+  "/configurator/shapes/custom.png": "/holo/shape-custom.png",
+  "/configurator/shapes/circle.png": "/holo/shape-circle.png",
+  "/configurator/shapes/oval.png": "/holo/shape-oval.png",
+  "/configurator/shapes/square.png": "/holo/shape-square.png",
+  "/configurator/shapes/rectangle.png": "/holo/shape-rectangle.png",
+  "/icons/matte.png": "/holo/matte.png",
+  "/icons/gloss.png": "/holo/gloss.png",
+  "/icons/size-small.png": "/holo/size-small.png",
+  "/icons/size-medium.png": "/holo/size-medium.png",
+  "/icons/size-large.png": "/holo/size-large.png",
+  "/icons/size-xlarge.png": "/holo/size-xlarge.png",
+};
+
+// Hero art per type; the knight is the default.
+const HERO_IMAGES: Partial<Record<StickerType, { src: string; width: number; height: number }>> = {
+  HOLOGRAPHIC: { src: "/mascot/holo-dragon.png", width: 868, height: 868 },
+};
+const DEFAULT_HERO_IMAGE = { src: "/mascot/knight-helmet.png", width: 615, height: 880 };
+
 const QUANTITY_PRESETS = [50, 100, 200, 300, 500, 1000, 2000];
 
 // What a fresh configurator starts on.
@@ -218,6 +239,8 @@ export function TypeConfigurator({
   const isHolographic = stickerType === "HOLOGRAPHIC";
   const hasWhiteInkOption = stickerType !== "VINYL";
   const hasRoundedCornersOption = shape === "SQUARE" || shape === "RECTANGLE";
+  const optionImage = (src: string) => (isHolographic ? (HOLO_IMAGES[src] ?? src) : src);
+  const heroImage = HERO_IMAGES[stickerType] ?? DEFAULT_HERO_IMAGE;
 
   const pricing = hasSize
     ? calculateStickerPricing({
@@ -298,10 +321,10 @@ export function TypeConfigurator({
       </Link>
       <div className="flex items-center gap-5 overflow-hidden rounded-[20px] bg-linear-[167deg] from-zap via-blaze via-55% to-grape px-5 py-4 sm:px-8 md:h-[208px] md:py-0 lg:px-12">
         <Image
-          src="/mascot/knight-helmet.png"
+          src={heroImage.src}
           alt=""
-          width={615}
-          height={880}
+          width={heroImage.width}
+          height={heroImage.height}
           className="hidden h-28 w-auto shrink-0 drop-shadow-[4px_4px_0_rgba(22,18,42,0.45)] sm:block md:h-40"
         />
         <div className="min-w-0 flex-1">
@@ -360,7 +383,7 @@ export function TypeConfigurator({
                       customSelected ? SELECTED_CLASSES : IDLE_CLASSES,
                     ].join(" ")}
                   >
-                    <ShapeImage src={custom.image} size={64} kissCut={cutType === "KISS"} />
+                    <ShapeImage src={optionImage(custom.image)} size={64} kissCut={cutType === "KISS"} />
                     <span className="text-sm font-black">{custom.label}</span>
                   </button>
                 );
@@ -373,7 +396,7 @@ export function TypeConfigurator({
                     onClick={() => setShape(s.value)}
                     className="gap-2"
                   >
-                    <ShapeImage src={s.image} size={64} kissCut={cutType === "KISS"} />
+                    <ShapeImage src={optionImage(s.image)} size={64} kissCut={cutType === "KISS"} />
                     <span className="text-sm font-black">{s.label}</span>
                   </OptionTile>
                 ))}
@@ -401,7 +424,7 @@ export function TypeConfigurator({
                     className="h-[148px] gap-2"
                   >
                     <Image
-                      src={f.icon}
+                      src={optionImage(f.icon)}
                       alt=""
                       width={64}
                       height={64}
@@ -449,7 +472,7 @@ export function TypeConfigurator({
                     >
                       {p.image ? (
                         <Image
-                          src={p.image}
+                          src={optionImage(p.image)}
                           alt=""
                           width={64}
                           height={64}
@@ -491,7 +514,7 @@ export function TypeConfigurator({
                       ].join(" ")}
                     >
                       <span className="flex items-center gap-2 text-sm font-black">
-                        <Image src="/icons/size-custom.png" alt="" width={48} height={48} className="size-12" />
+                        <Image src={optionImage("/icons/size-custom.png")} alt="" width={48} height={48} className="size-12" />
                         Custom size
                       </span>
                     </button>
