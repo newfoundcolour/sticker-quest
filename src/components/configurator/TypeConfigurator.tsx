@@ -29,6 +29,7 @@ import {
 } from "./StepCard";
 import { PriceReadout } from "./PriceReadout";
 import { ShapeImage } from "./ShapeImage";
+import { SizeGuide } from "./SizeGuide";
 import { STICKER_TYPE_DESCRIPTIONS, STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
 import { formatCurrency } from "@/lib/pricingUtils";
 import { MAX_ARTWORK_BYTES, type UploadArtworkResult } from "@/lib/uploadConstants";
@@ -458,7 +459,13 @@ export function TypeConfigurator({
             </div>
           </StepCard>
 
-          <StepCard step={3} mobileStep={4} title="Size" className="xl:min-h-[780px]">
+          <StepCard
+            step={3}
+            mobileStep={4}
+            title="Size"
+            action={<SizeGuide />}
+            className="xl:min-h-[780px]"
+          >
             <div className="flex flex-1 flex-col p-6">
               <div className="grid grid-cols-2 gap-2">
                 {SIZE_PRESETS.map((p) => {

@@ -9,6 +9,7 @@ export function StepCard({
   step,
   mobileStep,
   title,
+  action,
   className = "",
   children,
 }: {
@@ -16,6 +17,8 @@ export function StepCard({
   /** Number shown below `md`, for cards that are reordered there. Defaults to `step`. */
   mobileStep?: number;
   title: string;
+  /** Extra control on the right of the header bar (e.g. the size guide). */
+  action?: ReactNode;
   className?: string;
   children: ReactNode;
 }) {
@@ -38,6 +41,7 @@ export function StepCard({
           )}
         </span>
         <h2 className="text-lg font-black text-white">{title}</h2>
+        {action && <div className="ml-auto">{action}</div>}
       </div>
       {children}
     </section>
