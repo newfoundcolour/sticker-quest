@@ -94,3 +94,22 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Soft grape glow rising from both bottom corners of the dark pages. Each
+   glow is brightest in its bottom corner and fades out by the opposite top
+   corner. Sits behind the page content and scrolls with it. */
+@utility page-glow {
+  background-image:
+    radial-gradient(
+      farthest-corner at 0% 100%,
+      rgb(104 94 168 / 0.2),
+      rgb(104 94 168 / 0.07) 35%,
+      transparent 100%
+    ),
+    radial-gradient(
+      farthest-corner at 100% 100%,
+      rgb(104 94 168 / 0.2),
+      rgb(104 94 168 / 0.07) 35%,
+      transparent 100%
+    );
+}

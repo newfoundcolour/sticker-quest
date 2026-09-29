@@ -16,7 +16,8 @@ export default async function ConfigureTypePage({
   const pricingConfig = await getPricingConfig(stickerType);
 
   return (
-    <main className="flex flex-1 flex-col bg-night">
+    <main className="relative isolate flex flex-1 flex-col bg-night">
+      <div aria-hidden="true" className="page-glow pointer-events-none absolute inset-0 -z-10" />
       <TypeConfigurator stickerType={stickerType} pricingConfig={pricingConfig} />
       <Reviews />
     </main>
