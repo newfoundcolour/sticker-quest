@@ -19,7 +19,7 @@ const LINK_CLASSES = "text-white/55 transition-colors hover:text-white";
 function FooterColumn({ title, children }: { title: ReactNode; children: ReactNode }) {
   return (
     <div>
-      <h2 className="text-sm font-black text-white">{title}</h2>
+      <h2 className="text-lg font-black text-white">{title}</h2>
       <div className="mt-4 text-sm">{children}</div>
     </div>
   );
