@@ -33,7 +33,7 @@ export function NavBar({ cartCount }: { cartCount: number }) {
   }
 
   return (
-    <header className="bg-night">
+    <header className="relative z-10 bg-night">
       <Container className="flex items-center gap-3 py-3 sm:gap-5 sm:py-3.5">
         <Link href="/" className="shrink-0" aria-label="Sticker Quest home">
           <Image

@@ -3,7 +3,7 @@ import { Container } from "@/components/Container";
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/[0.13] bg-night">
+    <footer className="relative z-10 border-t border-white/[0.13] bg-night">
       <Container className="flex flex-col items-center justify-center gap-3 py-6 text-center sm:h-[112px] sm:flex-row sm:justify-between sm:py-0 sm:text-left">
         <Image
           src="/brand/logo-sticker-quest.png"

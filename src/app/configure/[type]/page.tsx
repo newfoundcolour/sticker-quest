@@ -17,14 +17,15 @@ export default async function ConfigureTypePage({
 
   return (
     <main className="relative isolate flex flex-1 flex-col bg-night">
-      {/* Pinned to the viewport, behind this page's content only — the nav and
-          footer paint over it with their own background. */}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10">
+      <TypeConfigurator stickerType={stickerType} pricingConfig={pricingConfig} />
+      <Reviews />
+      {/* Sticks to the bottom of the viewport while scrolling, then comes to
+          rest at the bottom of <main> — so the glow always ends above the
+          footer. Zero height; the glows extend upward behind the content. */}
+      <div aria-hidden="true" className="pointer-events-none sticky bottom-0 -z-10 h-0">
         <div className="page-glow-left absolute bottom-0 left-0 h-[85vh] w-[70%]" />
         <div className="page-glow-right absolute bottom-0 right-0 h-[85vh] w-[70%]" />
       </div>
-      <TypeConfigurator stickerType={stickerType} pricingConfig={pricingConfig} />
-      <Reviews />
     </main>
   );
 }
