@@ -17,9 +17,11 @@ export default async function ConfigureTypePage({
 
   return (
     <main className="relative isolate flex flex-1 flex-col bg-night">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="page-glow-left absolute bottom-0 left-0 h-[900px] max-h-full w-[70%]" />
-        <div className="page-glow-right absolute bottom-0 right-0 h-[900px] max-h-full w-[70%]" />
+      {/* Pinned to the viewport, behind this page's content only — the nav and
+          footer paint over it with their own background. */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10">
+        <div className="page-glow-left absolute bottom-0 left-0 h-[85vh] w-[70%]" />
+        <div className="page-glow-right absolute bottom-0 right-0 h-[85vh] w-[70%]" />
       </div>
       <TypeConfigurator stickerType={stickerType} pricingConfig={pricingConfig} />
       <Reviews />

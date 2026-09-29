@@ -96,8 +96,8 @@ body {
 }
 
 /* Soft grape glow for the dark pages: put one on a box pinned to a bottom
-   corner of the page. It's brightest in that corner and fades out by the
-   box's opposite top corner, so it scrolls into view with the page. */
+   corner of the viewport. It's brightest in that corner and fades out by
+   the box's opposite top corner. */
 @utility page-glow-left {
   background-image: radial-gradient(
     100% 100% at 0% 100%,
