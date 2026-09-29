@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Container } from "@/components/Container";
+import { InstagramIcon, TikTokIcon } from "@/components/icons/SocialIcons";
 import {
   STICKER_TYPE_GROUPS,
   STICKER_TYPE_LABELS,
@@ -12,6 +13,12 @@ const OFFICE_HOURS = [
   { days: "Monday – Friday", hours: "8am – 5pm" },
   { days: "Saturday", hours: "Closed" },
   { days: "Sunday", hours: "Closed" },
+];
+
+// TODO: point these at the real Sticker Quest profiles once the handles are set.
+const SOCIAL_LINKS = [
+  { name: "Instagram", href: "https://www.instagram.com/", Icon: InstagramIcon },
+  { name: "TikTok", href: "https://www.tiktok.com/", Icon: TikTokIcon },
 ];
 
 const LINK_CLASSES = "text-white/55 transition-colors hover:text-white";
@@ -79,6 +86,21 @@ export function Footer() {
             We&rsquo;re Sticker Quest and we&rsquo;re on a quest to make getting custom branded
             stickers dead easy.
           </p>
+          <ul className="mt-5 flex gap-3">
+            {SOCIAL_LINKS.map(({ name, href, Icon }) => (
+              <li key={name}>
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Sticker Quest on ${name}`}
+                  className="flex size-10 items-center justify-center rounded-full border-[1.5px] border-white/[0.19] bg-white/[0.08] text-white/80 transition-colors hover:border-blaze hover:bg-blaze hover:text-white"
+                >
+                  <Icon className="size-[18px]" />
+                </a>
+              </li>
+            ))}
+          </ul>
         </FooterColumn>
       </Container>
 
