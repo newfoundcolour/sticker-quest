@@ -41,11 +41,11 @@ export function PriceReadout({
           </li>
         )}
         <li className="flex items-center gap-2">
-          <span aria-hidden>📝</span>
+          <span aria-hidden>📜</span>
           We send a proof for your approval before printing
         </li>
         <li className="flex items-center gap-2">
-          <span aria-hidden>🔒</span>
+          <span aria-hidden>🛡️</span>
           Secure checkout
         </li>
       </ul>
