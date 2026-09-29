@@ -30,14 +30,16 @@ export function PriceReadout({
         {ready && savingsPercent > 0 && (
           <span className="text-sm font-black text-grape">Save {savingsPercent}%</span>
         )}
-        <p className="text-xs text-night/60">
-          {ready
-            ? "🚀 Ships 3–5 working days after proof approval"
-            : "Pick a size to see live pricing"}
-        </p>
+        {!ready && <p className="text-xs text-night/60">Pick a size to see live pricing</p>}
       </div>
 
       <ul className="flex flex-col gap-[5px] text-xs text-night/55">
+        {ready && (
+          <li className="flex items-center gap-2">
+            <span aria-hidden>🐎</span>
+            Ships 3–5 working days after proof approval
+          </li>
+        )}
         <li className="flex items-center gap-2">
           <span aria-hidden>📝</span>
           We send a proof for your approval before printing
