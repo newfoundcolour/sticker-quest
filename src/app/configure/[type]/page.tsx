@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { slugToStickerType } from "@/lib/stickerTypeSlug";
 import { getPricingConfig } from "@/lib/pricing";
 import { TypeConfigurator } from "@/components/configurator/TypeConfigurator";
+import { Reviews } from "@/components/Reviews";
 
 export default async function ConfigureTypePage({
   params,
@@ -17,6 +18,7 @@ export default async function ConfigureTypePage({
   return (
     <main className="flex flex-1 flex-col bg-night">
       <TypeConfigurator stickerType={stickerType} pricingConfig={pricingConfig} />
+      <Reviews />
     </main>
   );
 }

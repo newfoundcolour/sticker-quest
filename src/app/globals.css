@@ -17,6 +17,9 @@
   --color-quiet: #7a7879;
   --color-mist: #eceaf0;
   --color-sand: #f5f0e8;
+  /* Pastel review-card fills, alongside `zap`. */
+  --color-peach: #ffd7c8;
+  --color-lilac: #dcd5ff;
 
   /* Darker shades of the accents, used for a selected option's hard shadow. */
   --color-blaze-deep: #4d1e12;
@@ -39,6 +42,8 @@
   --color-quiet: var(--color-quiet);
   --color-mist: var(--color-mist);
   --color-sand: var(--color-sand);
+  --color-peach: var(--color-peach);
+  --color-lilac: var(--color-lilac);
   --color-blaze-deep: var(--color-blaze-deep);
   --color-zap-deep: var(--color-zap-deep);
 
@@ -49,6 +54,8 @@
   /* Same device, softer and always-on — a step header's bottom edge and the
      upload drop zone's resting state. */
   --shadow-pop-grape-soft: 3px 3px 0 0 rgba(104, 94, 168, 0.4);
+  /* Bigger, night-coloured version for the review cards. */
+  --shadow-pop-night: 5px 5px 0 0 var(--color-night);
 
   --shadow-card: 0 1px 4px rgba(32, 31, 32, 0.06), 0 6px 24px rgba(32, 31, 32, 0.07);
 
