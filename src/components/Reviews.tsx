@@ -8,7 +8,7 @@ const CARD_STYLES = [
   "bg-lilac md:rotate-2",
 ];
 
-/** "Stuck on quality." — tilted review cards on the dark page, below the configurator. */
+/** "Our Quest For Quality." — tilted review cards on the dark page, below the configurator. */
 export async function Reviews() {
   const reviews = await getReviews();
   if (reviews.length === 0) return null;
@@ -16,17 +16,12 @@ export async function Reviews() {
   return (
     <section aria-labelledby="reviews-heading" className="pt-16 pb-[68px]">
       <Container>
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <h2
-            id="reviews-heading"
-            className="text-[36px] font-black leading-none text-white uppercase md:text-[56px]"
-          >
-            Stuck on quality.
-          </h2>
-          <p className="rotate-3 rounded-full border-2 border-white bg-blaze px-[18px] py-2.5 text-xs font-black text-white uppercase">
-            <span aria-hidden="true">★★★★★ </span>Loved by makers
-          </p>
-        </div>
+        <h2
+          id="reviews-heading"
+          className="text-center text-[36px] font-black leading-none text-white uppercase md:text-[56px]"
+        >
+          Our Quest For Quality.
+        </h2>
 
         <ul className="mt-9 grid gap-6 md:grid-cols-3 md:gap-[18px]">
           {reviews.map((review, i) => (

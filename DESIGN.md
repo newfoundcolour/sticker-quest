@@ -20,7 +20,7 @@ The configurator was redesigned in Figma ("Sticker Quest 1.0", desktop frame `1:
 | `ink` / `quiet` | `#201f20` / `#7a7879` | Text / secondary text |
 | `mist` | `#eceaf0` | Idle tiles and inset panels |
 
-Tokens live in `globals.css` next to the original palette. Don't claim things in the UI that the business doesn't offer yet (store credit, satisfaction guarantee) — the Figma mock contains them, the build deliberately doesn't. The "Stuck on quality." reviews section is built, but its cards are placeholder copy from the mock (`src/lib/reviews.ts`) until real reviews can be added from the backend.
+Tokens live in `globals.css` next to the original palette. Don't claim things in the UI that the business doesn't offer yet (store credit, satisfaction guarantee) — the Figma mock contains them, the build deliberately doesn't. The "Our Quest For Quality." reviews section is built, but its cards are placeholder copy from the mock (`src/lib/reviews.ts`) until real reviews can be added from the backend.
 
 ## Signature element: the Waypoint Line + the Mascot
 
