@@ -1,6 +1,7 @@
 import { getCart, type CartItem } from "@/lib/cart";
 import { getPricingConfig, MissingPricingRuleError } from "@/lib/pricing";
 import { calculateStickerPricing } from "@/lib/pricingUtils";
+import { DISCONTINUED_STICKER_TYPES } from "@/lib/stickerTypeSlug";
 import type { PricingConfig } from "@/lib/pricing";
 import type { StickerType } from "@/generated/prisma/client";
 
@@ -12,7 +13,7 @@ export type PricedCartItem = CartItem & {
 
 export type PricedCart = {
   items: PricedCartItem[];
-  /** Cart items whose sticker type no longer has a PricingRule — excluded from the total, flagged for removal. */
+  /** Cart items whose sticker type is discontinued or has no PricingRule — excluded from the total, flagged for removal. */
   unavailableItemIds: string[];
   subtotal: number;
 };
@@ -34,6 +35,11 @@ export async function getPricedCart(): Promise<PricedCart> {
 
   await Promise.all(
     distinctTypes.map(async (type) => {
+      // A cart cookie can outlive a type being discontinued.
+      if (DISCONTINUED_STICKER_TYPES.has(type)) {
+        unavailableTypes.add(type);
+        return;
+      }
       try {
         configByType.set(type, await getPricingConfig(type));
       } catch (error) {

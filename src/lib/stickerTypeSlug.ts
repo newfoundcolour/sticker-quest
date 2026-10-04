@@ -10,8 +10,16 @@ export const STICKER_TYPE_SLUGS: Record<StickerType, string> = {
   LABEL_SHEETS: "label-sheets",
 };
 
+/**
+ * No longer sold. Kept in the enum, labels and pricing data so historic orders
+ * still render in the admin, but hidden from the site and refused at checkout.
+ */
+export const DISCONTINUED_STICKER_TYPES: ReadonlySet<StickerType> = new Set<StickerType>(["ECONOMY"]);
+
 const SLUG_TO_STICKER_TYPE: Record<string, StickerType> = Object.fromEntries(
-  Object.entries(STICKER_TYPE_SLUGS).map(([type, slug]) => [slug, type as StickerType]),
+  Object.entries(STICKER_TYPE_SLUGS)
+    .filter(([type]) => !DISCONTINUED_STICKER_TYPES.has(type as StickerType))
+    .map(([type, slug]) => [slug, type as StickerType]),
 );
 
 export function slugToStickerType(slug: string): StickerType | undefined {
@@ -48,7 +56,7 @@ export const STICKER_TYPE_IMAGES: Partial<Record<StickerType, string>> = {
 export const STICKER_TYPE_GROUPS: { title: string; types: StickerType[] }[] = [
   {
     title: "Individually cut",
-    types: ["VINYL", "HOLOGRAPHIC", "CHROME", "CLEAR", "ECONOMY"],
+    types: ["VINYL", "HOLOGRAPHIC", "CHROME", "CLEAR"],
   },
   {
     title: "Sheets",

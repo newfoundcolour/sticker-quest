@@ -20,7 +20,7 @@ Visual/design decisions must follow `DESIGN.md` in the project root.
 
 Customers configure a product with these options, and price recalculates live as each is selected:
 
-- **Sticker type:** vinyl, holographic, chrome, glitter, clear, economy, sticker sheets, label sheets
+- **Sticker type:** vinyl, holographic, chrome, glitter, clear, sticker sheets, label sheets
 - **Cut type:** kiss or die
 - **Shape:** square, circle, rectangle, oval, custom
 - **Finish:** matte or gloss
