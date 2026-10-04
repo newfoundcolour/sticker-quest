@@ -1,6 +1,6 @@
 import { removeFromCartAction, updateCartItemQuantityAction } from "@/app/actions/cart";
 import { STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
-import { CUT_TYPE_LABELS, FINISH_LABELS, SHAPE_LABELS, formatAddOns } from "@/lib/orderLabels";
+import { CUT_TYPE_LABELS, finishLabel, SHAPE_LABELS, formatAddOns } from "@/lib/orderLabels";
 import { formatCurrency } from "@/lib/pricingUtils";
 import { MIN_QUANTITY, formatSizeMm } from "@/lib/pricingUtils";
 import type { PricedCartItem } from "@/lib/cartPricing";
@@ -26,7 +26,7 @@ export function CartLineItem({
       <div className="min-w-0 flex-1">
         <p className="font-medium text-ink-navy">{STICKER_TYPE_LABELS[item.stickerType]}</p>
         <p className="text-sm text-ink-navy/60">
-          {SHAPE_LABELS[item.shape]} · {CUT_TYPE_LABELS[item.cutType]} · {FINISH_LABELS[item.finish]}
+          {SHAPE_LABELS[item.shape]} · {CUT_TYPE_LABELS[item.cutType]} · {finishLabel(item.stickerType, item.finish)}
         </p>
         <p className="text-sm text-ink-navy/60">
           {formatSizeMm(item.widthCm)} x {formatSizeMm(item.heightCm)}

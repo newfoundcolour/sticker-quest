@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
 import {
   CUT_TYPE_LABELS,
-  FINISH_LABELS,
+  finishLabel,
   ORDER_STATUS_LABELS,
   ORDER_STATUS_VALUES,
   SHAPE_LABELS,
@@ -170,7 +170,7 @@ export default async function AdminOrdersPage({
                       <Link href={href} className="block px-4 py-3">
                         <span className="block text-ink-navy/70">
                           {item
-                            ? `${SHAPE_LABELS[item.shape]} · ${CUT_TYPE_LABELS[item.cutType]} · ${FINISH_LABELS[item.finish]}`
+                            ? `${SHAPE_LABELS[item.shape]} · ${CUT_TYPE_LABELS[item.cutType]} · ${finishLabel(item.stickerType, item.finish)}`
                             : "—"}
                         </span>
                         {sizeLine && (

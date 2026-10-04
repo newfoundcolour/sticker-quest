@@ -1,4 +1,5 @@
-import type { CutType, Finish, OrderStatus, Shape } from "@/generated/prisma/client";
+import type { CutType, Finish, OrderStatus, Shape, StickerType } from "@/generated/prisma/client";
+import { STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
 
 /** Shared between the cart and checkout summaries — the configurator's own labels live inline there. */
 export const CUT_TYPE_LABELS: Record<CutType, string> = {
@@ -18,6 +19,17 @@ export const FINISH_LABELS: Record<Finish, string> = {
   MATTE: "Matte",
   GLOSS: "Gloss",
 };
+
+/** Only vinyl offers a matte/gloss choice; every other type is MATTE, shown as its material name. */
+export function hasFinishChoice(stickerType: StickerType): boolean {
+  return stickerType === "VINYL";
+}
+
+/** Older non-vinyl GLOSS items keep reading "Gloss" so staff print them as ordered. */
+export function finishLabel(stickerType: StickerType, finish: Finish): string {
+  if (hasFinishChoice(stickerType) || finish === "GLOSS") return FINISH_LABELS[finish];
+  return STICKER_TYPE_LABELS[stickerType];
+}
 
 /**
  * The yes/no extras a customer said yes to, as one " · "-joined line —

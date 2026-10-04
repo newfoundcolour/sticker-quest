@@ -31,6 +31,7 @@ import { PriceReadout } from "./PriceReadout";
 import { ShapeImage } from "./ShapeImage";
 import { SizeGuide } from "./SizeGuide";
 import { STICKER_TYPE_DESCRIPTIONS, STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
+import { hasFinishChoice } from "@/lib/orderLabels";
 import { formatCurrency } from "@/lib/pricingUtils";
 import { MAX_ARTWORK_BYTES, type UploadArtworkResult } from "@/lib/uploadConstants";
 
@@ -241,6 +242,12 @@ export function TypeConfigurator({
   const hasWhiteInkOption = stickerType !== "VINYL";
   const hasRoundedCornersOption = shape === "SQUARE" || shape === "RECTANGLE";
   const optionImage = (src: string) => (isHolographic ? (HOLO_IMAGES[src] ?? src) : src);
+  const finishes = hasFinishChoice(stickerType)
+    ? FINISHES
+    : FINISHES.filter((f) => f.value === "MATTE").map((f) => ({
+        ...f,
+        label: STICKER_TYPE_LABELS[stickerType],
+      }));
   const heroImage = HERO_IMAGES[stickerType] ?? DEFAULT_HERO_IMAGE;
 
   const pricing = hasSize
@@ -417,7 +424,7 @@ export function TypeConfigurator({
           <StepCard step={2} mobileStep={3} title="Material" className="xl:min-h-[780px]">
             <div className="flex flex-1 flex-col p-6">
               <div className="grid grid-cols-2 gap-2.5">
-                {FINISHES.map((f) => (
+                {finishes.map((f) => (
                   <OptionTile
                     key={f.value}
                     selected={finish === f.value}

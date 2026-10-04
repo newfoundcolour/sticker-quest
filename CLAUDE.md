@@ -23,7 +23,7 @@ Customers configure a product with these options, and price recalculates live as
 - **Sticker type:** vinyl, holographic, chrome, glitter, clear, sticker sheets, label sheets
 - **Cut type:** kiss or die
 - **Shape:** square, circle, rectangle, oval, custom
-- **Finish:** matte or gloss
+- **Finish:** matte or gloss for vinyl only; every other type has a single option (stored as matte) labelled with its material name
 - **Size:** 50, 75, 100 or 125 mm (square presets), or custom in mm rounded to the nearest 0.5 (up to max printer width). Stored and priced in cm.
 - **Quantity:** minimum 50, no upper limit
 

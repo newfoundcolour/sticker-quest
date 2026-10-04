@@ -4,10 +4,11 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { addToCart, removeFromCart, updateCartItemQuantity, type CartItem } from "@/lib/cart";
 import { clampQuantity } from "@/lib/pricingUtils";
+import { hasFinishChoice } from "@/lib/orderLabels";
 
 /** Called from the configurator once every step is complete. Redirects to the cart on success. */
 export async function addToCartAction(item: Omit<CartItem, "id">): Promise<void> {
-  await addToCart(item);
+  await addToCart(hasFinishChoice(item.stickerType) ? item : { ...item, finish: "MATTE" });
   revalidatePath("/", "layout");
   redirect("/cart");
 }

@@ -5,7 +5,7 @@ import { formatCurrency, formatSizeMm } from "@/lib/pricingUtils";
 import { STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
 import {
   CUT_TYPE_LABELS,
-  FINISH_LABELS,
+  finishLabel,
   ORDER_STATUS_BADGE_CLASSES,
   ORDER_STATUS_LABELS,
   SHAPE_LABELS,
@@ -110,7 +110,7 @@ export default async function AdminOrderDetailPage({
                   </p>
                   <p className="mt-1 text-sm text-ink-navy/60">
                     {SHAPE_LABELS[item.shape]} · {CUT_TYPE_LABELS[item.cutType]} ·{" "}
-                    {FINISH_LABELS[item.finish]}
+                    {finishLabel(item.stickerType, item.finish)}
                   </p>
                   <p className="text-sm text-ink-navy/60">
                     {formatSizeMm(Number(item.widthCm))} x {formatSizeMm(Number(item.heightCm))}
