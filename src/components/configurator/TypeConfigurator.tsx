@@ -62,19 +62,26 @@ const SIZE_PRESETS: { key: string; label: string; mm: number; image?: string }[]
   { key: "xlarge", label: "X-Large", mm: 125, image: "/icons/size-xlarge.png" },
 ];
 
-// Holographic swaps in its own option art; anything missing here keeps the default.
-const HOLO_IMAGES: Record<string, string> = {
-  "/configurator/shapes/custom.png": "/holo/shape-custom.png",
-  "/configurator/shapes/circle.png": "/holo/shape-circle.png",
-  "/configurator/shapes/oval.png": "/holo/shape-oval.png",
-  "/configurator/shapes/square.png": "/holo/shape-square.png",
-  "/configurator/shapes/rectangle.png": "/holo/shape-rectangle.png",
-  "/icons/matte.png": "/holo/matte.png",
-  "/icons/gloss.png": "/holo/gloss.png",
-  "/icons/size-small.png": "/holo/size-small.png",
-  "/icons/size-medium.png": "/holo/size-medium.png",
-  "/icons/size-large.png": "/holo/size-large.png",
-  "/icons/size-xlarge.png": "/holo/size-xlarge.png",
+// Default option art -> the file name each themed set uses for it.
+const THEMED_IMAGE_NAMES: Record<string, string> = {
+  "/configurator/shapes/custom.png": "shape-custom.png",
+  "/configurator/shapes/circle.png": "shape-circle.png",
+  "/configurator/shapes/oval.png": "shape-oval.png",
+  "/configurator/shapes/square.png": "shape-square.png",
+  "/configurator/shapes/rectangle.png": "shape-rectangle.png",
+  "/icons/matte.png": "matte.png",
+  "/icons/gloss.png": "gloss.png",
+  "/icons/size-small.png": "size-small.png",
+  "/icons/size-medium.png": "size-medium.png",
+  "/icons/size-large.png": "size-large.png",
+  "/icons/size-xlarge.png": "size-xlarge.png",
+};
+
+// Types that swap in their own option art from public/<folder>/. Each set
+// needs every file above that the type actually shows (non-vinyl has no gloss).
+const THEMED_IMAGE_FOLDERS: Partial<Record<StickerType, string>> = {
+  HOLOGRAPHIC: "holo",
+  CHROME: "chrome",
 };
 
 // Hero art per type; the knight is the default.
@@ -241,7 +248,11 @@ export function TypeConfigurator({
   const isHolographic = stickerType === "HOLOGRAPHIC";
   const hasWhiteInkOption = stickerType !== "VINYL";
   const hasRoundedCornersOption = shape === "SQUARE" || shape === "RECTANGLE";
-  const optionImage = (src: string) => (isHolographic ? (HOLO_IMAGES[src] ?? src) : src);
+  const themedFolder = THEMED_IMAGE_FOLDERS[stickerType];
+  const optionImage = (src: string) => {
+    const name = THEMED_IMAGE_NAMES[src];
+    return themedFolder && name ? `/${themedFolder}/${name}` : src;
+  };
   const finishes = hasFinishChoice(stickerType)
     ? FINISHES
     : FINISHES.filter((f) => f.value === "MATTE").map((f) => ({
