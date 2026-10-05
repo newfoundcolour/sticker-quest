@@ -8,15 +8,22 @@ import type { ReactNode } from "react";
 export function StepCard({
   step,
   mobileStep,
+  icon,
   title,
+  description,
   action,
   className = "",
   children,
 }: {
-  step: number;
+  /** Leave out for an unnumbered section (e.g. a sticker sheet's cut count). */
+  step?: number;
   /** Number shown below `md`, for cards that are reordered there. Defaults to `step`. */
   mobileStep?: number;
+  /** Shown left of the title, e.g. an emoji for an unnumbered section. */
+  icon?: ReactNode;
   title: string;
+  /** A short line beside the title (wraps under it on narrow screens). */
+  description?: string;
   /** Extra control on the right of the header bar (e.g. the size guide). */
   action?: ReactNode;
   className?: string;
@@ -29,18 +36,32 @@ export function StepCard({
         className,
       ].join(" ")}
     >
-      <div className="flex h-[60px] shrink-0 items-center gap-2.5 bg-grape px-[18px] shadow-pop-grape-soft">
-        <span className="flex size-[30px] shrink-0 items-center justify-center rounded-full border-[1.5px] border-night bg-zap text-xs font-black text-night">
-          {mobileStep === undefined ? (
-            step
-          ) : (
-            <>
-              <span className="md:hidden">{mobileStep}</span>
-              <span className="max-md:hidden">{step}</span>
-            </>
-          )}
-        </span>
-        <h2 className="text-lg font-black text-white">{title}</h2>
+      <div className="flex min-h-[60px] shrink-0 items-center gap-2.5 bg-grape px-[18px] py-2 shadow-pop-grape-soft">
+        {step !== undefined && (
+          <span className="flex size-[30px] shrink-0 items-center justify-center rounded-full border-[1.5px] border-night bg-zap text-xs font-black text-night">
+            {mobileStep === undefined ? (
+              step
+            ) : (
+              <>
+                <span className="md:hidden">{mobileStep}</span>
+                <span className="max-md:hidden">{step}</span>
+              </>
+            )}
+          </span>
+        )}
+        {icon && (
+          <span aria-hidden className="text-xl leading-none drop-shadow-[1.5px_1.5px_0_rgba(22,18,42,0.4)]">
+            {icon}
+          </span>
+        )}
+        {description ? (
+          <div className="flex flex-wrap items-baseline gap-x-3">
+            <h2 className="text-lg font-black text-white">{title}</h2>
+            <p className="text-sm text-white/75">{description}</p>
+          </div>
+        ) : (
+          <h2 className="text-lg font-black text-white">{title}</h2>
+        )}
         {action && <div className="ml-auto">{action}</div>}
       </div>
       {children}

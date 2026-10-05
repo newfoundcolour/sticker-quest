@@ -69,6 +69,8 @@ export async function submitOrderAction(
           widthCm: item.widthCm,
           heightCm: item.heightCm,
           quantity: item.quantity,
+          sheetMaterial: item.sheetMaterial ?? null,
+          sheetCuts: item.sheetCuts ?? null,
           artworkUrl: item.artworkUrl,
           artworkFilename: item.artworkFilename,
           pricePerUnit: item.pricePerUnit,

@@ -2,6 +2,7 @@ import { getCart, type CartItem } from "@/lib/cart";
 import { getPricingConfig, MissingPricingRuleError } from "@/lib/pricing";
 import { calculateStickerPricing } from "@/lib/pricingUtils";
 import { DISCONTINUED_STICKER_TYPES } from "@/lib/stickerTypeSlug";
+import { itemMaterial } from "@/lib/orderLabels";
 import type { PricingConfig } from "@/lib/pricing";
 import type { StickerType } from "@/generated/prisma/client";
 
@@ -29,7 +30,8 @@ export async function getPricedCart(): Promise<PricedCart> {
     return { items: [], unavailableItemIds: [], subtotal: 0 };
   }
 
-  const distinctTypes = [...new Set(cartItems.map((i) => i.stickerType))];
+  // A sticker sheet is priced on its material's rate; everything else on its own type's.
+  const distinctTypes = [...new Set(cartItems.flatMap((i) => [i.stickerType, itemMaterial(i)]))];
   const configByType = new Map<StickerType, PricingConfig>();
   const unavailableTypes = new Set<StickerType>();
 
@@ -56,19 +58,21 @@ export async function getPricedCart(): Promise<PricedCart> {
   const unavailableItemIds: string[] = [];
 
   for (const item of cartItems) {
-    const config = configByType.get(item.stickerType);
-    if (!config) {
+    const material = itemMaterial(item);
+    const config = configByType.get(material);
+    if (!config || unavailableTypes.has(item.stickerType)) {
       unavailableItemIds.push(item.id);
       continue;
     }
     const result = calculateStickerPricing({
       config,
-      isHolographic: item.stickerType === "HOLOGRAPHIC",
+      isHolographic: material === "HOLOGRAPHIC",
       whiteInk: item.whiteInk,
       lamination: item.lamination,
       widthCm: item.widthCm,
       heightCm: item.heightCm,
       quantity: item.quantity,
+      surchargePercent: item.sheetCuts ? config.sheetCutSurchargePercent[item.sheetCuts] : 0,
     });
     items.push({
       ...item,

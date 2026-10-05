@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
-import type { CutType, Finish, Shape, StickerType } from "@/generated/prisma/client";
+import type { CutType, Finish, Shape, SheetCuts, StickerType } from "@/generated/prisma/client";
 
 const CART_COOKIE = "sq_cart";
 const CART_COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
@@ -18,6 +18,9 @@ export type CartItem = {
   widthCm: number;
   heightCm: number;
   quantity: number;
+  /** Sticker sheets only; see OrderItem.sheetMaterial / sheetCuts. */
+  sheetMaterial?: StickerType;
+  sheetCuts?: SheetCuts;
   artworkUrl: string;
   artworkFilename: string;
 };

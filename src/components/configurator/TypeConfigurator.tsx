@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition, type CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import type { CutType, Finish, Shape, StickerType } from "@/generated/prisma/client";
+import type { CutType, Finish, Shape, SheetCuts, StickerType } from "@/generated/prisma/client";
 import type { PricingConfig } from "@/lib/pricing";
 import { addToCartAction } from "@/app/actions/cart";
 import { Container } from "@/components/Container";
@@ -31,7 +31,13 @@ import { PriceReadout } from "./PriceReadout";
 import { ShapeImage } from "./ShapeImage";
 import { SizeGuide } from "./SizeGuide";
 import { STICKER_TYPE_DESCRIPTIONS, STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
-import { hasFinishChoice } from "@/lib/orderLabels";
+import {
+  hasFinishChoice,
+  hasWhiteInkOption,
+  SHEET_CUTS_LABELS,
+  SHEET_CUTS_VALUES,
+  SHEET_MATERIALS,
+} from "@/lib/orderLabels";
 import { formatCurrency } from "@/lib/pricingUtils";
 import { MAX_ARTWORK_BYTES, type UploadArtworkResult } from "@/lib/uploadConstants";
 
@@ -62,6 +68,31 @@ const SIZE_PRESETS: { key: string; label: string; mm: number; image?: string }[]
   { key: "xlarge", label: "X-Large", mm: 125, image: "/icons/size-xlarge.png" },
 ];
 
+// Sticker sheets come in standard A-series paper sizes (portrait, in mm).
+const SHEET_SIZE_PRESETS: { key: string; label: string; widthMm: number; heightMm: number }[] = [
+  { key: "a6", label: "A6", widthMm: 105, heightMm: 148 },
+  { key: "a5", label: "A5", widthMm: 148, heightMm: 210 },
+  { key: "a4", label: "A4", widthMm: 210, heightMm: 297 },
+];
+const DEFAULT_SHEET_SIZE = "a5";
+
+// A sheet's material tiles show a rounded swatch that looks like the material.
+const MATERIAL_SWATCHES: Partial<Record<StickerType, CSSProperties>> = {
+  VINYL: { background: "linear-gradient(145deg, #ffffff 0%, #ffffff 55%, #e6e1d6 100%)" },
+  HOLOGRAPHIC: {
+    background:
+      "linear-gradient(135deg, #ff9ad5 0%, #ffd59a 22%, #c3ffa8 42%, #9ae6ff 62%, #c9a6ff 82%, #ff9ad5 100%)",
+  },
+  CHROME: {
+    background:
+      "linear-gradient(135deg, #fafafa 0%, #9a9da3 28%, #ffffff 48%, #6f737a 70%, #d9dbde 100%)",
+  },
+  CLEAR: {
+    background:
+      "linear-gradient(135deg, rgba(255,255,255,0.75), rgba(255,255,255,0.2)), repeating-conic-gradient(#d9d4c7 0 25%, #ffffff 0 50%) 0 0 / 12px 12px",
+  },
+};
+
 // Default option art -> the file name each themed set uses for it.
 const THEMED_IMAGE_NAMES: Record<string, string> = {
   "/configurator/shapes/custom.png": "shape-custom.png",
@@ -78,15 +109,21 @@ const THEMED_IMAGE_NAMES: Record<string, string> = {
 };
 
 // Types that swap in their own option art from public/<folder>/. Each set
-// needs every file above that the type actually shows (non-vinyl has no gloss).
+// needs every file above that the type actually shows (only vinyl and label sheets show gloss).
 const THEMED_IMAGE_FOLDERS: Partial<Record<StickerType, string>> = {
   HOLOGRAPHIC: "holo",
   CHROME: "chrome",
+  CLEAR: "clear",
 };
 
 // Hero art per type; the knight is the default.
 const HERO_IMAGES: Partial<Record<StickerType, { src: string; width: number; height: number }>> = {
+  VINYL: { src: "/mascot/vinyl-wizard.png", width: 1024, height: 1024 },
   HOLOGRAPHIC: { src: "/mascot/holo-dragon.png", width: 868, height: 868 },
+  CHROME: { src: "/mascot/chrome-knight.png", width: 830, height: 905 },
+  CLEAR: { src: "/mascot/clear-princess.png", width: 1024, height: 1024 },
+  LABEL_SHEETS: { src: "/mascot/label-sheet.png", width: 1024, height: 1024 },
+  STICKER_SHEETS: { src: "/mascot/sticker-sheet.png", width: 1024, height: 1024 },
 };
 const DEFAULT_HERO_IMAGE = { src: "/mascot/knight-helmet.png", width: 615, height: 880 };
 
@@ -100,6 +137,8 @@ const DEFAULT_FINISH: Finish = "MATTE";
 const DEFAULT_LAMINATION = false;
 const DEFAULT_SIZE = "medium";
 const DEFAULT_QUANTITY = 100;
+const DEFAULT_SHEET_MATERIAL: StickerType = "VINYL";
+const DEFAULT_SHEET_CUTS: SheetCuts = "CUTS_1_4";
 
 /**
  * XMLHttpRequest rather than fetch so we get real upload-progress events —
@@ -194,10 +233,21 @@ function pageTitle(stickerType: StickerType): string {
 export function TypeConfigurator({
   stickerType,
   pricingConfig,
+  materialPricingConfigs,
 }: {
   stickerType: StickerType;
   pricingConfig: PricingConfig;
+  /** Sticker sheets only: pricing for each material a sheet can be printed on. */
+  materialPricingConfigs?: Partial<Record<StickerType, PricingConfig>>;
 }) {
+  // Sticker sheets swap shape & cut for a material choice and a cut count.
+  const isSheet = stickerType === "STICKER_SHEETS";
+  const [sheetMaterial, setSheetMaterial] = useState<StickerType>(DEFAULT_SHEET_MATERIAL);
+  const [sheetCuts, setSheetCuts] = useState<SheetCuts>(DEFAULT_SHEET_CUTS);
+  const material = isSheet ? sheetMaterial : stickerType;
+  const config = (isSheet && materialPricingConfigs?.[material]) || pricingConfig;
+  const surchargePercent = isSheet ? config.sheetCutSurchargePercent[sheetCuts] : 0;
+
   const [cutType, setCutType] = useState<CutType | undefined>(DEFAULT_CUT_TYPE);
   const [shape, setShape] = useState<Shape | undefined>(DEFAULT_SHAPE);
   const [roundedCorners, setRoundedCorners] = useState(DEFAULT_ROUNDED_CORNERS);
@@ -206,7 +256,9 @@ export function TypeConfigurator({
   const [whiteInk, setWhiteInk] = useState(false);
   const [lamination, setLamination] = useState(DEFAULT_LAMINATION);
 
-  const [sizeChoice, setSizeChoice] = useState<string | undefined>(DEFAULT_SIZE); // preset key | 'custom'
+  const [sizeChoice, setSizeChoice] = useState<string | undefined>(
+    isSheet ? DEFAULT_SHEET_SIZE : DEFAULT_SIZE,
+  ); // preset key | 'custom'
   const [customWidthInput, setCustomWidthInput] = useState("");
   const [customHeightInput, setCustomHeightInput] = useState("");
 
@@ -223,7 +275,11 @@ export function TypeConfigurator({
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const preset = SIZE_PRESETS.find((p) => p.key === sizeChoice);
+  const preset = isSheet
+    ? SHEET_SIZE_PRESETS.find((p) => p.key === sizeChoice)
+    : SIZE_PRESETS.map((p) => ({ ...p, widthMm: p.mm, heightMm: p.mm })).find(
+        (p) => p.key === sizeChoice,
+      );
   const customWidth = parseFloat(customWidthInput);
   const customHeight = parseFloat(customHeightInput);
   const hasCustomSize =
@@ -231,8 +287,8 @@ export function TypeConfigurator({
   const hasSize = !!preset || hasCustomSize;
 
   // Inputs and presets are in mm; pricing and the cart work in cm.
-  const widthCm = mmToCm(preset ? preset.mm : clampSizeMm(customWidth || 0));
-  const heightCm = mmToCm(preset ? preset.mm : clampSizeMm(customHeight || 0));
+  const widthCm = mmToCm(preset ? preset.widthMm : clampSizeMm(customWidth || 0));
+  const heightCm = mmToCm(preset ? preset.heightMm : clampSizeMm(customHeight || 0));
 
   const customQuantity = parseInt(customQuantityInput, 10);
   const quantity =
@@ -245,36 +301,40 @@ export function TypeConfigurator({
     typeof quantityChoice === "number" ||
     (quantityChoice === "custom" && !Number.isNaN(customQuantity));
 
-  const isHolographic = stickerType === "HOLOGRAPHIC";
-  const hasWhiteInkOption = stickerType !== "VINYL";
-  const hasRoundedCornersOption = shape === "SQUARE" || shape === "RECTANGLE";
-  const themedFolder = THEMED_IMAGE_FOLDERS[stickerType];
+  const isHolographic = material === "HOLOGRAPHIC";
+  const showWhiteInk = hasWhiteInkOption(material);
+  const appliedWhiteInk = showWhiteInk && whiteInk;
+  const hasRoundedCornersOption = !isSheet && (shape === "SQUARE" || shape === "RECTANGLE");
+  const themedFolder = THEMED_IMAGE_FOLDERS[material];
   const optionImage = (src: string) => {
     const name = THEMED_IMAGE_NAMES[src];
     return themedFolder && name ? `/${themedFolder}/${name}` : src;
   };
-  const finishes = hasFinishChoice(stickerType)
+  const finishes = hasFinishChoice(material)
     ? FINISHES
     : FINISHES.filter((f) => f.value === "MATTE").map((f) => ({
         ...f,
-        label: STICKER_TYPE_LABELS[stickerType],
+        label: STICKER_TYPE_LABELS[material],
       }));
+  // A gloss pick doesn't carry over when a sheet switches to a matte-only material.
+  const appliedFinish = finish && (hasFinishChoice(material) ? finish : "MATTE");
   const heroImage = HERO_IMAGES[stickerType] ?? DEFAULT_HERO_IMAGE;
 
-  const pricing = hasSize
-    ? calculateStickerPricing({
-        config: pricingConfig,
-        isHolographic,
-        whiteInk,
-        lamination,
-        widthCm,
-        heightCm,
-        quantity,
-      })
-    : null;
+  const priceFor = (q: number) =>
+    calculateStickerPricing({
+      config,
+      isHolographic,
+      whiteInk: appliedWhiteInk,
+      lamination,
+      widthCm,
+      heightCm,
+      quantity: q,
+      surchargePercent,
+    });
+  const pricing = hasSize ? priceFor(quantity) : null;
 
   const completed = [
-    !!cutType && !!shape,
+    isSheet || (!!cutType && !!shape),
     !!finish,
     hasSize,
     hasQuantity,
@@ -285,19 +345,21 @@ export function TypeConfigurator({
   const [isAddingToCart, startAddToCart] = useTransition();
 
   function handleAddToCart() {
-    if (!cutType || !shape || !finish || !artworkUrl || !artworkFilename) return;
+    if (!cutType || !shape || !appliedFinish || !artworkUrl || !artworkFilename) return;
     startAddToCart(async () => {
       await addToCartAction({
         stickerType,
-        cutType,
-        shape,
-        finish,
+        // The server pins sheets to kiss cut on a rectangle regardless.
+        cutType: isSheet ? "KISS" : cutType,
+        shape: isSheet ? "RECTANGLE" : shape,
+        finish: appliedFinish,
         roundedCorners: hasRoundedCornersOption && roundedCorners,
-        whiteInk: hasWhiteInkOption && whiteInk,
+        whiteInk: appliedWhiteInk,
         lamination,
         widthCm,
         heightCm,
         quantity,
+        ...(isSheet && { sheetMaterial, sheetCuts }),
         artworkUrl,
         artworkFilename,
       });
@@ -357,88 +419,146 @@ export function TypeConfigurator({
       </div>
 
       <div className="mt-6 flex flex-col gap-6">
-        <div className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1.5fr]">
-          <StepCard step={1} mobileStep={2} title="Shape & Cut" className="xl:min-h-[780px]">
-            <div className="flex flex-1 flex-col gap-2.5 p-6">
-              <div className="flex gap-1 rounded-[14px] border border-grape bg-grape/25 p-1">
-                {CUT_TYPES.map((c) => {
-                  const selected = cutType === c.value;
+        {/* On mobile this sits just under the upload, which moves to the top. */}
+        {isSheet && (
+          <StepCard
+            icon="✂️"
+            title="How many cuts?"
+            description="How many individual stickers are on your sheet?"
+          >
+            <div className="p-4">
+              <div className="grid gap-2.5 sm:grid-cols-3">
+                {SHEET_CUTS_VALUES.map((c) => {
+                  const selected = sheetCuts === c;
+                  const percent = config.sheetCutSurchargePercent[c];
                   return (
-                    <button
-                      key={c.value}
-                      type="button"
-                      onClick={() => setCutType(c.value)}
-                      aria-pressed={selected}
-                      className={[
-                        "flex flex-1 flex-col items-center rounded-[10px] border py-2.5",
-                        OPTION_TRANSITION,
-                        LIFT_ON_HOVER,
-                        selected ? SELECTED_CLASSES : `${IDLE_CLASSES} text-grape`,
-                      ].join(" ")}
+                    <OptionTile
+                      key={c}
+                      selected={selected}
+                      onClick={() => setSheetCuts(c)}
+                      className="h-14 gap-0.5"
                     >
-                      <span className="text-xs font-black">{c.label}</span>
-                      <span className={selected ? "text-[10px]" : "text-[10px] text-grape/70"}>
-                        {c.hint}
+                      <span className="text-sm font-black">{SHEET_CUTS_LABELS[c]}</span>
+                      <span className={selected ? "text-[10px]" : "text-[10px] text-grape"}>
+                        {percent > 0 ? `+${percent}% pricing` : "Standard pricing"}
                       </span>
-                    </button>
+                    </OptionTile>
                   );
                 })}
               </div>
+            </div>
+          </StepCard>
+        )}
 
-              {/* Custom spans both columns; every row is 148px so all five options match. */}
-              <div className="grid auto-rows-[148px] grid-cols-2 gap-2.5">
-              {(() => {
-                const custom = SHAPES[0];
-                const customSelected = shape === custom.value;
-                return (
-                  <button
-                    type="button"
-                    onClick={() => setShape(custom.value)}
-                    aria-pressed={customSelected}
-                    className={[
-                      "group col-span-2 flex items-center justify-center gap-4 rounded-[14px] border px-5",
-                      OPTION_TRANSITION,
-                      LIFT_ON_HOVER,
-                      customSelected ? SELECTED_CLASSES : IDLE_CLASSES,
-                    ].join(" ")}
-                  >
-                    <ShapeImage src={optionImage(custom.image)} size={64} kissCut={cutType === "KISS"} />
-                    <span className="text-sm font-black">{custom.label}</span>
-                  </button>
-                );
-              })()}
-
-                {SHAPES.slice(1).map((s) => (
+        <div className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1.5fr]">
+          {isSheet ? (
+            <StepCard step={1} mobileStep={2} title="Material">
+              <div className="grid auto-rows-[148px] grid-cols-2 gap-2.5 p-6">
+                {SHEET_MATERIALS.map((m) => (
                   <OptionTile
-                    key={s.value}
-                    selected={shape === s.value}
-                    onClick={() => setShape(s.value)}
+                    key={m}
+                    selected={sheetMaterial === m}
+                    onClick={() => setSheetMaterial(m)}
                     className="gap-2"
                   >
-                    <ShapeImage src={optionImage(s.image)} size={64} kissCut={cutType === "KISS"} />
-                    <span className="text-sm font-black">{s.label}</span>
+                    <span
+                      aria-hidden
+                      style={MATERIAL_SWATCHES[m]}
+                      className={`size-16 rounded-[14px] border-[1.5px] border-night shadow-[3px_3px_0_rgba(22,18,42,0.25)] ${TILT_ON_HOVER}`}
+                    />
+                    <span className="text-sm font-black">{STICKER_TYPE_LABELS[m]}</span>
                   </OptionTile>
                 ))}
               </div>
+            </StepCard>
+          ) : (
+            <StepCard step={1} mobileStep={2} title="Shape & Cut">
+              <div className="flex flex-1 flex-col gap-2.5 p-6">
+                <div className="flex gap-1 rounded-[14px] border border-grape bg-grape/25 p-1">
+                  {CUT_TYPES.map((c) => {
+                    const selected = cutType === c.value;
+                    return (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => setCutType(c.value)}
+                        aria-pressed={selected}
+                        className={[
+                          "flex flex-1 flex-col items-center rounded-[10px] border py-2.5",
+                          OPTION_TRANSITION,
+                          LIFT_ON_HOVER,
+                          selected ? SELECTED_CLASSES : `${IDLE_CLASSES} text-grape`,
+                        ].join(" ")}
+                      >
+                        <span className="text-xs font-black">{c.label}</span>
+                        <span className={selected ? "text-[10px]" : "text-[10px] text-grape/70"}>
+                          {c.hint}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
 
-              {hasRoundedCornersOption && (
-                <YesNoQuestion
-                  question="Rounded corners?"
-                  value={roundedCorners}
-                  onChange={setRoundedCorners}
-                  className="pt-1.5"
-                />
-              )}
-            </div>
-          </StepCard>
+                {/* Custom spans both columns; every row is 148px so all five options match. */}
+                <div className="grid auto-rows-[148px] grid-cols-2 gap-2.5">
+                {(() => {
+                  const custom = SHAPES[0];
+                  const customSelected = shape === custom.value;
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => setShape(custom.value)}
+                      aria-pressed={customSelected}
+                      className={[
+                        "group col-span-2 flex items-center justify-center gap-4 rounded-[14px] border px-5",
+                        OPTION_TRANSITION,
+                        LIFT_ON_HOVER,
+                        customSelected ? SELECTED_CLASSES : IDLE_CLASSES,
+                      ].join(" ")}
+                    >
+                      <ShapeImage src={optionImage(custom.image)} size={64} kissCut={cutType === "KISS"} />
+                      <span className="text-sm font-black">{custom.label}</span>
+                    </button>
+                  );
+                })()}
 
-          <StepCard step={2} mobileStep={3} title="Material" className="xl:min-h-[780px]">
+                  {SHAPES.slice(1).map((s) => (
+                    <OptionTile
+                      key={s.value}
+                      selected={shape === s.value}
+                      onClick={() => setShape(s.value)}
+                      className="gap-2"
+                    >
+                      <ShapeImage src={optionImage(s.image)} size={64} kissCut={cutType === "KISS"} />
+                      <span className="text-sm font-black">{s.label}</span>
+                    </OptionTile>
+                  ))}
+                </div>
+
+                {hasRoundedCornersOption && (
+                  <YesNoQuestion
+                    question="Rounded corners?"
+                    value={roundedCorners}
+                    onChange={setRoundedCorners}
+                    className="pt-1.5"
+                  />
+                )}
+              </div>
+            </StepCard>
+          )}
+
+          <StepCard
+            step={2}
+            mobileStep={3}
+            title={isSheet ? "Finish" : "Material"}
+           
+          >
             <div className="flex flex-1 flex-col p-6">
               <div className="grid grid-cols-2 gap-2.5">
                 {finishes.map((f) => (
                   <OptionTile
                     key={f.value}
-                    selected={finish === f.value}
+                    selected={appliedFinish === f.value}
                     onClick={() => setFinish(f.value)}
                     className="h-[148px] gap-2"
                   >
@@ -455,7 +575,7 @@ export function TypeConfigurator({
               </div>
 
               <div className="mt-4 flex flex-col gap-4 border-t border-grape/30 pt-4">
-                {hasWhiteInkOption && (
+                {showWhiteInk && (
                   <YesNoQuestion
                     question="White ink?"
                     hint={
@@ -482,11 +602,27 @@ export function TypeConfigurator({
             mobileStep={4}
             title="Size"
             action={<SizeGuide />}
-            className="xl:min-h-[780px]"
+           
           >
             <div className="flex flex-1 flex-col p-6">
-              <div className="grid grid-cols-2 gap-2">
-                {SIZE_PRESETS.map((p) => {
+              <div className={`grid gap-2 ${isSheet ? "grid-cols-1" : "grid-cols-2"}`}>
+                {isSheet && SHEET_SIZE_PRESETS.map((p) => {
+                  const selected = sizeChoice === p.key;
+                  return (
+                    <OptionTile
+                      key={p.key}
+                      selected={selected}
+                      onClick={() => setSizeChoice(p.key)}
+                      className="h-16 px-2"
+                    >
+                      <span className="text-sm font-black">{p.label}</span>
+                      <span className={selected ? "text-[10px] text-night/60" : "text-[10px] text-night/50"}>
+                        {formatMmValue(p.widthMm)} mm × {formatMmValue(p.heightMm)} mm
+                      </span>
+                    </OptionTile>
+                  );
+                })}
+                {!isSheet && SIZE_PRESETS.map((p) => {
                   const selected = sizeChoice === p.key;
                   return (
                     <OptionTile
@@ -532,7 +668,7 @@ export function TypeConfigurator({
                       onClick={() => setSizeChoice("custom")}
                       aria-pressed={selected}
                       className={[
-                        "col-span-2 flex h-[62px] flex-col items-center justify-center rounded-[14px] border",
+                        "col-span-full flex h-[62px] flex-col items-center justify-center rounded-[14px] border",
                         OPTION_TRANSITION,
                         LIFT_ON_HOVER,
                         selected ? SELECTED_CLASSES : `${IDLE_CLASSES} border-dashed`,
@@ -587,12 +723,14 @@ export function TypeConfigurator({
               <p className="mt-3 text-xs text-quiet">
                 {sizeChoice === "custom"
                   ? `Both dimensions must be between ${MIN_SIZE_MM} mm and ${MAX_SIZE_MM} mm.`
-                  : "Preset sizes are treated as a square."}
+                  : isSheet
+                    ? "Sizes are the whole sheet, width × height."
+                    : "Preset sizes are treated as a square."}
               </p>
             </div>
           </StepCard>
 
-          <StepCard step={4} mobileStep={5} title="Quantity" className="xl:min-h-[780px]">
+          <StepCard step={4} mobileStep={5} title="Quantity">
             <div className="flex flex-col gap-3 p-6">
               {quantityChoice === "custom" ? (
                 <input
@@ -633,17 +771,7 @@ export function TypeConfigurator({
               )}
 
               {QUANTITY_PRESETS.map((q) => {
-                const preview = hasSize
-                  ? calculateStickerPricing({
-                      config: pricingConfig,
-                      isHolographic,
-                      whiteInk,
-                      lamination,
-                      widthCm,
-                      heightCm,
-                      quantity: q,
-                    })
-                  : null;
+                const preview = hasSize ? priceFor(q) : null;
                 const selected = quantityChoice === q;
                 return (
                   <button
@@ -802,7 +930,10 @@ export function TypeConfigurator({
 
         <div className="flex flex-wrap items-center justify-end gap-4">
           {!allComplete && (
-            <p className="text-sm text-sand/60">Finish all five steps to add to cart</p>
+            <p className="text-sm text-sand/60">
+              {/* Every other step starts filled in, so artwork is usually what's missing. */}
+              {artworkUrl ? "Finish all five steps to add to cart" : "Upload your artwork to add to cart"}
+            </p>
           )}
           <button
             type="button"

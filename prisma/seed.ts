@@ -62,6 +62,16 @@ async function main() {
     update: {},
     create: { key: PRICING_SETTING_KEYS.LAMINATION_SURCHARGE_PER_SQ_CM, value: 5 },
   });
+  await prisma.pricingSetting.upsert({
+    where: { key: PRICING_SETTING_KEYS.SHEET_CUTS_5_8_SURCHARGE_PERCENT },
+    update: {},
+    create: { key: PRICING_SETTING_KEYS.SHEET_CUTS_5_8_SURCHARGE_PERCENT, value: 5 },
+  });
+  await prisma.pricingSetting.upsert({
+    where: { key: PRICING_SETTING_KEYS.SHEET_CUTS_9_12_SURCHARGE_PERCENT },
+    update: {},
+    create: { key: PRICING_SETTING_KEYS.SHEET_CUTS_9_12_SURCHARGE_PERCENT, value: 10 },
+  });
 
   console.log("Pricing data seeded.");
 }

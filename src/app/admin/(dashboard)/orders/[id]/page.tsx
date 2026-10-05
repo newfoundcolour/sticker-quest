@@ -4,12 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { formatCurrency, formatSizeMm } from "@/lib/pricingUtils";
 import { STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
 import {
-  CUT_TYPE_LABELS,
-  finishLabel,
   ORDER_STATUS_BADGE_CLASSES,
   ORDER_STATUS_LABELS,
-  SHAPE_LABELS,
   formatAddOns,
+  itemSpecLine,
+  unitNoun,
 } from "@/lib/orderLabels";
 import { toArtworkDownloadUrl } from "@/lib/cloudinary";
 import { OrderStatusForm } from "@/components/admin/OrderStatusForm";
@@ -109,15 +108,14 @@ export default async function AdminOrderDetailPage({
                     {STICKER_TYPE_LABELS[item.stickerType]}
                   </p>
                   <p className="mt-1 text-sm text-ink-navy/60">
-                    {SHAPE_LABELS[item.shape]} · {CUT_TYPE_LABELS[item.cutType]} ·{" "}
-                    {finishLabel(item.stickerType, item.finish)}
+                    {itemSpecLine(item)}
                   </p>
                   <p className="text-sm text-ink-navy/60">
                     {formatSizeMm(Number(item.widthCm))} x {formatSizeMm(Number(item.heightCm))}
                     {addOns && ` · ${addOns}`}
                   </p>
                   <p className="mt-1 text-sm text-ink-navy/60">
-                    {item.quantity.toLocaleString("en-ZA")} stickers ·{" "}
+                    {item.quantity.toLocaleString("en-ZA")} {unitNoun(item.stickerType, item.quantity)} ·{" "}
                     <span className="font-mono">{formatCurrency(Number(item.pricePerUnit))}</span>{" "}
                     each
                   </p>

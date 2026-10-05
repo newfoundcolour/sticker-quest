@@ -2,12 +2,10 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
 import {
-  CUT_TYPE_LABELS,
-  finishLabel,
   ORDER_STATUS_LABELS,
   ORDER_STATUS_VALUES,
-  SHAPE_LABELS,
   formatAddOns,
+  itemSpecLine,
 } from "@/lib/orderLabels";
 import { formatSizeMm } from "@/lib/pricingUtils";
 import { getOrderStats } from "@/lib/orderStats";
@@ -170,7 +168,7 @@ export default async function AdminOrdersPage({
                       <Link href={href} className="block px-4 py-3">
                         <span className="block text-ink-navy/70">
                           {item
-                            ? `${SHAPE_LABELS[item.shape]} · ${CUT_TYPE_LABELS[item.cutType]} · ${finishLabel(item.stickerType, item.finish)}`
+                            ? itemSpecLine(item)
                             : "—"}
                         </span>
                         {sizeLine && (

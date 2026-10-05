@@ -45,6 +45,14 @@ enum Finish {
   GLOSS
 }
 
+/// How many individual stickers are on one sticker sheet; each tier adds a
+/// percentage surcharge (see PRICING_SETTING_KEYS in src/lib/pricingConstants.ts).
+enum SheetCuts {
+  CUTS_1_4
+  CUTS_5_8
+  CUTS_9_12
+}
+
 enum OrderStatus {
   AWAITING_PROOF
   APPROVED
@@ -138,6 +146,10 @@ model OrderItem {
   widthCm        Decimal     @db.Decimal(6, 2)
   heightCm       Decimal     @db.Decimal(6, 2)
   quantity       Int
+  /// Sticker sheets only: the material the sheet is printed on (vinyl,
+  /// holographic, chrome or clear) and how many stickers are cut from it.
+  sheetMaterial  StickerType?
+  sheetCuts      SheetCuts?
 
   artworkUrl      String
   artworkFilename String?

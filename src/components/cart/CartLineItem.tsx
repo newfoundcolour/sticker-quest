@@ -1,6 +1,6 @@
 import { removeFromCartAction, updateCartItemQuantityAction } from "@/app/actions/cart";
 import { STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
-import { CUT_TYPE_LABELS, finishLabel, SHAPE_LABELS, formatAddOns } from "@/lib/orderLabels";
+import { formatAddOns, itemSpecLine, unitNoun } from "@/lib/orderLabels";
 import { formatCurrency } from "@/lib/pricingUtils";
 import { MIN_QUANTITY, formatSizeMm } from "@/lib/pricingUtils";
 import type { PricedCartItem } from "@/lib/cartPricing";
@@ -26,7 +26,7 @@ export function CartLineItem({
       <div className="min-w-0 flex-1">
         <p className="font-medium text-ink-navy">{STICKER_TYPE_LABELS[item.stickerType]}</p>
         <p className="text-sm text-ink-navy/60">
-          {SHAPE_LABELS[item.shape]} · {CUT_TYPE_LABELS[item.cutType]} · {finishLabel(item.stickerType, item.finish)}
+          {itemSpecLine(item)}
         </p>
         <p className="text-sm text-ink-navy/60">
           {formatSizeMm(item.widthCm)} x {formatSizeMm(item.heightCm)}
@@ -65,7 +65,7 @@ export function CartLineItem({
           </div>
         ) : (
           <p className="mt-1 font-mono text-sm text-ink-navy/70">
-            {item.quantity.toLocaleString("en-ZA")} stickers
+            {item.quantity.toLocaleString("en-ZA")} {unitNoun(item.stickerType, item.quantity)}
           </p>
         )}
       </div>
@@ -74,7 +74,7 @@ export function CartLineItem({
           {formatCurrency(item.totalPrice)}
         </p>
         <p className="font-mono text-xs text-ink-navy/50">
-          {formatCurrency(item.pricePerUnit)} / sticker
+          {formatCurrency(item.pricePerUnit)} / {unitNoun(item.stickerType)}
         </p>
       </div>
     </div>

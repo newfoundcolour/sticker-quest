@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { StickerType } from "@/generated/prisma/client";
+import type { SheetCuts, StickerType } from "@/generated/prisma/client";
 import { PRICING_SETTING_KEYS } from "@/lib/pricingConstants";
 
 export type DiscountTier = {
@@ -11,6 +11,8 @@ export type PricingConfig = {
   ratePerSqCm: number;
   whiteInkRatePerSqCm: number;
   laminationSurchargePerSqCm: number;
+  /** Sticker sheets: % added per cut tier. */
+  sheetCutSurchargePercent: Record<SheetCuts, number>;
   discountTiers: DiscountTier[];
 };
 
@@ -52,6 +54,11 @@ export async function getPricingConfig(
     laminationSurchargePerSqCm: settingValue(
       PRICING_SETTING_KEYS.LAMINATION_SURCHARGE_PER_SQ_CM,
     ),
+    sheetCutSurchargePercent: {
+      CUTS_1_4: 0,
+      CUTS_5_8: settingValue(PRICING_SETTING_KEYS.SHEET_CUTS_5_8_SURCHARGE_PERCENT),
+      CUTS_9_12: settingValue(PRICING_SETTING_KEYS.SHEET_CUTS_9_12_SURCHARGE_PERCENT),
+    },
     discountTiers: discountTiers.map((t) => ({
       minQuantity: t.minQuantity,
       discountPercent: Number(t.discountPercent),

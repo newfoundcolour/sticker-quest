@@ -81,6 +81,8 @@ export type StickerPricingInput = {
   widthCm: number;
   heightCm: number;
   quantity: number;
+  /** % added before the quantity discount, e.g. a sticker sheet's cut tier. */
+  surchargePercent?: number;
 };
 
 export type StickerPricingResult = {
@@ -97,12 +99,15 @@ export type StickerPricingResult = {
  *
  * Effective rate: holographic uses its own rate outright; white ink replaces
  * the base rate (but never overrides holographic); lamination adds a flat
- * surcharge on top of whichever rate applies.
+ * surcharge on top of whichever rate applies. A percentage surcharge (a
+ * sticker sheet's cut tier) is part of the baseline, so quantity savings are
+ * measured against the surcharged price.
  */
 export function calculateStickerPricing(
   input: StickerPricingInput,
 ): StickerPricingResult {
-  const { config, isHolographic, whiteInk, lamination, widthCm, heightCm, quantity } = input;
+  const { config, isHolographic, whiteInk, lamination, widthCm, heightCm, quantity, surchargePercent = 0 } =
+    input;
 
   const areaCm2 = widthCm * heightCm;
 
@@ -116,7 +121,7 @@ export function calculateStickerPricing(
     rate += config.laminationSurchargePerSqCm;
   }
 
-  const baselinePricePerUnit = round2((areaCm2 * rate) / 100);
+  const baselinePricePerUnit = round2(((areaCm2 * rate) / 100) * (1 + surchargePercent / 100));
   const tier = pickDiscountTier(config.discountTiers, quantity);
   const pricePerUnit = round2(baselinePricePerUnit * (1 - tier.discountPercent / 100));
 
