@@ -4,12 +4,12 @@ This is a starting direction, not final branding. Swap the palette once the logo
 
 ## Configurator redesign (current direction)
 
-The configurator was redesigned in Figma ("Sticker Quest 1.0", desktop frame `1:2`, vinyl page) and that design is the look and layout going forward. Where it conflicts with the sections below (palette, type, Waypoint Line/Mascot on the configurator), **the Figma wins**; the older sections still describe pages not yet migrated (home, cart, checkout, admin).
+The configurator was redesigned in Figma ("Sticker Quest 1.0", desktop frame `1:2`, vinyl page) and that design is the look and layout going forward. Where it conflicts with the sections below (palette, type, Waypoint Line/Mascot on the configurator), **the Figma wins**; the older sections still describe pages not yet migrated (cart, checkout, admin). The home page ("Pick your sticker type") now uses the configurator's shell, banner and cards.
 
 - **Shell:** dark `night` page, full-width nav (logo, pill search "Select sticker type...", cart with count badge), gradient header banner, dark footer.
 - **Layout:** four white cards in a row — 1 Shape & Cut, 2 Material, 3 Size, 4 Quantity (with the total box at its foot) — then a full-width 5 Upload card. Numbered step badges replace the Waypoint Line on this page.
 - **Selected state:** an idle tile is `mist` grey; a chosen tile fills with its step's accent (Shape & Quantity `blaze`, Material `grape`, Size `zap`).
-- **Type:** Urbanist only — Black (900) for labels, prices and headings, Regular for hints. Prices are no longer set in mono.
+- **Type:** Inter only — Black (900) for labels, prices and headings, Regular for hints. Prices are no longer set in mono.
 
 | Token | Hex | Use |
 |---|---|---|

@@ -67,7 +67,7 @@
    * next/font/local.
    */
   --font-display: var(--font-bricolage-grotesque), "Clash Display", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-urbanist), "General Sans", var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), "General Sans", var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", monospace;
 }
 

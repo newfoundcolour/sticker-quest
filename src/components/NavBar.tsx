@@ -92,11 +92,14 @@ export function NavBar({ cartCount }: { cartCount: number }) {
           {showMenu && (
             // pt-2 (not mt-2) so the gap below the pill still counts as hovering the menu.
             <div className="absolute left-0 right-0 top-full z-10 pt-2">
-              <div className="overflow-hidden rounded-[20px] border-[1.5px] border-grape bg-sand shadow-card">
+              <div className="relative isolate overflow-hidden rounded-[20px] border-[1.5px] border-grape bg-night shadow-card">
+                {/* Same grape glows as the page background, fading up from the bottom corners. */}
+                <div aria-hidden className="page-glow-left absolute bottom-0 left-0 -z-10 h-[85%] w-[70%]" />
+                <div aria-hidden className="page-glow-right absolute bottom-0 right-0 -z-10 h-[85%] w-[70%]" />
                 <div className="grid grid-cols-2 gap-1 p-2">
                   {STICKER_TYPE_GROUPS.map((group) => (
                     <div key={group.title}>
-                      <p className="px-2 py-1 text-xs font-black uppercase tracking-wide text-quiet">
+                      <p className="px-2 py-1 text-xs font-black uppercase tracking-wide text-zap">
                         {group.title}
                       </p>
                       <div className="flex flex-col">
@@ -108,12 +111,12 @@ export function NavBar({ cartCount }: { cartCount: number }) {
                             onClick={() => goToType(type)}
                             className="flex items-start gap-2 rounded-xl p-2 text-left transition-colors hover:bg-zap/20"
                           >
-                            <StickerTypeImage type={type} className="h-8 w-8 shrink-0 text-night" />
+                            <StickerTypeImage type={type} className="h-8 w-8 shrink-0 text-white" />
                             <span>
-                              <span className="block text-sm font-black text-night">
+                              <span className="block text-sm font-black text-white">
                                 {STICKER_TYPE_LABELS[type]}
                               </span>
-                              <span className="line-clamp-2 block text-xs text-quiet">
+                              <span className="line-clamp-2 block text-xs text-white/60">
                                 {STICKER_TYPE_DESCRIPTIONS[type]}
                               </span>
                             </span>
