@@ -14,7 +14,7 @@ export default async function CartPage() {
           Configure a sticker to add it to your cart.
         </p>
         <Link
-          href="/"
+          href="/stickers"
           className="mt-3 rounded-xl bg-coral-signal px-6 py-3 font-medium text-paper transition-colors hover:bg-coral-signal/90"
         >
           Start your quest

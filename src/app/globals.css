@@ -59,6 +59,14 @@
 
   --shadow-card: 0 1px 4px rgba(32, 31, 32, 0.06), 0 6px 24px rgba(32, 31, 32, 0.07);
 
+  /* Home page "Ideal for:" band — slides one copy of its (duplicated) list to the left, then loops. */
+  --animate-ticker: ticker 90s linear infinite;
+  @keyframes ticker {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
   /*
    * Clash Display and General Sans are Fontshare exclusives (not on Google
    * Fonts). Bricolage Grotesque stands in for Clash Display — same bold,

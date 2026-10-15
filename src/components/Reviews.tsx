@@ -8,8 +8,8 @@ const CARD_STYLES = [
   "bg-lilac md:rotate-2",
 ];
 
-/** "Our Quest For Quality." — tilted review cards on the dark page, below the configurator. */
-export async function Reviews() {
+/** Tilted review cards on the dark page — below the configurator, and on the home page. */
+export async function Reviews({ title = "Our Quest For Quality." }: { title?: string }) {
   const reviews = await getReviews();
   if (reviews.length === 0) return null;
 
@@ -20,7 +20,7 @@ export async function Reviews() {
           id="reviews-heading"
           className="text-center text-[36px] font-black leading-none text-white uppercase md:text-[56px]"
         >
-          Our Quest For Quality.
+          {title}
         </h2>
 
         <ul className="mt-9 grid gap-6 md:grid-cols-3 md:gap-[18px]">

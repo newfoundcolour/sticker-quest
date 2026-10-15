@@ -395,7 +395,7 @@ export function TypeConfigurator({
   return (
     <Container className="pb-8 pt-4">
       <Link
-        href="/"
+        href="/stickers"
         className="mb-2 inline-block text-base font-bold text-blaze transition-colors hover:text-grape"
       >
         &lt; {pageTitle(stickerType)}

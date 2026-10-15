@@ -11,7 +11,7 @@ export function ComingSoon({ title, blurb }: { title: string; blurb: string }) {
         </h1>
         <p className="mx-auto mt-5 max-w-md text-base leading-[1.5] text-white/65">{blurb}</p>
         <Link
-          href="/"
+          href="/stickers"
           className="mt-8 inline-block rounded-full border-2 border-night bg-blaze px-7 py-3 text-sm font-black text-white uppercase shadow-pop-blaze"
         >
           Make some stickers
