@@ -2,9 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/Container";
 
-/** Night-ink hard shadow under each mascot, same as the configurator banner's helmet. */
-const MASCOT_SHADOW = "drop-shadow-[6px_6px_0_rgba(22,18,42,0.45)]";
-
 /** "On a quest for custom stickers?" — the gradient landing banner. */
 export function HomeHero() {
   return (
@@ -14,7 +11,7 @@ export function HomeHero() {
           <p className="inline-block rounded-full bg-night px-4 py-2 text-xs font-black uppercase tracking-wide text-zap sm:text-sm">
             ✦ Custom stickers &amp; labels
           </p>
-          <h1 className="pt-6 text-[44px] font-black leading-[0.92] text-sand uppercase drop-shadow-[4px_4px_0_rgba(22,18,42,0.35)] sm:text-[64px] xl:text-[88px]">
+          <h1 className="pt-6 text-[44px] font-black leading-[0.92] text-sand uppercase sm:text-[64px] xl:text-[88px]">
             On a quest for custom stickers?
           </h1>
           <p className="max-w-[620px] pt-6 text-base font-bold leading-[1.45] text-night sm:text-xl">
@@ -37,28 +34,16 @@ export function HomeHero() {
           </div>
         </div>
 
-        <div aria-hidden="true" className="relative aspect-[500/440] w-full max-w-[420px] shrink-0 lg:max-w-[500px]">
+        {/* The wizard is taller than its box and spills into the banner's padding, as in the Figma. */}
+        <div aria-hidden="true" className="relative my-4 aspect-[500/440] w-full max-w-[420px] shrink-0 md:my-0 lg:max-w-[500px]">
           <Image
-            src="/mascot/vinyl-wizard.png"
+            src="/mascot/wizard-full.png"
             alt=""
-            width={1024}
-            height={1024}
+            width={3011}
+            height={3613}
             priority
-            className={`absolute left-[10%] top-[4.5%] w-[80%] ${MASCOT_SHADOW}`}
-          />
-          <Image
-            src="/mascot/holo-dragon.png"
-            alt=""
-            width={868}
-            height={868}
-            className={`absolute -left-[2%] top-[55%] w-[38%] rotate-[-10deg] ${MASCOT_SHADOW}`}
-          />
-          <Image
-            src="/mascot/chrome-knight.png"
-            alt=""
-            width={830}
-            height={905}
-            className={`absolute right-0 top-[2%] w-[34%] rotate-[8deg] ${MASCOT_SHADOW}`}
+            sizes="(min-width: 1024px) 456px, 384px"
+            className="absolute -left-[1.8%] -top-[12.2%] w-[91.2%]"
           />
         </div>
       </div>
