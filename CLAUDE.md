@@ -39,7 +39,7 @@ Pricing is driven by a pricing rules table, not hardcoded — exact pricing tabl
 
 **Order pipeline (status values):** `awaiting_proof` → `approved` → `printing` → `shipped`
 
-**Delivery promise:** 3–5 working days from proof approval.
+**Delivery promise:** printed and dispatched the next business day after proof approval.
 
 ## Roles & admin
 
