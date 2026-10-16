@@ -79,6 +79,12 @@
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", monospace;
 }
 
+/* In-page links (e.g. the hero's jump to #products) glide rather than jump;
+   the reduced-motion block below turns this back off. */
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--color-paper);
   color: var(--color-ink-navy);

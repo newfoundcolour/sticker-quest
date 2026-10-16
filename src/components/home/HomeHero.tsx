@@ -35,7 +35,14 @@ export function HomeHero() {
         </div>
 
         {/* The wizard is taller than its box and spills into the banner's padding, as in the Figma. */}
-        <div aria-hidden="true" className="relative my-4 aspect-[500/440] w-full max-w-[420px] shrink-0 md:my-0 lg:max-w-[500px]">
+        {/* Clicking him jumps to the type cards; keyboard users already have "Browse sticker types". */}
+        <a
+          href="#products"
+          aria-hidden="true"
+          tabIndex={-1}
+          className="group relative my-4 block aspect-[500/440] w-full max-w-[420px] shrink-0 md:my-0 lg:max-w-[500px]"
+        >
+          <div className="pointer-events-none absolute inset-[4%] -top-[6%] rounded-full bg-[radial-gradient(closest-side,rgb(245_240_232/0.75),rgb(245_240_232/0.25)_55%,transparent)] opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100" />
           <Image
             src="/mascot/wizard-full.png"
             alt=""
@@ -45,7 +52,7 @@ export function HomeHero() {
             sizes="(min-width: 1024px) 456px, 384px"
             className="absolute -left-[1.8%] -top-[12.2%] w-[91.2%]"
           />
-        </div>
+        </a>
       </div>
     </Container>
   );
