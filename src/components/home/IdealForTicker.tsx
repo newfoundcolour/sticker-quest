@@ -1,3 +1,5 @@
+import { Container } from "@/components/Container";
+
 // Placeholder industries — swap for real client names once we've worked with some reputable brands.
 const INDUSTRIES = [
   "Coffee shops",
@@ -29,20 +31,23 @@ function IndustryList({ hidden = false }: { hidden?: boolean }) {
 /** "Ideal for:" — a lime band of industries scrolling right to left. */
 export function IdealForTicker() {
   return (
-    <section aria-label="Ideal for" className="pt-10">
-      <div className="relative overflow-hidden bg-zap py-[22px]">
-        {/* Pinned over the left edge; the list slides out from under it. */}
-        <div className="absolute inset-y-0 left-0 z-10 flex items-center bg-zap pr-3 pl-4 shadow-[16px_0_14px_0_var(--color-zap)] sm:pl-[44px]">
-          <p className="rounded-full bg-night px-[18px] py-2.5 text-sm font-black uppercase tracking-wide text-zap sm:text-base">
-            Ideal for:
-          </p>
-        </div>
-        {/* Two copies of the list, so sliding left by exactly one copy loops seamlessly. */}
-        <div className="flex w-max animate-ticker">
-          <IndustryList />
-          <IndustryList hidden />
+      <section aria-label="Ideal for" className="pt-10">
+        <Container>
+        {/* Same width as the hero banner; both ends fade into the page. */}
+        <div className="relative overflow-hidden bg-zap py-[22px] [--fade:32px] [mask-image:linear-gradient(to_right,transparent,black_var(--fade),black_calc(100%-var(--fade)),transparent)] sm:[--fade:64px]">
+          {/* Pinned clear of the left fade, lined up with the banner's text; the list slides out from under it. */}
+          <div className="absolute inset-y-0 left-0 z-10 flex items-center bg-zap pr-3 pl-10 shadow-[16px_0_14px_0_var(--color-zap)] sm:pl-[72px]">
+            <p className="rounded-full bg-night px-[18px] py-2.5 text-sm font-black uppercase tracking-wide text-zap sm:text-base">
+              Ideal for:
+            </p>
+          </div>
+          {/* Two copies of the list, so sliding left by exactly one copy loops seamlessly. */}
+          <div className="flex w-max animate-ticker">
+            <IndustryList />
+            <IndustryList hidden />
         </div>
       </div>
+      </Container>
     </section>
   );
 }
