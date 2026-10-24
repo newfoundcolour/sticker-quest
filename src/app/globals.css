@@ -67,6 +67,18 @@
     }
   }
 
+  /* Home page hero wizard — a slow float, like a sticker drifting on the banner. */
+  --animate-bob: bob 6s ease-in-out infinite;
+  @keyframes bob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-1.5%);
+    }
+  }
+
   /*
    * Clash Display and General Sans are Fontshare exclusives (not on Google
    * Fonts). Bricolage Grotesque stands in for Clash Display — same bold,
@@ -128,4 +140,14 @@ body {
     rgb(104 94 168 / 0.16) 45%,
     transparent 100%
   );
+}
+
+/*
+ * Die-cut sticker lettering: a thick white border drawn behind the letters
+ * (paint-order keeps the fill on top), plus a soft drop shadow for lift.
+ */
+@utility sticker-text {
+  -webkit-text-stroke: 0.32em white;
+  paint-order: stroke fill;
+  filter: drop-shadow(0 3px 4px rgb(0 0 0 / 0.35));
 }

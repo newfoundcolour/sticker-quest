@@ -43,15 +43,18 @@ export function HomeHero() {
           className="group relative my-4 block aspect-[500/440] w-full max-w-[420px] shrink-0 md:my-0 lg:max-w-[500px]"
         >
           <div className="pointer-events-none absolute inset-[4%] -top-[6%] rounded-full bg-[radial-gradient(closest-side,rgb(245_240_232/0.75),rgb(245_240_232/0.25)_55%,transparent)] opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100" />
-          <Image
-            src="/mascot/wizard-full.png"
-            alt=""
-            width={3011}
-            height={3613}
-            priority
-            sizes="(min-width: 1024px) 456px, 384px"
-            className="absolute -left-[1.8%] -top-[12.2%] w-[91.2%]"
-          />
+          {/* wizard-sticker.png is wizard-full.png with a baked-in white die-cut border. */}
+          <div className="absolute inset-0 motion-safe:animate-bob">
+            <Image
+              src="/mascot/wizard-sticker.png"
+              alt=""
+              width={3211}
+              height={3813}
+              priority
+              sizes="(min-width: 1024px) 456px, 384px"
+              className="absolute -left-[1.8%] -top-[12.2%] w-[91.2%] drop-shadow-[0_12px_14px_rgb(32_31_32/0.35)]"
+            />
+          </div>
         </a>
       </div>
     </Container>

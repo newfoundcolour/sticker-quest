@@ -14,7 +14,7 @@ export function ProductCards() {
   const types = STICKER_TYPE_GROUPS.flatMap((group) => group.types);
 
   return (
-    <section id="products" aria-labelledby="products-heading" className="scroll-mt-6 pt-16 md:pt-24">
+    <section id="products" aria-labelledby="products-heading" className="scroll-mt-6 pt-8 md:pt-10">
       <Container>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
