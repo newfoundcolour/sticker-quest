@@ -19,6 +19,7 @@ The configurator was redesigned in Figma ("Sticker Quest 1.0", desktop frame `1:
 | `zap` | `#d6de23` | Selected size, savings badges (`zap-ink` `#7a7200` for badge text) |
 | `ink` / `quiet` | `#201f20` / `#7a7879` | Text / secondary text |
 | `mist` | `#eceaf0` | Idle tiles and inset panels |
+| `dusk` / `dusk-line` | `#2b2542` / `#383053` | Dark card fill / border on the night page (home product cards) |
 
 Tokens live in `globals.css` next to the original palette. Don't claim things in the UI that the business doesn't offer yet (store credit, satisfaction guarantee) — the Figma mock contains them, the build deliberately doesn't. The "Our Quest For Quality." reviews section is built, but its cards are placeholder copy from the mock (`src/lib/reviews.ts`) until real reviews can be added from the backend.
 

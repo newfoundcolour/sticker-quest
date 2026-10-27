@@ -5,9 +5,12 @@ import type { StickerType } from "@/generated/prisma/client";
 export function StickerTypeImage({
   type,
   className,
+  size = 96,
 }: {
   type: StickerType;
   className?: string;
+  /** Rendered size in px, so larger slots get a sharp enough source. */
+  size?: number;
 }) {
   const src = STICKER_TYPE_IMAGES[type];
 
@@ -24,7 +27,7 @@ export function StickerTypeImage({
 
   return (
     <span className={`flex items-center justify-center ${className ?? ""}`}>
-      <Image src={src} alt="" width={96} height={96} className="h-full w-full object-contain" />
+      <Image src={src} alt="" width={size} height={size} className="h-full w-full object-contain" />
     </span>
   );
 }

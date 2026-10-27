@@ -20,6 +20,9 @@
   /* Pastel review-card fills, alongside `zap`. */
   --color-peach: #ffd7c8;
   --color-lilac: #dcd5ff;
+  /* Raised dark surfaces on the night page (home product cards). */
+  --color-dusk: #2b2542;
+  --color-dusk-line: #383053;
 
   /* Darker shades of the accents, used for a selected option's hard shadow. */
   --color-blaze-deep: #4d1e12;
@@ -44,6 +47,8 @@
   --color-sand: var(--color-sand);
   --color-peach: var(--color-peach);
   --color-lilac: var(--color-lilac);
+  --color-dusk: var(--color-dusk);
+  --color-dusk-line: var(--color-dusk-line);
   --color-blaze-deep: var(--color-blaze-deep);
   --color-zap-deep: var(--color-zap-deep);
 
