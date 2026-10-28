@@ -56,11 +56,28 @@ enum SheetCuts {
   CUTS_9_12
 }
 
+/// Pipeline: AWAITING_PROOF -> AWAITING_APPROVAL (proof sent, waiting on the
+/// customer) -> APPROVED -> PRINTING -> SHIPPED. A rejected proof sends the
+/// order back to AWAITING_PROOF.
 enum OrderStatus {
   AWAITING_PROOF
+  AWAITING_APPROVAL
   APPROVED
   PRINTING
   SHIPPED
+}
+
+enum ProofStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// Who made a proof decision: the customer in their account, or staff
+/// recording an approval given elsewhere (e.g. on WhatsApp).
+enum ProofDecisionSource {
+  CUSTOMER
+  STAFF_ON_BEHALF
 }
 
 /// Mirrors a Supabase Auth user (auth.users) 1:1 — id is that user's uuid,
@@ -141,7 +158,8 @@ model Order {
   userId String?
   user   Profile? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  items OrderItem[]
+  items  OrderItem[]
+  proofs Proof[]
 
   trackingNumber String?
   notes          String?
@@ -190,4 +208,38 @@ model OrderItem {
   createdAt DateTime @default(now())
 
   @@index([orderId])
+}
+
+/// One version of a print proof for an order. Every version is kept — a new
+/// upload adds version N+1 and never overwrites. Only the latest version can
+/// be approved or rejected; older pending ones count as superseded.
+/// The file lives in the private "proofs" Supabase Storage bucket and is only
+/// ever served through a short-lived signed URL after an ownership check.
+model Proof {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  version          Int
+  /// Path inside the "proofs" bucket, e.g. orders/<orderId>/<random>.pdf
+  storagePath      String   @unique
+  originalFilename String
+  /// Detected from the file's bytes, not the browser's claim.
+  mimeType         String
+  sizeBytes        Int
+
+  status          ProofStatus          @default(PENDING)
+  customerComment String?
+  decidedAt       DateTime?
+  /// Supabase user id of whoever recorded the decision.
+  decidedBy       String?
+  decisionSource  ProofDecisionSource?
+
+  /// Supabase user id of the staff member who uploaded it.
+  uploadedBy String
+  createdAt  DateTime @default(now())
+
+  @@unique([orderId, version])
+  @@index([orderId, createdAt])
+  @@index([status])
 }

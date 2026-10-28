@@ -32,6 +32,15 @@ function ClockIcon() {
   );
 }
 
+function EyeIcon() {
+  return (
+    <svg {...iconProps()}>
+      <path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12Z" />
+      <circle cx="12" cy="12" r="2.5" />
+    </svg>
+  );
+}
+
 function CheckIcon() {
   return (
     <svg {...iconProps()}>
@@ -123,7 +132,7 @@ function StatCard({
 /** The "Quick Stats" row from DESIGN.md — Admin Dashboard UI Inspiration. */
 export function QuickStats({ stats }: { stats: OrderStats }) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(150px,1fr))]">
       <StatCard
         label="Total Orders"
         value={stats.totalOrders.toLocaleString("en-ZA")}
@@ -133,6 +142,11 @@ export function QuickStats({ stats }: { stats: OrderStats }) {
         label="Awaiting Proof"
         value={stats.awaitingProof.toLocaleString("en-ZA")}
         icon={<ClockIcon />}
+      />
+      <StatCard
+        label="Awaiting Approval"
+        value={stats.awaitingApproval.toLocaleString("en-ZA")}
+        icon={<EyeIcon />}
       />
       <StatCard
         label="Approved"

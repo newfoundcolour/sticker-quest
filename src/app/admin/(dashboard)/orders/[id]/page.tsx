@@ -14,6 +14,7 @@ import {
 } from "@/lib/orderLabels";
 import { toArtworkDownloadUrl } from "@/lib/cloudinary";
 import { OrderStatusForm } from "@/components/admin/OrderStatusForm";
+import { ProofsPanel } from "@/components/admin/ProofsPanel";
 
 export default async function AdminOrderDetailPage({
   params,
@@ -148,6 +149,8 @@ export default async function AdminOrderDetailPage({
           })}
         </div>
       </section>
+
+      <ProofsPanel orderId={order.id} />
 
       <section className="mt-8 rounded-2xl border border-ink-navy/10 bg-white/70 p-5">
         <h2 className="text-sm font-semibold text-ink-navy/80">Fulfilment</h2>

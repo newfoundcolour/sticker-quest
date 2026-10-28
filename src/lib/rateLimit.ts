@@ -16,6 +16,8 @@ export const RATE_LIMITS = {
   emailPerAddress: { limit: 3, windowSeconds: 60 * 60 },
   passwordChangePerUser: { limit: 10, windowSeconds: 60 * 60 },
   artworkUploadPerIp: { limit: 30, windowSeconds: 10 * 60 },
+  proofDecisionPerUser: { limit: 30, windowSeconds: 60 * 60 },
+  staffUploadPerUser: { limit: 120, windowSeconds: 60 * 60 },
 } as const;
 
 type Rule = { limit: number; windowSeconds: number };

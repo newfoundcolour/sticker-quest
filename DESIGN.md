@@ -119,6 +119,7 @@ Order status renders as a colored pill in the orders table, not plain text — r
 | Status | Pill |
 |---|---|
 | Awaiting Proof | Waypoint Gold (muted) |
+| Awaiting Approval | Waypoint Gold (outlined, Paper fill) — a proof is with the customer |
 | Approved | Trail Teal (muted) |
 | Printing | Coral Signal (muted) |
 | Shipped | Ink Navy (solid) |
@@ -127,7 +128,7 @@ Shipped gets the solid treatment — it's the terminal state, and standing out a
 
 ### Filter pills
 
-`All / Awaiting Proof / Approved / Printing / Shipped` as pill buttons above the table, not a `<select>` — staff narrow the view in one click. Active pill: solid Coral Signal. Inactive: outlined Ink Navy/15. Same pill shape as the status badges, just larger and interactive.
+`All / Awaiting Proof / Awaiting Approval / Approved / Printing / Shipped` as pill buttons above the table, not a `<select>` — staff narrow the view in one click. Active pill: solid Coral Signal. Inactive: outlined Ink Navy/15. Same pill shape as the status badges, just larger and interactive.
 
 ### Customer identity in the table
 

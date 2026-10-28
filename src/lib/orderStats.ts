@@ -4,6 +4,7 @@ import type { OrderStatus } from "@/generated/prisma/client";
 export type OrderStats = {
   totalOrders: number;
   awaitingProof: number;
+  awaitingApproval: number;
   approved: number;
   printing: number;
   shippedToday: number;
@@ -72,6 +73,7 @@ export async function getOrderStats(): Promise<OrderStats> {
   return {
     totalOrders: overall._count._all,
     awaitingProof: countByStatus.AWAITING_PROOF ?? 0,
+    awaitingApproval: countByStatus.AWAITING_APPROVAL ?? 0,
     approved: countByStatus.APPROVED ?? 0,
     printing: countByStatus.PRINTING ?? 0,
     shippedToday,

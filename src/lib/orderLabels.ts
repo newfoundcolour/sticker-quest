@@ -125,9 +125,10 @@ export function formatAddOns(item: {
     .join(" · ");
 }
 
-/** Pipeline order per CLAUDE.md: awaiting_proof -> approved -> printing -> shipped. */
+/** Pipeline order per CLAUDE.md: awaiting_proof -> awaiting_approval -> approved -> printing -> shipped. */
 export const ORDER_STATUS_VALUES: OrderStatus[] = [
   "AWAITING_PROOF",
+  "AWAITING_APPROVAL",
   "APPROVED",
   "PRINTING",
   "SHIPPED",
@@ -135,14 +136,20 @@ export const ORDER_STATUS_VALUES: OrderStatus[] = [
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   AWAITING_PROOF: "Awaiting Proof",
+  AWAITING_APPROVAL: "Awaiting Approval",
   APPROVED: "Approved",
   PRINTING: "Printing",
   SHIPPED: "Shipped",
 };
 
-/** Used for the status badge in the admin orders list and detail view. */
+/**
+ * Used for the status badge in the admin orders list and detail view.
+ * Awaiting Approval is outlined Waypoint Gold: the ball is in the customer's court.
+ * (Ring, not border, so it survives the select's border-0 in the orders table.)
+ */
 export const ORDER_STATUS_BADGE_CLASSES: Record<OrderStatus, string> = {
   AWAITING_PROOF: "bg-waypoint-gold/20 text-ink-navy",
+  AWAITING_APPROVAL: "bg-paper text-ink-navy ring-2 ring-inset ring-waypoint-gold",
   APPROVED: "bg-trail-teal/15 text-trail-teal",
   PRINTING: "bg-coral-signal/15 text-coral-signal",
   SHIPPED: "bg-ink-navy text-paper",
@@ -153,7 +160,22 @@ export const ORDER_STATUS_BADGE_CLASSES: Record<OrderStatus, string> = {
  * TODO(payfast): once Order.paymentStatus exists, also require it to be PAID —
  * an unpaid order shouldn't count as active. Not invented here on purpose.
  */
-export const ACTIVE_ORDER_STATUSES: OrderStatus[] = ["AWAITING_PROOF", "APPROVED", "PRINTING"];
+export const ACTIVE_ORDER_STATUSES: OrderStatus[] = ["AWAITING_PROOF", "AWAITING_APPROVAL", "APPROVED", "PRINTING"];
+
+/** Proof version states as people see them ("superseded" = a newer version exists). */
+export const PROOF_STATUS_LABELS = {
+  PENDING: "Awaiting approval",
+  APPROVED: "Approved",
+  REJECTED: "Changes requested",
+  SUPERSEDED: "Superseded",
+} as const;
+
+export const PROOF_STATUS_CLASSES = {
+  PENDING: "bg-paper text-ink-navy ring-2 ring-inset ring-waypoint-gold",
+  APPROVED: "bg-trail-teal/15 text-trail-teal",
+  REJECTED: "bg-coral-signal/15 text-coral-signal",
+  SUPERSEDED: "bg-ink-navy/10 text-ink-navy/60",
+} as const;
 
 /** The short order number customers see, e.g. "#K3J9X2QZ" (the last 8 characters of the id). */
 export function orderNumber(orderId: string): string {

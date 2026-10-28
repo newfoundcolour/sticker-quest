@@ -6,6 +6,8 @@ import { ArtworkThumb } from "@/components/account/ArtworkThumb";
 import { OrderProgress, StatusPill, formatOrderDate } from "@/components/account/OrderBits";
 import { requireVerifiedUser } from "@/lib/auth";
 import { getCustomerOrderOr404 } from "@/lib/customerOrders";
+import { listProofsForOwnedOrder } from "@/lib/proofs";
+import { ProofStatusPill } from "@/components/account/ProofBits";
 import {
   SHAPE_LABELS,
   CUT_TYPE_LABELS,
@@ -21,21 +23,24 @@ import {
 import { reorderHref } from "@/lib/reorder";
 import { formatCurrency } from "@/lib/pricingUtils";
 import { STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
+import type { OrderStatus } from "@/generated/prisma/client";
 
 export const metadata: Metadata = { title: "Order details · Sticker Quest" };
 
-const STATUS_BLURBS = {
+const STATUS_BLURBS: Record<OrderStatus, string> = {
   AWAITING_PROOF: "We're checking your artwork and preparing a proof for you to approve.",
+  AWAITING_APPROVAL: "Your proof is ready! Have a look below and approve it, or tell us what to change.",
   APPROVED: "Proof approved! Your stickers go to print next, and ship the next business day.",
   PRINTING: "Your stickers are on the press right now.",
   SHIPPED: "On the way! Your parcel is with The Courier Guy.",
-} as const;
+};
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireVerifiedUser(`/account/orders`);
   // 404s for orders that don't exist *and* for other customers' orders.
   const order = await getCustomerOrderOr404(user.id, id);
+  const proofs = await listProofsForOwnedOrder(user.id, order.id);
 
   return (
     <>
@@ -52,7 +57,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         <StepCard icon="🧭" title="Where it's at">
           <div className="flex flex-col gap-4 p-5 sm:p-6">
             <OrderProgress status={order.status} />
-            <p className="text-sm text-ink">{STATUS_BLURBS[order.status as keyof typeof STATUS_BLURBS] ?? ""}</p>
+            <p className="text-sm text-ink">{STATUS_BLURBS[order.status]}</p>
             {order.trackingNumber && (
               <p className="text-sm text-ink">
                 Tracking number: <span className="font-black">{order.trackingNumber}</span>
@@ -143,12 +148,30 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             </dl>
           </StepCard>
 
-          {/* Phase 4 fills this in with the proof viewer and approve/reject. */}
           <StepCard icon="🖼️" title="Proofs">
-            <p className="p-5 text-sm text-ink sm:p-6">
-              When your proof is ready, it&apos;ll show up here for you to approve. We&apos;ll also
-              send it by email or WhatsApp.
-            </p>
+            {proofs.length === 0 ? (
+              <p className="p-5 text-sm text-ink sm:p-6">
+                When your proof is ready, it&apos;ll show up here for you to approve. We&apos;ll also
+                send it by email or WhatsApp.
+              </p>
+            ) : (
+              <ul className="divide-y divide-grape/20">
+                {proofs.map((p) => (
+                  <li key={p.id}>
+                    <Link
+                      href={`/account/proofs/${p.id}`}
+                      className="flex items-center justify-between gap-3 px-5 py-3 text-sm hover:bg-white/60 sm:px-6"
+                    >
+                      <span>
+                        <span className="block font-black text-night">Version {p.version}</span>
+                        <span className="block text-xs text-quiet">Sent {formatOrderDate(p.createdAt)}</span>
+                      </span>
+                      <ProofStatusPill status={p.shownStatus} />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
           </StepCard>
         </div>
       </div>
