@@ -13,8 +13,10 @@ import {
   STICKER_TYPE_SLUGS,
 } from "@/lib/stickerTypeSlug";
 import type { StickerType } from "@/generated/prisma/client";
+import type { NavAccount } from "@/lib/navAccount";
+import { AccountNav } from "@/components/nav/AccountNav";
 
-export function NavBar({ cartCount }: { cartCount: number }) {
+export function NavBar({ cartCount, account }: { cartCount: number; account: NavAccount | null }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -130,6 +132,8 @@ export function NavBar({ cartCount }: { cartCount: number }) {
             </div>
           )}
         </div>
+
+        <AccountNav account={account} />
 
         <Link
           href="/cart"

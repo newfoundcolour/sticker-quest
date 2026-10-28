@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Container } from "@/components/Container";
 import { InstagramIcon, TikTokIcon } from "@/components/icons/SocialIcons";
 import { signOutCustomerAction } from "@/app/actions/auth";
-import { createClient } from "@/lib/supabase/server";
+import { getSessionUser, isEmailVerified } from "@/lib/auth";
 import {
   STICKER_TYPE_GROUPS,
   STICKER_TYPE_LABELS,
@@ -35,10 +35,8 @@ function FooterColumn({ title, children }: { title: ReactNode; children: ReactNo
 }
 
 export async function Footer() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const sessionUser = await getSessionUser();
+  const user = sessionUser && isEmailVerified(sessionUser) ? sessionUser : null;
 
   return (
     <footer className="relative z-10 border-t border-white/[0.13] bg-night">
@@ -82,7 +80,6 @@ export async function Footer() {
           </dl>
         </FooterColumn>
 
-        {/* Customer account pages (/login, /signup, /orders, /reorder) are still to be built. */}
         <FooterColumn title="My Shop">
           <ul className="space-y-2.5">
             <li>
@@ -93,12 +90,17 @@ export async function Footer() {
             {user ? (
               <>
                 <li>
-                  <Link href="/reorder" className={LINK_CLASSES}>
+                  <Link href="/account" className={LINK_CLASSES}>
+                    My account
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/account/reorder" className={LINK_CLASSES}>
                     Reorder
                   </Link>
                 </li>
                 <li>
-                  <Link href="/orders" className={LINK_CLASSES}>
+                  <Link href="/account/orders" className={LINK_CLASSES}>
                     My Orders
                   </Link>
                 </li>
@@ -166,10 +168,13 @@ export async function Footer() {
             className="h-8 w-auto sm:h-10"
           />
           <p className="text-xs text-white/45">© 2026 StickerQuest Inc. · All rights reserved.</p>
-          {/* Plain text until the Privacy / Terms pages exist. */}
           <div className="flex gap-5 text-xs font-bold text-white/55 sm:gap-7">
-            <span>Privacy</span>
-            <span>Terms</span>
+            <Link href="/privacy" className="transition-colors hover:text-white">
+              Privacy
+            </Link>
+            <Link href="/terms" className="transition-colors hover:text-white">
+              Terms
+            </Link>
             <Link href="/contact" className="transition-colors hover:text-white">
               Contact
             </Link>

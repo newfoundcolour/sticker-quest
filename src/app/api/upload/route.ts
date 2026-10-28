@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ArtworkTooLargeError, uploadArtwork } from "@/lib/cloudinary";
 import { MAX_ARTWORK_BYTES } from "@/lib/uploadConstants";
 import type { UploadArtworkResult } from "@/lib/uploadConstants";
+import { RATE_LIMITS, clientIp, rateLimit } from "@/lib/rateLimit";
 
 /**
  * Route handler (rather than a Server Action) so the client can drive the
@@ -9,6 +10,14 @@ import type { UploadArtworkResult } from "@/lib/uploadConstants";
  * Actions don't expose those.
  */
 export async function POST(request: Request): Promise<NextResponse<UploadArtworkResult>> {
+  // Anyone can upload artwork (guests included), so cap it per visitor.
+  if (!(await rateLimit("artwork-upload", await clientIp(), RATE_LIMITS.artworkUploadPerIp))) {
+    return NextResponse.json(
+      { ok: false, error: "You've uploaded a lot of files in a short time. Try again in a few minutes." },
+      { status: 429 },
+    );
+  }
+
   const formData = await request.formData();
   const file = formData.get("file");
 

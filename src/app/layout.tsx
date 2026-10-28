@@ -3,6 +3,7 @@ import { Averia_Libre, Bricolage_Grotesque, Geist, Inter, JetBrains_Mono } from 
 import { NavBar } from "@/components/NavBar";
 import { Footer } from "@/components/Footer";
 import { getCart } from "@/lib/cart";
+import { getNavAccount } from "@/lib/navAccount";
 import "./globals.css";
 
 // The site's UI face (replaced Urbanist from the Figma). A variable font, so every weight the design
@@ -50,7 +51,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cart = await getCart();
+  const [cart, account] = await Promise.all([getCart(), getNavAccount()]);
 
   return (
     <html
@@ -58,7 +59,7 @@ export default async function RootLayout({
       className={`${inter.variable} ${averiaLibre.variable} ${geistSans.variable} ${bricolageGrotesque.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-paper text-ink-navy">
-        <NavBar cartCount={cart.length} />
+        <NavBar cartCount={cart.length} account={account} />
         {children}
         <Footer />
       </body>

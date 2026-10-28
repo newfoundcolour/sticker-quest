@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentProfile, isStaffRole } from "@/lib/auth";
 import { LoginForm } from "@/components/admin/LoginForm";
@@ -16,6 +17,10 @@ export default async function AdminLoginPage() {
       <div className="rounded-2xl border border-ink-navy/10 bg-white/70 p-6">
         <LoginForm />
       </div>
+      {/* Same reset flow as customers; after resetting, staff land back on /admin. */}
+      <Link href="/forgot-password" className="mt-4 text-center text-sm text-ink-navy/60 hover:text-ink-navy">
+        Forgot your password?
+      </Link>
     </main>
   );
 }

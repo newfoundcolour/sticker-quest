@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getPricedCart } from "@/lib/cartPricing";
 import { clearCart, setLastOrderCookie } from "@/lib/cart";
+import { getSessionUser, isEmailVerified } from "@/lib/auth";
 
 export type CheckoutResult = { ok: false; error: string };
 
@@ -50,8 +51,18 @@ export async function submitOrderAction(
     .filter(Boolean)
     .join(", ");
 
+  // Attach the order to the logged-in customer. The id comes from the verified
+  // session only — never from the form.
+  const user = await getSessionUser();
+  const profile =
+    user && isEmailVerified(user)
+      ? await prisma.profile.findUnique({ where: { id: user.id }, select: { id: true } })
+      : null;
+  const userId = profile?.id ?? null;
+
   const order = await prisma.order.create({
     data: {
+      userId,
       customerName: fullName,
       email,
       phone,

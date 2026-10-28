@@ -12,9 +12,12 @@ datasource db {
   provider = "postgresql"
 }
 
+/// CUSTOMER is the default for every signup (set by the auth.users trigger,
+/// never by a form or API). STAFF/ADMIN are granted by hand in the database.
 enum Role {
   ADMIN
   STAFF
+  CUSTOMER
 }
 
 enum StickerType {
@@ -62,13 +65,32 @@ enum OrderStatus {
 
 /// Mirrors a Supabase Auth user (auth.users) 1:1 — id is that user's uuid,
 /// not a locally generated id. Supabase Auth owns credentials; this table
-/// only holds the app-specific role.
+/// holds the app-specific role and profile details. Rows are created and
+/// their email kept in sync by triggers on auth.users (see the
+/// customer_accounts migration). Authorisation reads `role` from here only —
+/// never from Supabase user_metadata, which users can edit themselves.
 model Profile {
-  id        String   @id
-  email     String   @unique
-  role      Role     @default(STAFF)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id
+  email           String   @unique
+  role            Role     @default(CUSTOMER)
+  firstName       String   @default("")
+  lastName        String   @default("")
+  company         String?
+  instagramHandle String?
+  orders          Order[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+/// Fixed-window request counters for our own server actions and routes
+/// (auth endpoints, uploads). See src/lib/rateLimit.ts.
+model RateLimit {
+  key         String
+  windowStart DateTime
+  count       Int      @default(0)
+
+  @@id([key, windowStart])
+  @@index([windowStart])
 }
 
 /// Base material rate for one sticker type, in cents per square cm. Price is
@@ -113,6 +135,12 @@ model Order {
   phone           String
   shippingAddress String
 
+  /// The customer account this order belongs to. Null for guest orders; set
+  /// at checkout when a verified customer is logged in, or later when a
+  /// guest order's email matches an account's Supabase-verified email.
+  userId String?
+  user   Profile? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
   items OrderItem[]
 
   trackingNumber String?
@@ -124,6 +152,8 @@ model Order {
   updatedAt DateTime @updatedAt
 
   @@index([status])
+  @@index([userId, createdAt])
+  @@index([email])
 }
 
 /// One configured sticker line within an order — a cart line item that
