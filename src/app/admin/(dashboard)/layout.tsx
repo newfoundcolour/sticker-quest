@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { getCurrentProfile } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 import { signOutAction } from "@/app/actions/auth";
 
 export default async function AdminDashboardLayout({
@@ -8,11 +7,7 @@ export default async function AdminDashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const profile = await getCurrentProfile();
-
-  if (!profile || (profile.role !== "ADMIN" && profile.role !== "STAFF")) {
-    redirect("/admin/login");
-  }
+  await requireStaff();
 
   return (
     <div className="min-h-screen">

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { requireStaff } from "@/lib/auth";
 import { ORDER_STATUS_VALUES } from "@/lib/orderLabels";
 import type { OrderStatus } from "@/generated/prisma/client";
 
@@ -17,6 +18,7 @@ export async function updateOrderAction(
   _prevState: UpdateOrderResult | undefined,
   formData: FormData,
 ): Promise<UpdateOrderResult> {
+  await requireStaff();
   const status = String(formData.get("status") ?? "");
   const trackingNumber = String(formData.get("trackingNumber") ?? "").trim();
 
@@ -40,6 +42,9 @@ export async function updateOrderAction(
 
 /** Called from the inline status dropdown on the orders table — status only, no tracking number. */
 export async function setOrderStatusAction(orderId: string, status: OrderStatus): Promise<void> {
+  await requireStaff();
+  // Arguments arrive straight from the browser, so re-check the status value.
+  if (!isOrderStatus(status)) return;
   await prisma.order.update({ where: { id: orderId }, data: { status } });
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);

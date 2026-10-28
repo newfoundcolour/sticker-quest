@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { requireStaff } from "@/lib/auth";
 import { formatCurrency, formatSizeMm } from "@/lib/pricingUtils";
 import { STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
 import {
@@ -18,6 +19,7 @@ export default async function AdminOrderDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await requireStaff();
   const { id } = await params;
   const order = await prisma.order.findUnique({
     where: { id },

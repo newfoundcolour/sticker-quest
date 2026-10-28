@@ -76,3 +76,25 @@ export async function clearCart(): Promise<void> {
   const store = await cookies();
   store.delete(CART_COOKIE);
 }
+
+const LAST_ORDER_COOKIE = "sq_last_order";
+
+/**
+ * Remembers which order this browser just placed, so /checkout/success only
+ * shows an order to the browser that created it — not to anyone holding the id.
+ */
+export async function setLastOrderCookie(orderId: string): Promise<void> {
+  const store = await cookies();
+  store.set(LAST_ORDER_COOKIE, orderId, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/checkout/success",
+    maxAge: 60 * 60, // 1 hour
+  });
+}
+
+export async function getLastOrderId(): Promise<string | undefined> {
+  const store = await cookies();
+  return store.get(LAST_ORDER_COOKIE)?.value;
+}

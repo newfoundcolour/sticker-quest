@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { requireStaff } from "@/lib/auth";
 import { STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
 import {
   ORDER_STATUS_LABELS,
@@ -44,6 +45,7 @@ export default async function AdminOrdersPage({
 }: {
   searchParams: Promise<{ status?: string; page?: string }>;
 }) {
+  await requireStaff();
   const { status, page: pageParam } = await searchParams;
   const activeStatus = status && isOrderStatus(status) ? status : undefined;
   const page = Math.max(1, Number(pageParam) || 1);

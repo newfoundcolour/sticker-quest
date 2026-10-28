@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getPricedCart } from "@/lib/cartPricing";
-import { clearCart } from "@/lib/cart";
+import { clearCart, setLastOrderCookie } from "@/lib/cart";
 
 export type CheckoutResult = { ok: false; error: string };
 
@@ -81,5 +81,6 @@ export async function submitOrderAction(
   });
 
   await clearCart();
+  await setLastOrderCookie(order.id);
   redirect(`/checkout/success?order=${order.id}`);
 }

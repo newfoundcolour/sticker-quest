@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
-import { getCurrentProfile } from "@/lib/auth";
+import { getCurrentProfile, isStaffRole } from "@/lib/auth";
 import { LoginForm } from "@/components/admin/LoginForm";
 
 export default async function AdminLoginPage() {
   const profile = await getCurrentProfile();
-  if (profile && (profile.role === "ADMIN" || profile.role === "STAFF")) {
+  if (isStaffRole(profile)) {
     redirect("/admin");
   }
 

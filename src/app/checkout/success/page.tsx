@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/pricingUtils";
+import { getLastOrderId } from "@/lib/cart";
 
 export default async function CheckoutSuccessPage({
   searchParams,
@@ -9,7 +10,8 @@ export default async function CheckoutSuccessPage({
   searchParams: Promise<{ order?: string }>;
 }) {
   const { order: orderId } = await searchParams;
-  if (!orderId) notFound();
+  // Only the browser that just placed this order may see it.
+  if (!orderId || orderId !== (await getLastOrderId())) notFound();
 
   const order = await prisma.order.findUnique({
     where: { id: orderId },
