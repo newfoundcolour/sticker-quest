@@ -1,5 +1,6 @@
 import type { CutType, Finish, OrderStatus, Shape, SheetCuts, StickerType } from "@/generated/prisma/client";
 import { STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
+import { cmToMm, formatMmValue } from "@/lib/pricingUtils";
 
 /** Shared between the cart and checkout summaries — the configurator's own labels live inline there. */
 export const CUT_TYPE_LABELS: Record<CutType, string> = {
@@ -146,3 +147,63 @@ export const ORDER_STATUS_BADGE_CLASSES: Record<OrderStatus, string> = {
   PRINTING: "bg-coral-signal/15 text-coral-signal",
   SHIPPED: "bg-ink-navy text-paper",
 };
+
+/**
+ * Orders that are still in progress for the customer.
+ * TODO(payfast): once Order.paymentStatus exists, also require it to be PAID —
+ * an unpaid order shouldn't count as active. Not invented here on purpose.
+ */
+export const ACTIVE_ORDER_STATUSES: OrderStatus[] = ["AWAITING_PROOF", "APPROVED", "PRINTING"];
+
+/** The short order number customers see, e.g. "#K3J9X2QZ" (the last 8 characters of the id). */
+export function orderNumber(orderId: string): string {
+  return `#${orderId.slice(-8).toUpperCase()}`;
+}
+
+/** "75 × 75 mm" from an item's cm dimensions. */
+export function itemSizeLabel(item: { widthCm: number | { toString(): string }; heightCm: number | { toString(): string } }): string {
+  const mm = (cm: number) => formatMmValue(cmToMm(cm));
+  return `${mm(Number(item.widthCm))} × ${mm(Number(item.heightCm))} mm`;
+}
+
+/**
+ * One readable line per item for the customer's order tables, e.g.
+ * "Vinyl · Die cut · Circle · 75 × 75 mm · Matte · 100 pcs", or for a sheet
+ * "Sticker Sheets · Holographic · 5–8 Stickers · 148 × 210 mm · 50 sheets".
+ */
+export function itemSummary(
+  item: ItemMaterial & {
+    cutType: CutType;
+    shape: Shape;
+    finish: Finish;
+    sheetCuts?: SheetCuts | null;
+    widthCm: number | { toString(): string };
+    heightCm: number | { toString(): string };
+    quantity: number;
+  },
+): string {
+  const qty = item.quantity.toLocaleString("en-ZA");
+  if (item.stickerType === "STICKER_SHEETS") {
+    const material = itemMaterial(item);
+    return [
+      STICKER_TYPE_LABELS.STICKER_SHEETS,
+      material !== "STICKER_SHEETS" && STICKER_TYPE_LABELS[material],
+      (hasFinishChoice(material) || item.finish === "GLOSS") && FINISH_LABELS[item.finish],
+      item.sheetCuts && SHEET_CUTS_LABELS[item.sheetCuts],
+      itemSizeLabel(item),
+      `${qty} ${unitNoun(item.stickerType, item.quantity)}`,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+  }
+  return [
+    STICKER_TYPE_LABELS[item.stickerType],
+    hasCutChoice(item.stickerType) && CUT_TYPE_LABELS[item.cutType].replace(" Cut", " cut"),
+    SHAPE_LABELS[item.shape],
+    itemSizeLabel(item),
+    finishLabel(item),
+    `${qty} pcs`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}

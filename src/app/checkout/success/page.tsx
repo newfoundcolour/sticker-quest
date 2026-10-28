@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/pricingUtils";
 import { getLastOrderId } from "@/lib/cart";
+import { getSessionUser } from "@/lib/auth";
 
 export default async function CheckoutSuccessPage({
   searchParams,
@@ -10,14 +11,18 @@ export default async function CheckoutSuccessPage({
   searchParams: Promise<{ order?: string }>;
 }) {
   const { order: orderId } = await searchParams;
-  // Only the browser that just placed this order may see it.
-  if (!orderId || orderId !== (await getLastOrderId())) notFound();
+  if (!orderId) notFound();
 
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: { items: true },
   });
   if (!order) notFound();
+
+  // Only the browser that just placed this order, or its logged-in owner, may see it.
+  const isJustPlaced = orderId === (await getLastOrderId());
+  const user = isJustPlaced ? null : await getSessionUser();
+  if (!isJustPlaced && !(user && order.userId === user.id)) notFound();
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center gap-4 px-4 py-20 text-center">

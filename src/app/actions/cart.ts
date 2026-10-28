@@ -11,9 +11,42 @@ import {
   SHEET_CUTS_VALUES,
   SHEET_MATERIALS,
 } from "@/lib/orderLabels";
+import { isOwnArtworkUrl } from "@/lib/artworkUrls";
+import { copyArtwork } from "@/lib/cloudinary";
+import { getSessionUser, isEmailVerified } from "@/lib/auth";
+import { findCustomerOrderItem } from "@/lib/customerOrders";
+
+export type AddToCartInput = Omit<CartItem, "id"> & {
+  /** Set when the artwork is a past order item's (reorder); the server copies it. */
+  reorderSourceItemId?: string;
+};
+
+/**
+ * Resolves the artwork for a new cart line. A reorder gets a fresh copy of
+ * the customer's own past artwork (ownership re-checked here, from the
+ * session); anything else must be a file we uploaded to Cloudinary.
+ */
+async function resolveArtwork(input: AddToCartInput): Promise<{ artworkUrl: string; artworkFilename: string } | null> {
+  if (input.reorderSourceItemId) {
+    const user = await getSessionUser();
+    if (!user || !isEmailVerified(user)) return null;
+    const source = await findCustomerOrderItem(user.id, input.reorderSourceItemId);
+    if (!source || !isOwnArtworkUrl(source.artworkUrl)) return null;
+    const copy = await copyArtwork(source.artworkUrl);
+    return { artworkUrl: copy.url, artworkFilename: source.artworkFilename ?? input.artworkFilename };
+  }
+
+  if (!isOwnArtworkUrl(input.artworkUrl)) return null;
+  return { artworkUrl: input.artworkUrl, artworkFilename: String(input.artworkFilename ?? "").slice(0, 255) };
+}
 
 /** Called from the configurator once every step is complete. Redirects to the cart on success. */
-export async function addToCartAction(item: Omit<CartItem, "id">): Promise<void> {
+export async function addToCartAction(input: AddToCartInput): Promise<void> {
+  // Pull out everything that must not be copied straight into the cart cookie.
+  const { reorderSourceItemId: _reorder, artworkUrl: _url, artworkFilename: _name, ...item } = input;
+  void _reorder;
+  void _url;
+  void _name;
   const { sheetMaterial, sheetCuts, ...rest } = item;
   let material = item.stickerType;
   let sheet: Partial<CartItem> = {};
@@ -28,9 +61,13 @@ export async function addToCartAction(item: Omit<CartItem, "id">): Promise<void>
     sheet = { cutType: "KISS" };
   }
 
+  const artwork = await resolveArtwork(input);
+  if (!artwork) return;
+
   await addToCart({
     ...rest,
     ...sheet,
+    ...artwork,
     finish: hasFinishChoice(material) ? item.finish : "MATTE",
     whiteInk: hasWhiteInkOption(material) && item.whiteInk,
   });

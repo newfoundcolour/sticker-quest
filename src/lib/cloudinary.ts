@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import { MAX_ARTWORK_BYTES } from "@/lib/uploadConstants";
+import { isOwnArtworkUrl } from "@/lib/artworkUrls";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -58,6 +59,28 @@ export async function uploadArtwork(
     },
   );
 
+  return { url: result.secure_url, publicId: result.public_id };
+}
+
+/**
+ * Copies existing artwork into a brand-new Cloudinary asset (for reorders),
+ * so two orders never share — or can delete — one file. Only our own
+ * artwork URLs are accepted, so Cloudinary is never asked to fetch an
+ * arbitrary address.
+ */
+export async function copyArtwork(sourceUrl: string): Promise<{ url: string; publicId: string }> {
+  if (!isOwnArtworkUrl(sourceUrl)) throw new Error("Refusing to copy artwork from outside our Cloudinary folder");
+
+  const upload = cloudinary.uploader.upload(sourceUrl, {
+    folder: "sticker-quest/artwork",
+    resource_type: "auto",
+    use_filename: true,
+    unique_filename: true,
+  });
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("Cloudinary copy timed out")), CLOUDINARY_UPLOAD_TIMEOUT_MS),
+  );
+  const result = await Promise.race([upload, timeout]);
   return { url: result.secure_url, publicId: result.public_id };
 }
 

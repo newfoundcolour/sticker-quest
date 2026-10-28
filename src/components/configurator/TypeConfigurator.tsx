@@ -231,46 +231,97 @@ function pageTitle(stickerType: StickerType): string {
   return label.endsWith("Sheets") ? label : `${label} Stickers`;
 }
 
+/**
+ * A past order item's choices, used to prefill the configurator for a
+ * reorder. Prices are still worked out fresh from today's pricing data.
+ */
+export type ReorderSelection = {
+  sourceItemId: string;
+  cutType: CutType;
+  shape: Shape;
+  finish: Finish;
+  roundedCorners: boolean;
+  whiteInk: boolean;
+  lamination: boolean;
+  widthMm: number;
+  heightMm: number;
+  quantity: number;
+  sheetMaterial?: StickerType;
+  sheetCuts?: SheetCuts;
+  /** The customer's own past artwork; the server copies it on add to cart. */
+  artworkUrl: string;
+  artworkFilename: string;
+};
+
+/** Maps a reorder's size and quantity onto the configurator's preset choices. */
+function initialChoices(isSheet: boolean, initial: ReorderSelection | undefined) {
+  if (!initial) return undefined;
+  const sizePreset = isSheet
+    ? SHEET_SIZE_PRESETS.find((p) => p.widthMm === initial.widthMm && p.heightMm === initial.heightMm)?.key
+    : initial.widthMm === initial.heightMm
+      ? SIZE_PRESETS.find((p) => p.mm === initial.widthMm)?.key
+      : undefined;
+  const quantityPreset = QUANTITY_PRESETS.includes(initial.quantity) ? initial.quantity : undefined;
+  return {
+    sizeChoice: sizePreset ?? "custom",
+    customWidth: sizePreset ? "" : formatMmValue(initial.widthMm),
+    customHeight: sizePreset ? "" : formatMmValue(initial.heightMm),
+    quantityChoice: (quantityPreset ?? "custom") as number | "custom",
+    customQuantity: quantityPreset ? "" : String(initial.quantity),
+  };
+}
+
 export function TypeConfigurator({
   stickerType,
   pricingConfig,
   materialPricingConfigs,
+  initialSelection,
 }: {
   stickerType: StickerType;
   pricingConfig: PricingConfig;
   /** Sticker sheets only: pricing for each material a sheet can be printed on. */
   materialPricingConfigs?: Partial<Record<StickerType, PricingConfig>>;
+  /** Prefill from a past order (reorder). */
+  initialSelection?: ReorderSelection;
 }) {
   // Sticker sheets swap shape & cut for a material choice and a cut count.
   const isSheet = stickerType === "STICKER_SHEETS";
-  const [sheetMaterial, setSheetMaterial] = useState<StickerType>(DEFAULT_SHEET_MATERIAL);
-  const [sheetCuts, setSheetCuts] = useState<SheetCuts>(DEFAULT_SHEET_CUTS);
+  const initial = initialSelection;
+  const start = initialChoices(isSheet, initial);
+  const [sheetMaterial, setSheetMaterial] = useState<StickerType>(
+    initial?.sheetMaterial && SHEET_MATERIALS.includes(initial.sheetMaterial) ? initial.sheetMaterial : DEFAULT_SHEET_MATERIAL,
+  );
+  const [sheetCuts, setSheetCuts] = useState<SheetCuts>(initial?.sheetCuts ?? DEFAULT_SHEET_CUTS);
   const material = isSheet ? sheetMaterial : stickerType;
   const config = (isSheet && materialPricingConfigs?.[material]) || pricingConfig;
   const surchargePercent = isSheet ? config.sheetCutSurchargePercent[sheetCuts] : 0;
 
-  const [cutType, setCutType] = useState<CutType | undefined>(DEFAULT_CUT_TYPE);
+  const [cutType, setCutType] = useState<CutType | undefined>(initial?.cutType ?? DEFAULT_CUT_TYPE);
   // Label sheets are always kiss cut, so they only ask for a shape.
   const showCutChoice = hasCutChoice(stickerType);
   const appliedCut = showCutChoice ? cutType : "KISS";
-  const [shape, setShape] = useState<Shape | undefined>(DEFAULT_SHAPE);
-  const [roundedCorners, setRoundedCorners] = useState(DEFAULT_ROUNDED_CORNERS);
+  const [shape, setShape] = useState<Shape | undefined>(initial?.shape ?? DEFAULT_SHAPE);
+  const [roundedCorners, setRoundedCorners] = useState(initial?.roundedCorners ?? DEFAULT_ROUNDED_CORNERS);
 
-  const [finish, setFinish] = useState<Finish | undefined>(DEFAULT_FINISH);
-  const [whiteInk, setWhiteInk] = useState(false);
-  const [lamination, setLamination] = useState(DEFAULT_LAMINATION);
+  const [finish, setFinish] = useState<Finish | undefined>(initial?.finish ?? DEFAULT_FINISH);
+  const [whiteInk, setWhiteInk] = useState(initial?.whiteInk ?? false);
+  const [lamination, setLamination] = useState(initial?.lamination ?? DEFAULT_LAMINATION);
 
   const [sizeChoice, setSizeChoice] = useState<string | undefined>(
-    isSheet ? DEFAULT_SHEET_SIZE : DEFAULT_SIZE,
+    start?.sizeChoice ?? (isSheet ? DEFAULT_SHEET_SIZE : DEFAULT_SIZE),
   ); // preset key | 'custom'
-  const [customWidthInput, setCustomWidthInput] = useState("");
-  const [customHeightInput, setCustomHeightInput] = useState("");
+  const [customWidthInput, setCustomWidthInput] = useState(start?.customWidth ?? "");
+  const [customHeightInput, setCustomHeightInput] = useState(start?.customHeight ?? "");
 
-  const [quantityChoice, setQuantityChoice] = useState<number | "custom" | undefined>(DEFAULT_QUANTITY);
-  const [customQuantityInput, setCustomQuantityInput] = useState("");
+  const [quantityChoice, setQuantityChoice] = useState<number | "custom" | undefined>(
+    start?.quantityChoice ?? DEFAULT_QUANTITY,
+  );
+  const [customQuantityInput, setCustomQuantityInput] = useState(start?.customQuantity ?? "");
 
-  const [artworkUrl, setArtworkUrl] = useState<string | undefined>();
-  const [artworkFilename, setArtworkFilename] = useState<string | undefined>();
+  const [artworkUrl, setArtworkUrl] = useState<string | undefined>(initial?.artworkUrl);
+  const [artworkFilename, setArtworkFilename] = useState<string | undefined>(initial?.artworkFilename);
+  // Set while the artwork is the reordered item's; uploading a new file clears it.
+  const [reorderSourceItemId, setReorderSourceItemId] = useState<string | undefined>(initial?.sourceItemId);
   const [uploadStatus, setUploadStatus] = useState<
     "idle" | "uploading" | "error" | "tooLarge"
   >("idle");
@@ -366,6 +417,7 @@ export function TypeConfigurator({
         ...(isSheet && { sheetMaterial, sheetCuts }),
         artworkUrl,
         artworkFilename,
+        reorderSourceItemId,
       });
     });
   }
@@ -386,6 +438,7 @@ export function TypeConfigurator({
     if (result.ok) {
       setArtworkUrl(result.url);
       setArtworkFilename(result.filename);
+      setReorderSourceItemId(undefined);
       setUploadStatus("idle");
     } else {
       setUploadStatus("error");

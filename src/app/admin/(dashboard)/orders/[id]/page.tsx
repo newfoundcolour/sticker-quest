@@ -9,6 +9,7 @@ import {
   ORDER_STATUS_LABELS,
   formatAddOns,
   itemSpecLine,
+  orderNumber,
   unitNoun,
 } from "@/lib/orderLabels";
 import { toArtworkDownloadUrl } from "@/lib/cloudinary";
@@ -38,7 +39,9 @@ export default async function AdminOrderDetailPage({
           <h1 className="font-display text-2xl font-semibold text-ink-navy">
             {order.customerName}
           </h1>
-          <p className="mt-1 font-mono text-xs text-ink-navy/50">{order.id}</p>
+          <p className="mt-1 font-mono text-xs text-ink-navy/50">
+            <span className="font-semibold text-ink-navy/70">{orderNumber(order.id)}</span> · {order.id}
+          </p>
         </div>
         <span
           className={`inline-flex rounded-full px-3 py-1.5 text-sm font-medium ${ORDER_STATUS_BADGE_CLASSES[order.status]}`}
