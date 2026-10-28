@@ -41,6 +41,9 @@ export async function GET(request: NextRequest) {
   if (user) await linkGuestOrders(user);
 
   if (type === "recovery" || next.startsWith("/reset-password")) redirect("/reset-password");
-  if (type === "email_change") redirect("/account?email=updated");
+  if (type === "email_change") {
+    // With "Secure email change", both addresses must confirm; new_email stays set until they have.
+    redirect(user?.new_email ? "/account/settings?email=half" : "/account/settings?email=updated");
+  }
   redirect(next);
 }

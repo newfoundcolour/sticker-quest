@@ -8,8 +8,8 @@ import {
   resendConfirmationAction,
   resetPasswordAction,
   signupAction,
-  type AuthFormState,
 } from "@/app/actions/auth";
+import type { AuthFormState } from "@/lib/authForms";
 import { FormMessage, PasswordField, SubmitButton, TextField } from "./fields";
 import { AUTH_LINK_CLASSES } from "./AuthShell";
 

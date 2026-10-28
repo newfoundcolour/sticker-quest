@@ -25,7 +25,7 @@ export const newPasswordSchema = z
     message: "That password is too easy to guess. Try a few random words strung together.",
   });
 
-const nameSchema = (label: string) =>
+export const nameSchema = (label: string) =>
   z
     .string()
     .trim()

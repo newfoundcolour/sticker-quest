@@ -1,11 +1,16 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { isAuthWeakPasswordError, type AuthError } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import {
+  confirmUrl,
+  isRateLimited,
+  keepValues,
+  weakPasswordMessage,
+  type AuthFormState,
+} from "@/lib/authForms";
 import { prisma } from "@/lib/prisma";
 import { isStaffRole, linkGuestOrders } from "@/lib/auth";
-import { siteUrl } from "@/lib/siteUrl";
 import { safeRedirectPath } from "@/lib/safeRedirect";
 import { RATE_LIMITS, TOO_MANY_ATTEMPTS, clientIp, rateLimit } from "@/lib/rateLimit";
 import {
@@ -17,49 +22,8 @@ import {
   signupSchema,
 } from "@/lib/validation/auth";
 
-/**
- * Shared result shape for the auth forms. Messages are deliberately generic
- * wherever a specific one would reveal whether an email is registered.
- */
-export type AuthFormState =
-  | { ok: true; message: string; email?: string }
-  | {
-      ok: false;
-      message?: string;
-      fieldErrors?: Record<string, string>;
-      /** What was typed (never passwords), so the form can refill after React resets it. */
-      values?: Record<string, string>;
-    }
-  | undefined;
-
-function keepValues(formData: FormData): Record<string, string> {
-  const values = formObject(formData);
-  for (const key of Object.keys(values)) {
-    if (/password/i.test(key)) delete values[key];
-  }
-  return values;
-}
-
 const GENERIC_LOGIN_ERROR = "Email or password is incorrect.";
 const CHECK_EMAIL = "Check your email";
-
-/** Where Supabase's default (non-token-hash) email links land; /auth/confirm handles both. */
-function confirmUrl(next: string): string {
-  return `${siteUrl()}/auth/confirm?next=${encodeURIComponent(next)}`;
-}
-
-function isRateLimited(error: AuthError): boolean {
-  return error.status === 429 || Boolean(error.code?.startsWith("over_"));
-}
-
-/** Supabase's own password checks (e.g. leaked-password protection on Pro) — safe to show. */
-function weakPasswordMessage(error: AuthError): string | undefined {
-  if (!isAuthWeakPasswordError(error)) return undefined;
-  if (error.reasons.includes("pwned")) {
-    return "That password has shown up in a data breach. Please choose a different one.";
-  }
-  return "That password doesn't meet our requirements. Try a longer one.";
-}
 
 // ─── Customer login ────────────────────────────────────────────────────────
 

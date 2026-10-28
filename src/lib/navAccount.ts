@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser, isEmailVerified } from "@/lib/auth";
 
@@ -17,7 +18,8 @@ function initialsFor(firstName: string, lastName: string, email: string): string
   return fromName || (email[0] ?? "?").toUpperCase();
 }
 
-export async function getNavAccount(): Promise<NavAccount | null> {
+/** Cached per request: the top nav and the account side nav both use it. */
+export const getNavAccount = cache(async (): Promise<NavAccount | null> => {
   const user = await getSessionUser();
   if (!user || !isEmailVerified(user)) return null;
 
@@ -34,4 +36,4 @@ export async function getNavAccount(): Promise<NavAccount | null> {
     // TODO(phase 4): count the user's pending proofs on orders awaiting approval.
     proofsAwaiting: 0,
   };
-}
+});

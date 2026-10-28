@@ -1,50 +1,48 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Container } from "@/components/Container";
 import { StepCard } from "@/components/configurator/StepCard";
 import { FormMessage, PRIMARY_BUTTON_CLASSES } from "@/components/auth/fields";
+import { AccountPageHeader } from "@/components/account/AccountPageHeader";
 import { prisma } from "@/lib/prisma";
 import { requireVerifiedUser } from "@/lib/auth";
 
-export const metadata: Metadata = { title: "Your account · Sticker Quest" };
+export const metadata: Metadata = { title: "Dashboard · Sticker Quest" };
 
 const NOTICES: Record<string, string> = {
   password: "Your password is updated, and any other devices have been signed out.",
-  email: "Email change confirmed. If we asked you to confirm from both addresses, check the other inbox too.",
 };
 
-// Placeholder landing page until the full account area (Phase 2) replaces it.
+// Placeholder until the dashboard (Phase 3) replaces it.
 export default async function AccountPage({
   searchParams,
 }: {
-  searchParams: Promise<{ password?: string; email?: string }>;
+  searchParams: Promise<{ password?: string }>;
 }) {
   const user = await requireVerifiedUser("/account");
-  const { password, email } = await searchParams;
+  const { password } = await searchParams;
   const profile = await prisma.profile.findUnique({
     where: { id: user.id },
     select: { firstName: true },
   });
-  const notice = password === "updated" ? NOTICES.password : email === "updated" ? NOTICES.email : undefined;
+  const notice = password === "updated" ? NOTICES.password : undefined;
 
   return (
-    <main className="flex flex-1 flex-col bg-night">
-      <Container className="flex justify-center py-12 sm:py-20">
-        <div className="w-full max-w-[560px]">
-          <StepCard icon="👋" title={`Hey ${profile?.firstName || "there"}!`}>
-            <div className="flex flex-col gap-5 p-6 sm:p-7">
-              {notice && <FormMessage tone="success">{notice}</FormMessage>}
-              <p className="text-sm leading-relaxed text-ink">
-                You&apos;re logged in. Your dashboard for orders, proofs, reorders and support is
-                being built and lands here soon.
-              </p>
-              <Link href="/stickers" className={`${PRIMARY_BUTTON_CLASSES} text-center`}>
-                Make some stickers
-              </Link>
-            </div>
-          </StepCard>
-        </div>
-      </Container>
-    </main>
+    <>
+      <AccountPageHeader title={`Hey ${profile?.firstName || "there"}!`} />
+      <div className="max-w-[560px]">
+        <StepCard icon="👋" title="Your dashboard">
+          <div className="flex flex-col gap-5 p-6 sm:p-7">
+            {notice && <FormMessage tone="success">{notice}</FormMessage>}
+            <p className="text-sm leading-relaxed text-ink">
+              Your orders, proofs, reorders and support messages will all live here. They&apos;re
+              on their way!
+            </p>
+            <Link href="/stickers" className={`${PRIMARY_BUTTON_CLASSES} text-center`}>
+              Make some stickers
+            </Link>
+          </div>
+        </StepCard>
+      </div>
+    </>
   );
 }
