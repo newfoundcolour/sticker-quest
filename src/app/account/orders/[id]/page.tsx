@@ -63,6 +63,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 Tracking number: <span className="font-black">{order.trackingNumber}</span>
               </p>
             )}
+            <Link href={`/account/support/new?order=${order.id}`} className="self-start text-sm font-black text-blaze hover:underline">
+              Need help with this order? Message us →
+            </Link>
           </div>
         </StepCard>
 

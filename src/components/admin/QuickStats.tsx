@@ -32,6 +32,14 @@ function ClockIcon() {
   );
 }
 
+function ChatIcon() {
+  return (
+    <svg {...iconProps()}>
+      <path d="M20 12a7.5 7.5 0 0 1-10.9 6.7L4.5 20l1.3-4.3A7.5 7.5 0 1 1 20 12Z" />
+    </svg>
+  );
+}
+
 function EyeIcon() {
   return (
     <svg {...iconProps()}>
@@ -174,6 +182,11 @@ export function QuickStats({ stats }: { stats: OrderStats }) {
         label="Avg Order Value"
         value={formatCurrency(stats.averageOrderValue)}
         icon={<AverageIcon />}
+      />
+      <StatCard
+        label="Open Conversations"
+        value={stats.openConversations.toLocaleString("en-ZA")}
+        icon={<ChatIcon />}
       />
     </div>
   );

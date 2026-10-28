@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
+import { getSupportCountsForStaff } from "@/lib/support";
 import { signOutAction } from "@/app/actions/auth";
 
 export default async function AdminDashboardLayout({
@@ -8,6 +9,7 @@ export default async function AdminDashboardLayout({
   children: React.ReactNode;
 }) {
   await requireStaff();
+  const support = await getSupportCountsForStaff();
 
   return (
     <div className="min-h-screen">
@@ -19,6 +21,15 @@ export default async function AdminDashboardLayout({
           <nav className="flex gap-4 text-sm font-medium text-ink-navy/70">
             <Link href="/admin/orders" className="hover:text-ink-navy">
               Orders
+            </Link>
+            <Link href="/admin/support" className="flex items-center gap-1.5 hover:text-ink-navy">
+              Support
+              {support.unreadConversations > 0 && (
+                <span className="rounded-full bg-coral-signal px-1.5 font-mono text-[11px] leading-[18px] text-paper">
+                  {support.unreadConversations}
+                  <span className="sr-only"> unread</span>
+                </span>
+              )}
             </Link>
           </nav>
         </div>

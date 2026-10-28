@@ -6,6 +6,7 @@ export type OrderStats = {
   awaitingProof: number;
   awaitingApproval: number;
   approved: number;
+  openConversations: number;
   printing: number;
   shippedToday: number;
   shippedTodayTrendPercent: number | null;
@@ -43,7 +44,7 @@ export async function getOrderStats(): Promise<OrderStats> {
   const tomorrowStart = addDays(todayStart, 1);
   const yesterdayStart = addDays(todayStart, -1);
 
-  const [statusCounts, overall, revenueToday, revenueYesterday, shippedToday, shippedYesterday] =
+  const [statusCounts, overall, revenueToday, revenueYesterday, shippedToday, shippedYesterday, openConversations] =
     await Promise.all([
       prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
       prisma.order.aggregate({ _count: { _all: true }, _avg: { totalPrice: true } }),
@@ -61,6 +62,7 @@ export async function getOrderStats(): Promise<OrderStats> {
       prisma.order.count({
         where: { status: "SHIPPED", updatedAt: { gte: yesterdayStart, lt: todayStart } },
       }),
+      prisma.supportConversation.count({ where: { status: "OPEN" } }),
     ]);
 
   const countByStatus = Object.fromEntries(
@@ -74,6 +76,7 @@ export async function getOrderStats(): Promise<OrderStats> {
     totalOrders: overall._count._all,
     awaitingProof: countByStatus.AWAITING_PROOF ?? 0,
     awaitingApproval: countByStatus.AWAITING_APPROVAL ?? 0,
+    openConversations,
     approved: countByStatus.APPROVED ?? 0,
     printing: countByStatus.PRINTING ?? 0,
     shippedToday,

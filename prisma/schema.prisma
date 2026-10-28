@@ -95,6 +95,7 @@ model Profile {
   company         String?
   instagramHandle String?
   orders          Order[]
+  conversations   SupportConversation[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -160,6 +161,7 @@ model Order {
 
   items  OrderItem[]
   proofs Proof[]
+  conversations SupportConversation[]
 
   trackingNumber String?
   notes          String?
@@ -242,4 +244,70 @@ model Proof {
   @@unique([orderId, version])
   @@index([orderId, createdAt])
   @@index([status])
+}
+
+enum SupportCategory {
+  PRINT_QUALITY
+  WRONG_SIZE
+  WRONG_DESIGN
+  DAMAGED_IN_SHIPPING
+  MISSING_ITEM
+  SHIPPING_DELIVERY
+  OTHER
+}
+
+enum ConversationStatus {
+  OPEN
+  RESOLVED
+}
+
+enum MessageSender {
+  CUSTOMER
+  STAFF
+}
+
+/// A private support thread between one customer and staff. Each "New
+/// message" from the customer starts a new conversation; replying to a
+/// resolved one reopens it.
+model SupportConversation {
+  id       String          @id @default(cuid())
+  userId   String
+  user     Profile         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category SupportCategory
+  /// Optional link to one of the customer's own orders (ownership checked on create).
+  orderId  String?
+  order    Order?          @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  status        ConversationStatus @default(OPEN)
+  lastMessageAt DateTime           @default(now())
+  resolvedAt    DateTime?
+  createdAt     DateTime           @default(now())
+
+  messages SupportMessage[]
+
+  @@index([userId, lastMessageAt])
+  @@index([status, lastMessageAt])
+  @@index([orderId])
+}
+
+/// One message in a support thread. Body is plain text (rendered escaped,
+/// max 5,000 characters). An optional reference image lives in the private
+/// "support-attachments" bucket and is only served via a signed URL after
+/// an ownership check.
+model SupportMessage {
+  id             String              @id @default(cuid())
+  conversationId String
+  conversation   SupportConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         MessageSender
+  /// Supabase user id of the customer or staff member who sent it.
+  senderUserId   String
+  body           String
+  attachmentPath String?
+  attachmentName String?
+  createdAt      DateTime            @default(now())
+  /// When the other side first saw it; null = unread.
+  readAt         DateTime?
+
+  @@index([conversationId, createdAt])
+  @@index([conversationId, sender, readAt])
 }

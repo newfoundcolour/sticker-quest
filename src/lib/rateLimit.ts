@@ -18,6 +18,8 @@ export const RATE_LIMITS = {
   artworkUploadPerIp: { limit: 30, windowSeconds: 10 * 60 },
   proofDecisionPerUser: { limit: 30, windowSeconds: 60 * 60 },
   staffUploadPerUser: { limit: 120, windowSeconds: 60 * 60 },
+  supportNewConversationPerUser: { limit: 10, windowSeconds: 60 * 60 },
+  supportMessagePerUser: { limit: 40, windowSeconds: 60 * 60 },
 } as const;
 
 type Rule = { limit: number; windowSeconds: number };
