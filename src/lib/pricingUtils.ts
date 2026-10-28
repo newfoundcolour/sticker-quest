@@ -13,11 +13,11 @@ export function inchesToCm(inches: number): number {
 }
 
 // Sizes are stored and priced in cm (OrderItem.widthCm / heightCm) but shown
-// and entered in mm, rounded to the nearest 0.5 mm. The 0.5"-14" printer
-// limits are the underlying constraint (see CLAUDE.md — "up to max printer
-// width"), converted once here rather than re-derived at each call site.
+// and entered in mm, rounded to the nearest 0.5 mm. The printer limits
+// (0.5" minimum, 635 mm max width — see CLAUDE.md, "up to max printer width")
+// are set once here rather than re-derived at each call site.
 export const MIN_SIZE_CM = inchesToCm(0.5);
-export const MAX_SIZE_CM = inchesToCm(14);
+export const MAX_SIZE_CM = 63.5;
 
 export function roundToHalfMm(mm: number): number {
   return Math.round(mm * 2) / 2;

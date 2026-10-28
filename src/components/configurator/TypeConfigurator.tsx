@@ -32,6 +32,7 @@ import { ShapeImage } from "./ShapeImage";
 import { SizeGuide } from "./SizeGuide";
 import { STICKER_TYPE_DESCRIPTIONS, STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
 import {
+  hasCutChoice,
   hasFinishChoice,
   hasWhiteInkOption,
   SHEET_CUTS_LABELS,
@@ -249,6 +250,9 @@ export function TypeConfigurator({
   const surchargePercent = isSheet ? config.sheetCutSurchargePercent[sheetCuts] : 0;
 
   const [cutType, setCutType] = useState<CutType | undefined>(DEFAULT_CUT_TYPE);
+  // Label sheets are always kiss cut, so they only ask for a shape.
+  const showCutChoice = hasCutChoice(stickerType);
+  const appliedCut = showCutChoice ? cutType : "KISS";
   const [shape, setShape] = useState<Shape | undefined>(DEFAULT_SHAPE);
   const [roundedCorners, setRoundedCorners] = useState(DEFAULT_ROUNDED_CORNERS);
 
@@ -334,7 +338,7 @@ export function TypeConfigurator({
   const pricing = hasSize ? priceFor(quantity) : null;
 
   const completed = [
-    isSheet || (!!cutType && !!shape),
+    isSheet || (!!appliedCut && !!shape),
     !!finish,
     hasSize,
     hasQuantity,
@@ -345,12 +349,12 @@ export function TypeConfigurator({
   const [isAddingToCart, startAddToCart] = useTransition();
 
   function handleAddToCart() {
-    if (!cutType || !shape || !appliedFinish || !artworkUrl || !artworkFilename) return;
+    if (!appliedCut || !shape || !appliedFinish || !artworkUrl || !artworkFilename) return;
     startAddToCart(async () => {
       await addToCartAction({
         stickerType,
-        // The server pins sheets to kiss cut on a rectangle regardless.
-        cutType: isSheet ? "KISS" : cutType,
+        // The server pins sheets to kiss cut on a rectangle, and label sheets to kiss cut, regardless.
+        cutType: isSheet ? "KISS" : appliedCut,
         shape: isSheet ? "RECTANGLE" : shape,
         finish: appliedFinish,
         roundedCorners: hasRoundedCornersOption && roundedCorners,
@@ -472,8 +476,9 @@ export function TypeConfigurator({
               </div>
             </StepCard>
           ) : (
-            <StepCard step={1} mobileStep={2} title="Shape & Cut">
+            <StepCard step={1} mobileStep={2} title={showCutChoice ? "Shape & Cut" : "Shape"}>
               <div className="flex flex-1 flex-col gap-2.5 p-6">
+                {showCutChoice && (
                 <div className="flex gap-1 rounded-[14px] border border-grape bg-grape/25 p-1">
                   {CUT_TYPES.map((c) => {
                     const selected = cutType === c.value;
@@ -498,6 +503,7 @@ export function TypeConfigurator({
                     );
                   })}
                 </div>
+                )}
 
                 {/* Custom spans both columns; every row is 148px so all five options match. */}
                 <div className="grid auto-rows-[148px] grid-cols-2 gap-2.5">
@@ -516,7 +522,7 @@ export function TypeConfigurator({
                         customSelected ? SELECTED_CLASSES : IDLE_CLASSES,
                       ].join(" ")}
                     >
-                      <ShapeImage src={optionImage(custom.image)} size={64} kissCut={cutType === "KISS"} />
+                      <ShapeImage src={optionImage(custom.image)} size={64} kissCut={appliedCut === "KISS"} />
                       <span className="text-sm font-black">{custom.label}</span>
                     </button>
                   );
@@ -529,7 +535,7 @@ export function TypeConfigurator({
                       onClick={() => setShape(s.value)}
                       className="gap-2"
                     >
-                      <ShapeImage src={optionImage(s.image)} size={64} kissCut={cutType === "KISS"} />
+                      <ShapeImage src={optionImage(s.image)} size={64} kissCut={appliedCut === "KISS"} />
                       <span className="text-sm font-black">{s.label}</span>
                     </OptionTile>
                   ))}

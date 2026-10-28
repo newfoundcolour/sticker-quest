@@ -54,6 +54,14 @@ export function hasWhiteInkOption(material: StickerType): boolean {
   return material !== "VINYL" && material !== "LABEL_SHEETS";
 }
 
+/**
+ * Label sheets are always kiss cut (the labels peel off a backing sheet), so
+ * customers only pick a shape. Sticker sheets are pinned separately.
+ */
+export function hasCutChoice(stickerType: StickerType): boolean {
+  return stickerType !== "LABEL_SHEETS";
+}
+
 /** Older non-vinyl GLOSS items keep reading "Gloss" so staff print them as ordered. */
 export function finishLabel(item: ItemMaterial & { finish: Finish }): string {
   const material = itemMaterial(item);
@@ -74,7 +82,13 @@ export function itemSpecLine(
   },
 ): string {
   if (item.stickerType !== "STICKER_SHEETS") {
-    return `${SHAPE_LABELS[item.shape]} · ${CUT_TYPE_LABELS[item.cutType]} · ${finishLabel(item)}`;
+    return [
+      SHAPE_LABELS[item.shape],
+      hasCutChoice(item.stickerType) && CUT_TYPE_LABELS[item.cutType],
+      finishLabel(item),
+    ]
+      .filter(Boolean)
+      .join(" · ");
   }
   const material = itemMaterial(item);
   return [

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { addToCart, removeFromCart, updateCartItemQuantity, type CartItem } from "@/lib/cart";
 import { clampQuantity } from "@/lib/pricingUtils";
 import {
+  hasCutChoice,
   hasFinishChoice,
   hasWhiteInkOption,
   SHEET_CUTS_VALUES,
@@ -23,6 +24,8 @@ export async function addToCartAction(item: Omit<CartItem, "id">): Promise<void>
     if (!sheetCuts || !SHEET_CUTS_VALUES.includes(sheetCuts)) return;
     material = sheetMaterial;
     sheet = { sheetMaterial, sheetCuts, cutType: "KISS", shape: "RECTANGLE", roundedCorners: false };
+  } else if (!hasCutChoice(item.stickerType)) {
+    sheet = { cutType: "KISS" };
   }
 
   await addToCart({
