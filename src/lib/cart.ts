@@ -1,6 +1,16 @@
 import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
+import { z } from "zod";
 import type { CutType, Finish, Shape, SheetCuts, StickerType } from "@/generated/prisma/client";
+import {
+  CutType as CutTypeEnum,
+  Finish as FinishEnum,
+  Shape as ShapeEnum,
+  SheetCuts as SheetCutsEnum,
+  StickerType as StickerTypeEnum,
+} from "@/generated/prisma/enums";
+import { MAX_SIZE_CM, MIN_QUANTITY, MIN_SIZE_CM } from "@/lib/pricingUtils";
+import { isOwnArtworkUrl } from "@/lib/artworkUrls";
 
 const CART_COOKIE = "sq_cart";
 const CART_COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
@@ -25,11 +35,40 @@ export type CartItem = {
   artworkFilename: string;
 };
 
+const enumOf = <T extends Record<string, string>>(e: T) => z.enum(Object.values(e) as [T[keyof T], ...T[keyof T][]]);
+const sizeCm = z.number().finite().min(MIN_SIZE_CM).max(MAX_SIZE_CM);
+
+/**
+ * What a valid cart line looks like. The cart lives in a cookie the visitor
+ * can edit, and addToCartAction can be called directly, so every line is
+ * checked against this on the way in *and* every time the cart is read:
+ * real enum values, sizes within the printer limits, at least the minimum
+ * quantity, and artwork we uploaded ourselves.
+ */
+export const cartItemInputSchema = z.object({
+  stickerType: enumOf(StickerTypeEnum),
+  cutType: enumOf(CutTypeEnum),
+  shape: enumOf(ShapeEnum),
+  finish: enumOf(FinishEnum),
+  roundedCorners: z.boolean().optional(),
+  whiteInk: z.boolean(),
+  lamination: z.boolean(),
+  widthCm: sizeCm,
+  heightCm: sizeCm,
+  quantity: z.number().int().min(MIN_QUANTITY).max(2_147_483_647),
+  sheetMaterial: enumOf(StickerTypeEnum).optional(),
+  sheetCuts: enumOf(SheetCutsEnum).optional(),
+  artworkUrl: z.string().max(2048).refine((url) => isOwnArtworkUrl(url), "Unknown artwork"),
+  artworkFilename: z.string().max(255),
+});
+const cartItemSchema = cartItemInputSchema.extend({ id: z.string().min(1).max(64) });
+
 /**
  * The cart is the full line-item list, stored client-side in a cookie —
  * there's no server session for anonymous customers. Only the configuration
  * choices live here; price is always recomputed server-side from live
  * PricingRule data (see cartPricing.ts), never trusted from the cookie.
+ * Lines that fail validation (tampered or out of date) are dropped.
  */
 export async function getCart(): Promise<CartItem[]> {
   const store = await cookies();
@@ -37,9 +76,12 @@ export async function getCart(): Promise<CartItem[]> {
   if (!raw) return [];
 
   try {
-    const parsed = JSON.parse(raw);
+    const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed;
+    return parsed.flatMap((line) => {
+      const result = cartItemSchema.safeParse(line);
+      return result.success ? [result.data] : [];
+    });
   } catch {
     return [];
   }

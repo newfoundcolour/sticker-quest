@@ -8,12 +8,13 @@ Visual/design decisions must follow `DESIGN.md` in the project root.
 
 ## Stack
 
-- **Framework:** Next.js (App Router)
+- **Framework:** Next.js 16 (App Router), `src/` layout — the proxy (formerly middleware) is `src/proxy.ts`
 - **Styling:** Tailwind CSS
-- **Database + Auth:** Supabase (Postgres)
-- **ORM:** Prisma
-- **Artwork storage:** Cloudinary (customer-uploaded artwork)
-- **Payments:** PayFast — charged upfront at checkout
+- **Database + Auth:** Supabase (Postgres + Supabase Auth via `@supabase/ssr`)
+- **ORM:** Prisma (connects as `postgres`, which bypasses RLS)
+- **Artwork storage:** Cloudinary (customer-uploaded artwork, folder `sticker-quest/artwork`)
+- **Private files:** Supabase Storage — buckets `proofs` and `support-attachments` (private)
+- **Payments:** PayFast — charged upfront at checkout (not integrated yet; `Order` has no `paymentStatus` — see `TODO(payfast)`)
 - **Shipping:** The Courier Guy — manual booking for v1, no API integration yet
 
 ## Product configurator
@@ -27,20 +28,70 @@ Customers configure a product with these options, and price recalculates live as
 - **Size:** 50, 75, 100 or 125 mm (square presets), or custom in mm rounded to the nearest 0.5 (up to max printer width). Stored and priced in cm.
 - **Quantity:** minimum 50, no upper limit
 
-Pricing is driven by a pricing rules table, not hardcoded — exact pricing tables are still being finalized, so avoid baking specific prices into code.
+Pricing is driven by a pricing rules table, not hardcoded — exact pricing tables are still being finalized, so avoid baking specific prices into code. Prices are always recomputed server-side (`getPricedCart`); never trust a price, size or quantity from the browser.
 
 ## Order flow
 
-1. Customer configures product and uploads artwork.
+1. Customer configures product and uploads artwork (logged in or as a guest).
 2. Customer pays via PayFast at checkout (payment is upfront).
-3. Order enters `awaiting_proof` status.
-4. Staff manually preflights the artwork offline in Illustrator and sends a proof to the customer via WhatsApp or email.
-5. Once the customer approves, staff manually updates the order status.
+3. Order enters `awaiting_proof` status. If a verified customer is logged in, the order gets their `userId`.
+4. Staff preflight the artwork in Illustrator and upload a proof on `/admin/orders/[id]` → order moves to `awaiting_approval`. (Staff may still send proofs by WhatsApp/email.)
+5. The customer approves (→ `approved`) or requests changes with a comment (→ back to `awaiting_proof`) at `/account/proofs`. Staff can record an approval given elsewhere ("approve on customer's behalf"), and setting an order to Approved by hand records the pending proof as staff-approved.
 
-**Order pipeline (status values):** `awaiting_proof` → `approved` → `printing` → `shipped`
+**Order pipeline (status values):** `awaiting_proof` → `awaiting_approval` → `approved` → `printing` → `shipped`
 
 **Delivery promise:** printed and dispatched the next business day after proof approval.
 
-## Roles & admin
+## Roles & access
 
-Two internal roles: **admin** and **staff**. Access is via a login-gated dashboard at `/admin`.
+Three roles, stored **only** in `Profile.role` (a server-side table): **customer** (default for every signup), **staff**, **admin**.
+
+- New auth users get a `CUSTOMER` Profile from a Postgres trigger on `auth.users` (also keeps `Profile.email` in sync with the verified email and deletes the Profile with the user). Staff/admin are granted by hand in the database. No form, action or API ever writes `role`.
+- **Never** use Supabase `user_metadata` for authorisation — users can edit it. It only carries first/last name at signup.
+- `/admin/*` — staff/admin only (`requireStaff()`); a logged-in customer gets a 404. `/admin/login` admits staff only.
+- `/account/*` — a logged-in user with a **verified email** (`requireVerifiedUser()`).
+- The proxy only refreshes the session, sets the CSP and redirects logged-out `/account` visits; it is not a security boundary.
+
+## Routes
+
+- **Auth:** `/signup`, `/login`, `/forgot-password`, `/reset-password`, `/auth/confirm` (Supabase email links: `token_hash` + `type`, or PKCE `code`), `/terms`, `/privacy` (placeholders)
+- **Account:** `/account` (dashboard), `/account/orders`, `/account/orders/[id]`, `/account/reorder`, `/account/proofs`, `/account/proofs/[id]`, `/account/proofs/[id]/file`, `/account/support`, `/account/support/new`, `/account/support/[id]`, `/account/support/attachments/[messageId]`, `/account/settings`
+- **Reorder:** `/configure/[type]?reorder=<orderItemId>` prefills the configurator from the customer's own item
+- **Admin:** `/admin/login`, `/admin/orders`, `/admin/orders/[id]` (with Proofs panel), `/admin/proofs/[id]/file`, `/admin/support`, `/admin/support/[id]`, `/admin/support/attachments/[messageId]`
+
+## Data model (beyond orders/pricing)
+
+- **Profile** — id = Supabase auth user id; email, role, firstName, lastName, company?, instagramHandle?
+- **Order.userId** (nullable) — guest orders stay valid; past guest orders are linked by email **only after Supabase has verified that email** (`linkGuestOrders`).
+- **Proof** — orderId, version (unique per order, never overwritten), storagePath, originalFilename, mimeType, sizeBytes, status (pending/approved/rejected; "superseded" is computed), customerComment, decidedAt, decidedBy, decisionSource (customer / staff_on_behalf), uploadedBy.
+- **SupportConversation** — userId, category, orderId?, status (open/resolved), lastMessageAt, resolvedAt. **SupportMessage** — sender (customer/staff), senderUserId, body (plain text ≤ 5,000), attachmentPath?, readAt.
+- **RateLimit** — fixed-window counters for our own actions (`src/lib/rateLimit.ts`).
+
+## Security rules (keep these when adding features)
+
+- **Every public-schema table has RLS enabled with no policies** (deny-all), and `anon`/`authenticated` privileges revoked. Every new table's migration must do the same (`ENABLE ROW LEVEL SECURITY` + `REVOKE ALL … FROM anon, authenticated`).
+- **Authorise in server code.** Every server action and route handler checks the session itself (`requireStaff()` / `requireVerifiedUser()`); layouts don't protect actions. Take the user id from the verified session (`getUser()` via `getSessionUser()`), never from the browser, and scope every customer query by it (see `src/lib/customerOrders.ts`, `proofs.ts`, `support.ts`). Someone else's order/proof/conversation/file = 404.
+- **Validate everything server-side** with zod: auth forms, settings, cart lines (`cartItemInputSchema` — also re-checked on every cart read), checkout fields, support messages, proof comments.
+- **Files:** private buckets only; validate by magic bytes (`src/lib/fileSniff.ts`), random storage names, serve only through routes that check access then redirect to a 5-minute signed URL. Artwork URLs must be in our Cloudinary folder (`isOwnArtworkUrl`).
+- **Secrets:** `SUPABASE_SERVICE_ROLE_KEY` is server-only (`src/lib/storage.ts` imports `server-only`); never `NEXT_PUBLIC_`.
+- **No open redirects:** any `next` from a URL or form goes through `safeRedirectPath`.
+- **Plain text only:** never `dangerouslySetInnerHTML`; messages render escaped with `whitespace-pre-wrap`.
+- **Auth responses are generic** (login, signup, forgot password, email change) — never reveal whether an email is registered.
+- Security headers: CSP with a per-request nonce in `src/proxy.ts` (allows Cloudinary, Supabase, PayFast form posts); static headers in `next.config.ts`.
+
+## Email / notifications
+
+No transactional email yet. Events (proof ready/approved/rejected, support messages) call `notify()` in `src/lib/notifications.ts` — plug an email provider in there.
+
+## Migrations
+
+- Apply with `npx prisma migrate deploy` (not `migrate dev`): migrations add triggers on Supabase's `auth.users` and create Storage buckets, which a plain shadow database doesn't have. Always show migrations to the owner before applying to the live database.
+- Supabase's pooler can make Prisma's migration engine time out (`P1001`) — add `connect_timeout=60` to the URL and retry.
+- Adding a value to an enum goes in its own migration (Postgres can't use a new enum value in the same transaction).
+
+## Testing
+
+- `npm run typecheck`, `npm run lint`.
+- End-to-end: Playwright in `tests/e2e`, run against a **separate test Supabase project** configured in `.env.test` (`TEST_SUPABASE_URL`, `TEST_SUPABASE_ANON_KEY`, `TEST_SUPABASE_SERVICE_ROLE_KEY`, `TEST_DATABASE_URL`, optional `TEST_EMAIL_DOMAIN`). The tests refuse to run if `.env.test` matches the live project in `.env`.
+  - `npm run test:e2e:db` — migrate + seed the test database (rerun after new migrations)
+  - `npm run test:e2e` — starts the app on port 3100 (build folder `.next-test`) and runs the tests

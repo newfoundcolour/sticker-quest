@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // The Playwright test server builds into its own folder so it can run
+  // alongside your normal dev server (see playwright.config.ts).
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   images: {
     // Site imagery is flat sticker-style PNG art; the optimizer's lossy WebP
     // re-encode visibly smudges it, so serve the exported files as-is.

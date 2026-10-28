@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { addToCart, removeFromCart, updateCartItemQuantity, type CartItem } from "@/lib/cart";
+import { addToCart, cartItemInputSchema, removeFromCart, updateCartItemQuantity, type CartItem } from "@/lib/cart";
 import { clampQuantity } from "@/lib/pricingUtils";
 import {
   hasCutChoice,
@@ -27,7 +27,8 @@ export type AddToCartInput = Omit<CartItem, "id"> & {
  * session); anything else must be a file we uploaded to Cloudinary.
  */
 async function resolveArtwork(input: AddToCartInput): Promise<{ artworkUrl: string; artworkFilename: string } | null> {
-  if (input.reorderSourceItemId) {
+  if (input.reorderSourceItemId !== undefined) {
+    if (typeof input.reorderSourceItemId !== "string") return null;
     const user = await getSessionUser();
     if (!user || !isEmailVerified(user)) return null;
     const source = await findCustomerOrderItem(user.id, input.reorderSourceItemId);
@@ -42,11 +43,11 @@ async function resolveArtwork(input: AddToCartInput): Promise<{ artworkUrl: stri
 
 /** Called from the configurator once every step is complete. Redirects to the cart on success. */
 export async function addToCartAction(input: AddToCartInput): Promise<void> {
-  // Pull out everything that must not be copied straight into the cart cookie.
-  const { reorderSourceItemId: _reorder, artworkUrl: _url, artworkFilename: _name, ...item } = input;
-  void _reorder;
-  void _url;
-  void _name;
+  // This is a public endpoint: validate every field server-side (types, enum
+  // values, size and quantity limits) before anything else happens.
+  const config = cartItemInputSchema.omit({ artworkUrl: true, artworkFilename: true }).safeParse(input);
+  if (!config.success) return;
+  const item = config.data;
   const { sheetMaterial, sheetCuts, ...rest } = item;
   let material = item.stickerType;
   let sheet: Partial<CartItem> = {};
@@ -64,13 +65,15 @@ export async function addToCartAction(input: AddToCartInput): Promise<void> {
   const artwork = await resolveArtwork(input);
   if (!artwork) return;
 
-  await addToCart({
+  const line = cartItemInputSchema.safeParse({
     ...rest,
     ...sheet,
     ...artwork,
     finish: hasFinishChoice(material) ? item.finish : "MATTE",
     whiteInk: hasWhiteInkOption(material) && item.whiteInk,
   });
+  if (!line.success) return;
+  await addToCart(line.data);
   revalidatePath("/", "layout");
   redirect("/cart");
 }

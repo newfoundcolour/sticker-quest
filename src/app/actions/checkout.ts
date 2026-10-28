@@ -32,8 +32,17 @@ export async function submitOrderAction(
   if (!fullName || !email || !phone || !addressLine1 || !city || !province || !postalCode) {
     return { ok: false, error: "Please fill in all required fields." };
   }
-  if (!EMAIL_PATTERN.test(email)) {
+  if (!EMAIL_PATTERN.test(email) || email.length > 254) {
     return { ok: false, error: "Enter a valid email address." };
+  }
+  // Public endpoint: cap every field so nobody can store megabytes of text.
+  const tooLong =
+    fullName.length > 120 ||
+    phone.length > 30 ||
+    [addressLine1, addressLine2, city, province].some((v) => v.length > 200) ||
+    postalCode.length > 12;
+  if (tooLong) {
+    return { ok: false, error: "One of those fields is too long. Please shorten it." };
   }
 
   const { items, unavailableItemIds, subtotal } = await getPricedCart();
@@ -45,6 +54,10 @@ export async function submitOrderAction(
       ok: false,
       error: "Some items in your cart are no longer available — remove them to continue.",
     };
+  }
+  // Belt and braces: a valid cart always has a positive price.
+  if (!(subtotal > 0) || items.some((i) => !(i.totalPrice > 0))) {
+    return { ok: false, error: "Something's off with your cart. Please remove the item and add it again." };
   }
 
   const shippingAddress = [addressLine1, addressLine2, city, province, postalCode]
