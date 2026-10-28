@@ -1,13 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/Container";
 import { StickerTypeImage } from "@/components/StickerTypeImage";
-import {
-  LIFT_ON_HOVER_ANY,
-  OPTION_TRANSITION,
-  StepCard,
-  TILT_ON_HOVER,
-} from "@/components/configurator/StepCard";
+import { TILT_ON_HOVER } from "@/components/configurator/StepCard";
 import {
   STICKER_TYPE_DESCRIPTIONS,
   STICKER_TYPE_GROUPS,
@@ -15,63 +9,64 @@ import {
   STICKER_TYPE_SLUGS,
 } from "@/lib/stickerTypeSlug";
 
-/** Per-group layout: on wide screens the groups share a row, sized so every tile is the same width. */
-const GROUP_LAYOUT: Record<string, { card: string; grid: string }> = {
-  "Individually cut": { card: "lg:col-span-2", grid: "grid-cols-2 sm:grid-cols-4" },
-  Sheets: { card: "", grid: "grid-cols-2" },
-};
-
+/** "Pick your sticker type" — the product directory, one column per group. */
 export function TypeGrid() {
   return (
-    <Container className="pb-8 pt-4">
-      <div className="flex items-center gap-5 overflow-hidden rounded-[20px] bg-linear-[167deg] from-zap via-blaze via-55% to-grape px-5 py-4 sm:px-8 md:h-[208px] md:py-0 lg:px-12">
-        <Image
-          src="/mascot/knight-helmet.png"
-          alt=""
-          width={615}
-          height={880}
-          priority
-          className="hidden h-28 w-auto shrink-0 drop-shadow-[4px_4px_0_rgba(22,18,42,0.45)] sm:block md:h-40"
-        />
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-black uppercase tracking-wide text-night">Start your quest</p>
-          <h1 className="pt-1 break-words text-[28px] font-black leading-none text-sand uppercase lg:text-[40px] xl:text-[64px]">
-            Pick your sticker type
-          </h1>
-          <p className="pt-3 text-sm leading-[1.5] text-sand md:text-base">
-            Choose a material to start — shape, size and quantity come next.
-          </p>
-        </div>
+    <Container className="pt-12 pb-[72px] lg:px-[72px]">
+      <div className="flex flex-col gap-3.5">
+        <p className="text-[13px] font-black uppercase tracking-[0.06em] text-zap">Start your quest</p>
+        <h1 className="font-headline text-[36px] font-bold leading-[1.05] text-sand uppercase md:text-[56px]">
+          Pick your sticker type
+        </h1>
+        <p className="text-base leading-normal text-[#b5b0c4] md:text-[17px]">
+          Choose a material to start — shape, size and quantity come next.
+        </p>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        {STICKER_TYPE_GROUPS.map((group, i) => {
-          const layout = GROUP_LAYOUT[group.title] ?? { card: "", grid: "grid-cols-2" };
-          return (
-            <StepCard key={group.title} step={i + 1} title={group.title} className={layout.card}>
-              <div className={`grid flex-1 gap-2.5 p-4 ${layout.grid}`}>
-                {group.types.map((type) => (
+      <div className="mt-11 grid gap-10 md:grid-cols-2 md:gap-9">
+        {STICKER_TYPE_GROUPS.map((group, i) => (
+          <section
+            key={group.title}
+            aria-labelledby={`type-group-${i}`}
+            // A thin rule splits the two columns on wider screens.
+            className={i === 0 ? "md:border-r md:border-white/9 md:pr-9" : "md:pr-9"}
+          >
+            <h2
+              id={`type-group-${i}`}
+              className="text-[15px] font-extrabold uppercase tracking-[0.05em] text-[#b9a6f4]"
+            >
+              {group.title}
+            </h2>
+            <ul className="mt-3">
+              {group.types.map((type) => (
+                <li key={type} className="border-b border-white/9 last:border-b-0">
                   <Link
-                    key={type}
                     href={`/configure/${STICKER_TYPE_SLUGS[type]}`}
-                    className={[
-                      "group flex flex-col items-center gap-2 rounded-[14px] border border-grape bg-sand p-3 text-center text-night",
-                      "hover:border-zap-deep hover:bg-zap hover:shadow-pop-zap",
-                      OPTION_TRANSITION,
-                      LIFT_ON_HOVER_ANY,
-                    ].join(" ")}
+                    className="group flex min-h-[112px] items-center gap-[18px] py-[18px]"
                   >
-                    <StickerTypeImage type={type} className={`size-20 sm:size-24 ${TILT_ON_HOVER}`} />
-                    <span className="text-base font-black">{STICKER_TYPE_LABELS[type]}</span>
-                    <span className="text-xs leading-snug text-night/70">
-                      {STICKER_TYPE_DESCRIPTIONS[type]}
+                    <StickerTypeImage
+                      type={type}
+                      size={72}
+                      className={`size-[72px] shrink-0 ${TILT_ON_HOVER}`}
+                    />
+                    <span className="flex min-w-0 flex-col gap-1.5">
+                      <span className="text-base leading-[1.25] font-bold text-white transition-colors group-hover:text-zap">
+                        {STICKER_TYPE_LABELS[type]}
+                        {STICKER_TYPE_LABELS[type].endsWith("Sheets") ? "" : " Stickers"}
+                        <span aria-hidden className="ml-2 inline-block transition-transform group-hover:translate-x-0.5">
+                          →
+                        </span>
+                      </span>
+                      <span className="text-sm leading-[1.4] text-[#b5b0c4]">
+                        {STICKER_TYPE_DESCRIPTIONS[type]}
+                      </span>
                     </span>
                   </Link>
-                ))}
-              </div>
-            </StepCard>
-          );
-        })}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
       </div>
     </Container>
   );

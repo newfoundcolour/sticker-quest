@@ -14,11 +14,11 @@ export async function Reviews({ title = "Our Quest For Quality." }: { title?: st
   if (reviews.length === 0) return null;
 
   return (
-    <section aria-labelledby="reviews-heading" className="pt-16 pb-[68px]">
+    <section aria-labelledby="reviews-heading" className="pt-16 pb-[66px]">
       <Container>
         <h2
           id="reviews-heading"
-          className="text-center text-[36px] font-black leading-none text-white uppercase md:text-[56px]"
+          className="text-center font-headline text-[36px] font-bold leading-none text-white uppercase md:text-[56px]"
         >
           {title}
         </h2>

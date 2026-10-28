@@ -1,38 +1,44 @@
 import { Container } from "@/components/Container";
 
+/** Shared badge look: a little sticker with a light die-cut edge. */
+const BADGE = "flex h-14 items-center justify-center text-[26px] font-black shadow-[0_4px_6px_rgba(0,0,0,0.35)]";
+const BADGE_EDGE = "border border-sand/65";
+
+/** Each step's badge is a different sticker shape: circle, square, rectangle, oval. */
 const STEPS = [
   {
     title: "Upload your design",
     body: "PNG, PDF, AI, EPS, SVG. We’ll take anything.",
-    badge: "bg-blaze text-white",
+    badge: `${BADGE} ${BADGE_EDGE} w-14 rounded-full bg-blaze text-white`,
   },
   {
     title: "Approve your proof",
     body: "Sent to you quickly via email or WhatsApp.",
-    badge: "bg-grape text-white",
+    badge: `${BADGE} ${BADGE_EDGE} w-14 rounded-[4px] bg-grape text-white`,
   },
   {
     title: "Fast shipping",
     body: "Approve your proof and we print it. It’s out the door the next business day.",
-    badge: "bg-zap text-night",
+    badge: `${BADGE} ${BADGE_EDGE} w-20 rounded-[4px] bg-zap text-night`,
   },
   {
     title: "Shipped to your door",
+    // The oval's edge is drawn in the SVG, so no border here.
     body: "Leave us a five-star review if you love them.",
-    badge: "bg-blaze text-white",
+    badge: `${BADGE} w-20 rounded-full bg-[url(/how-it-works/oval-badge.svg)] bg-size-[100%_100%] text-white`,
   },
 ];
 
-/** "We made it easy to get custom stickers." — the four-step process strip. */
+/** "We made it easy to get custom stickers." — four steps split by thin dividers. */
 export function HowItWorks() {
   return (
-    <section aria-labelledby="how-it-works-heading" className="pt-10 pb-6">
+    <section aria-labelledby="how-it-works-heading" className="pt-[30px] pb-6">
       <Container>
-        <div className="text-center">
-          <p className="text-sm font-black uppercase tracking-wider text-zap">How it works</p>
+        <div className="flex flex-col items-center gap-3 text-center uppercase">
+          <p className="text-sm font-black tracking-[0.06em] text-zap">How it works</p>
           <h2
             id="how-it-works-heading"
-            className="mx-auto max-w-[900px] pt-3 text-[36px] font-black leading-none text-white uppercase md:text-[56px]"
+            className="max-w-[900px] font-headline text-[36px] font-bold leading-none text-white md:text-[56px]"
           >
             We made it easy to get custom stickers.
           </h2>
@@ -42,16 +48,20 @@ export function HowItWorks() {
           {STEPS.map((step, i) => (
             <li
               key={step.title}
-              className="flex flex-col gap-4 rounded-[24px] border-[1.5px] border-night bg-sand px-7 pt-7 pb-8 text-night shadow-[5px_5px_0_0_rgba(104,94,168,0.55)]"
+              className="relative flex flex-col items-center gap-4 p-7 text-center text-white"
             >
-              <span
-                aria-hidden="true"
-                className={`flex size-14 items-center justify-center rounded-full border-[1.5px] border-night text-[26px] font-black ${step.badge}`}
-              >
+              <span aria-hidden="true" className={step.badge}>
                 {i + 1}
               </span>
               <h3 className="text-2xl leading-[1.1] font-black">{step.title}</h3>
-              <p className="text-base leading-[1.45] text-night/75">{step.body}</p>
+              <p className="text-base leading-[1.45] text-white/70">{step.body}</p>
+              {/* Divider sits in the middle of the gap to the next step (desktop row only). */}
+              {i < STEPS.length - 1 && (
+                <span
+                  aria-hidden="true"
+                  className="absolute top-7 bottom-7 -right-2 hidden w-px bg-sand/25 lg:block"
+                />
+              )}
             </li>
           ))}
         </ol>

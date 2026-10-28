@@ -9,7 +9,7 @@ The configurator was redesigned in Figma ("Sticker Quest 1.0", desktop frame `1:
 - **Shell:** dark `night` page, full-width nav (logo, pill search "Select sticker type...", cart with count badge), gradient header banner, dark footer.
 - **Layout:** four white cards in a row — 1 Shape & Cut, 2 Material, 3 Size, 4 Quantity (with the total box at its foot) — then a full-width 5 Upload card. Numbered step badges replace the Waypoint Line on this page.
 - **Selected state:** an idle tile is `mist` grey; a chosen tile fills with its step's accent (Shape & Quantity `blaze`, Material `grape`, Size `zap`).
-- **Type:** Inter only — Black (900) for labels, prices and headings, Regular for hints. Prices are no longer set in mono.
+- **Type:** Inter — Black (900) for labels, prices and headings, Regular for hints. Prices are no longer set in mono. On the home page the big headlines (hero and section titles) are **Averia Libre Bold** (`font-headline font-bold`).
 
 | Token | Hex | Use |
 |---|---|---|

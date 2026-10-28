@@ -19,14 +19,14 @@ export function ProductCards() {
   const types = STICKER_TYPE_GROUPS.flatMap((group) => group.types);
 
   return (
-    <section id="products" aria-labelledby="products-heading" className="scroll-mt-6 pt-16 md:pt-24">
+    <section id="products" aria-labelledby="products-heading" className="scroll-mt-6 pt-16">
       <Container>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="flex flex-col gap-3 uppercase">
             <p className="text-sm font-black tracking-[0.06em] text-zap">Start your quest</p>
             <h2
               id="products-heading"
-              className="text-[36px] font-black leading-none text-white md:text-[56px]"
+              className="font-headline text-[36px] font-bold leading-none text-white md:text-[56px]"
             >
               Pick your sticker.
             </h2>

@@ -94,6 +94,8 @@
   --font-display: var(--font-bricolage-grotesque), "Clash Display", ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-inter), "General Sans", var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", monospace;
+  /* Big home page headlines — pair with `font-bold`, its only loaded weight. */
+  --font-headline: var(--font-averia-libre), ui-serif, serif;
 }
 
 /* In-page links (e.g. the hero's jump to #products) glide rather than jump;

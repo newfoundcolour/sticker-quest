@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Geist, Inter, JetBrains_Mono } from "next/font/google";
+import { Averia_Libre, Bricolage_Grotesque, Geist, Inter, JetBrains_Mono } from "next/font/google";
 import { NavBar } from "@/components/NavBar";
 import { Footer } from "@/components/Footer";
 import { getCart } from "@/lib/cart";
@@ -9,6 +9,13 @@ import "./globals.css";
 // uses (Regular through Black) comes from one file.
 const inter = Inter({
   variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+// Big home page headlines (hero, section titles), per the Figma. Only the Bold weight is used.
+const averiaLibre = Averia_Libre({
+  variable: "--font-averia-libre",
+  weight: "700",
   subsets: ["latin"],
 });
 
@@ -48,7 +55,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${geistSans.variable} ${bricolageGrotesque.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${averiaLibre.variable} ${geistSans.variable} ${bricolageGrotesque.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-paper text-ink-navy">
         <NavBar cartCount={cart.length} />

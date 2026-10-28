@@ -32,3 +32,10 @@ export async function signOutAction() {
   await supabase.auth.signOut();
   redirect("/admin/login");
 }
+
+/** Customer sign-out from the footer's "My Shop" column — back to the home page. */
+export async function signOutCustomerAction() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/");
+}

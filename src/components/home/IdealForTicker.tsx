@@ -50,7 +50,7 @@ function IndustryList({ hidden = false }: { hidden?: boolean }) {
 /** "Ideal for:" — tilted, sticker-style industry names scrolling right to left. */
 export function IdealForTicker() {
   return (
-      <section aria-label="Ideal for" className="pt-10">
+      <section aria-label="Ideal for" className="pt-[26px]">
         <Container>
         <p className="mx-auto w-fit rounded-full bg-night px-[18px] py-2.5 text-[14px] font-black uppercase tracking-wide text-zap">
           Ideal for:

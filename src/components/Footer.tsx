@@ -3,6 +3,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Container } from "@/components/Container";
 import { InstagramIcon, TikTokIcon } from "@/components/icons/SocialIcons";
+import { signOutCustomerAction } from "@/app/actions/auth";
+import { createClient } from "@/lib/supabase/server";
 import {
   STICKER_TYPE_GROUPS,
   STICKER_TYPE_LABELS,
@@ -32,10 +34,15 @@ function FooterColumn({ title, children }: { title: ReactNode; children: ReactNo
   );
 }
 
-export function Footer() {
+export async function Footer() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <footer className="relative z-10 border-t border-white/[0.13] bg-night">
-      <Container className="grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4">
+      <Container className="grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-5">
         <FooterColumn title="Products">
           <ul className="space-y-2.5">
             {STICKER_TYPE_GROUPS.flatMap((group) => group.types).map((type) => {
@@ -73,6 +80,51 @@ export function Footer() {
               </div>
             ))}
           </dl>
+        </FooterColumn>
+
+        {/* Customer account pages (/login, /signup, /orders, /reorder) are still to be built. */}
+        <FooterColumn title="My Shop">
+          <ul className="space-y-2.5">
+            <li>
+              <Link href="/stickers" className={LINK_CLASSES}>
+                Start your order →
+              </Link>
+            </li>
+            {user ? (
+              <>
+                <li>
+                  <Link href="/reorder" className={LINK_CLASSES}>
+                    Reorder
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/orders" className={LINK_CLASSES}>
+                    My Orders
+                  </Link>
+                </li>
+                <li>
+                  <form action={signOutCustomerAction}>
+                    <button type="submit" className={`cursor-pointer ${LINK_CLASSES}`}>
+                      Sign out
+                    </button>
+                  </form>
+                </li>
+              </>
+            ) : (
+              <>
+                <li>
+                  <Link href="/login" className={LINK_CLASSES}>
+                    Log in
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/signup" className={LINK_CLASSES}>
+                    Sign up
+                  </Link>
+                </li>
+              </>
+            )}
+          </ul>
         </FooterColumn>
 
         <FooterColumn

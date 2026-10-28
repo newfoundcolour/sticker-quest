@@ -4,17 +4,17 @@ import { SouthAfricaMap } from "@/components/home/SouthAfricaMap";
 /** "Made in Cape Town. Ships anywhere in South Africa." — copy beside a map. */
 export function MadeInCapeTown() {
   return (
-    <section aria-labelledby="cape-town-heading" className="py-16 md:py-24">
+    <section aria-labelledby="cape-town-heading" className="pt-16 pb-16 md:pb-24">
       <Container>
         <div className="flex flex-col items-center gap-12 rounded-[28px] border-[1.5px] border-night bg-grape px-6 py-10 sm:px-10 lg:flex-row lg:gap-12 lg:py-14 lg:pl-[72px] lg:pr-14">
           <div className="min-w-0 flex-1">
             <p className="text-sm font-black uppercase tracking-wider text-zap">Proudly South African</p>
             <h2
               id="cape-town-heading"
-              className="pt-5 text-[40px] font-black leading-[0.95] text-sand uppercase md:text-[64px]"
+              className="pt-5 font-headline text-[40px] font-bold leading-[0.95] text-sand uppercase md:text-[64px]"
             >
               Made in Cape Town.
-              <span className="block pt-5 text-[28px] leading-none text-zap md:text-[40px]">
+              <span className="block pt-5 font-sans text-[26px] font-extrabold leading-none text-zap md:text-[36px]">
                 Ships anywhere in South Africa.
               </span>
             </h2>
