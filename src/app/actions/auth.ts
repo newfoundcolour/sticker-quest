@@ -66,7 +66,7 @@ export async function loginAction(_prev: AuthFormState, formData: FormData): Pro
 export async function signupAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const parsed = signupSchema.safeParse(formObject(formData));
   if (!parsed.success) return { ok: false, fieldErrors: fieldErrors(parsed.error), values: keepValues(formData) };
-  const { firstName, lastName, email, password } = parsed.data;
+  const { firstName, lastName, company, phone, instagramHandle, email, password } = parsed.data;
 
   if (!(await rateLimit("signup-ip", await clientIp(), RATE_LIMITS.signupPerIp))) {
     return { ok: false, message: TOO_MANY_ATTEMPTS, values: keepValues(formData) };
@@ -78,9 +78,15 @@ export async function signupAction(_prev: AuthFormState, formData: FormData): Pr
     password,
     options: {
       emailRedirectTo: confirmUrl("/account"),
-      // Display data only — copied into Profile by the auth.users trigger.
-      // The role is never taken from here.
-      data: { first_name: firstName, last_name: lastName },
+      // Display data only — copied into Profile by the auth.users trigger,
+      // which re-checks each value. The role is never taken from here.
+      data: {
+        first_name: firstName,
+        last_name: lastName,
+        ...(company && { company }),
+        ...(phone && { phone }),
+        ...(instagramHandle && { instagram_handle: instagramHandle }),
+      },
     },
   });
 

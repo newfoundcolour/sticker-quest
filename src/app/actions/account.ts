@@ -31,7 +31,7 @@ export async function updateProfileAction(_prev: AuthFormState, formData: FormDa
 
   await prisma.profile.update({ where: { id: user.id }, data: parsed.data });
 
-  // The nav avatar shows the initials.
+  // The account menu greets the customer by first name.
   revalidatePath("/", "layout");
   return { ok: true, message: "Saved. Looking good!" };
 }

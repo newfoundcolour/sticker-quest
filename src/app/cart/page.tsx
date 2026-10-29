@@ -1,61 +1,107 @@
+import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
+import { Container } from "@/components/Container";
+import { CartItemCard, UnavailableItemCard } from "@/components/cart/CartItemCard";
+import { DiscountCard } from "@/components/cart/DiscountCard";
+import { CheckoutPanel, type CheckoutStatus } from "@/components/cart/CheckoutPanel";
+import { OrderSummary } from "@/components/cart/OrderSummary";
+import { EMPTY_DELIVERY_VALUES, type DeliveryValues } from "@/components/checkout/DeliveryFields";
+import { ProductCardGrid } from "@/components/home/ProductCards";
+import { getSessionUser, isEmailVerified } from "@/lib/auth";
 import { getPricedCart } from "@/lib/cartPricing";
-import { formatCurrency } from "@/lib/pricingUtils";
-import { CartLineItem } from "@/components/cart/CartLineItem";
+import { savedDeliveryValues } from "@/lib/deliveryDefaults";
+import { prisma } from "@/lib/prisma";
+import { DELIVERY_PROFILE_SELECT, completeDeliveryDetails } from "@/lib/validation/deliveryDetails";
 
-export default async function CartPage() {
-  const { items, unavailableItemIds, subtotal } = await getPricedCart();
+export const metadata: Metadata = { title: "Your cart · Sticker Quest" };
 
-  if (items.length === 0 && unavailableItemIds.length === 0) {
-    return (
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-3 px-4 py-20 text-center">
-        <h1 className="font-display text-3xl font-bold text-ink-navy">Your cart is empty</h1>
-        <p className="max-w-sm text-sm text-ink-navy/60">
-          Configure a sticker to add it to your cart.
-        </p>
-        <Link
-          href="/stickers"
-          className="mt-3 rounded-xl bg-coral-signal px-6 py-3 font-medium text-paper transition-colors hover:bg-coral-signal/90"
-        >
-          Start your quest
-        </Link>
-      </main>
-    );
-  }
-
+/** Figma "Sticker Quest cart — empty": a centred hero, then the product cards to start from. */
+function EmptyCart() {
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
-      <h1 className="font-display text-3xl font-bold text-ink-navy">Your cart</h1>
-
-      <div className="mt-6 flex flex-col gap-4">
-        {items.map((item) => (
-          <CartLineItem key={item.id} item={item} editable />
-        ))}
-      </div>
-
-      {unavailableItemIds.length > 0 && (
-        <p className="mt-4 text-sm text-coral-signal">
-          One or more items in your cart are no longer available for order and have been left out
-          of your total — remove them to continue.
-        </p>
-      )}
-
-      {items.length > 0 && (
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-ink-navy/10 bg-ink-navy px-6 py-5 text-paper">
-          <div>
-            <p className="text-sm text-paper/60">Subtotal</p>
-            <p className="font-mono text-3xl font-semibold tabular-nums">
-              {formatCurrency(subtotal)}
+    <main className="flex flex-1 flex-col bg-night">
+      <Container className="pb-16">
+        <div className="flex flex-col items-center gap-8 px-2 py-14 text-center sm:py-20">
+          <div className="flex size-[72px] items-center justify-center rounded-full border-2 border-white/[0.19] bg-white/5">
+            <Image src="/icons/cart-hero.svg" alt="" width={32} height={32} />
+          </div>
+          <div className="flex flex-col items-center gap-5">
+            <h1 className="font-headline text-[40px] font-bold uppercase leading-none text-white sm:text-[64px]">
+              Your cart is empty.
+            </h1>
+            <p className="text-base leading-normal text-white/55 sm:text-lg">
+              Add some stickers to get started on your next quest.
             </p>
           </div>
           <Link
-            href="/checkout"
-            className="rounded-xl bg-coral-signal px-6 py-3.5 font-medium text-paper transition-colors hover:bg-coral-signal/90"
+            href="/stickers"
+            className="flex items-center gap-2 rounded-full bg-zap px-9 py-[18px] text-lg font-black text-night shadow-[4px_4px_0_0_var(--color-grape)] transition-[translate,box-shadow] duration-150 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-zap motion-safe:hover:-translate-y-0.5 motion-safe:hover:shadow-[4px_6px_0_0_var(--color-grape)]"
           >
-            Proceed to checkout
+            Get custom stickers <span aria-hidden>→</span>
           </Link>
         </div>
-      )}
+
+        <section aria-label="Sticker types">
+          <ProductCardGrid />
+        </section>
+      </Container>
+    </main>
+  );
+}
+
+/** Where the customer stands for checkout, and their saved details to prefill the popup. */
+async function checkoutStatus(): Promise<{ status: CheckoutStatus; email: string | null; saved: DeliveryValues }> {
+  const user = await getSessionUser();
+  if (!user) return { status: "guest", email: null, saved: EMPTY_DELIVERY_VALUES };
+  const email = user.email ?? null;
+  if (!isEmailVerified(user)) return { status: "unverified", email, saved: EMPTY_DELIVERY_VALUES };
+
+  const saved = await savedDeliveryValues(user.id);
+  // Ready only when the Profile itself is complete — values prefilled from a past order still need saving.
+  const profile = await prisma.profile.findUnique({ where: { id: user.id }, select: DELIVERY_PROFILE_SELECT });
+  return { status: completeDeliveryDetails(profile) ? "ready" : "incomplete", email, saved };
+}
+
+/** Figma "Sticker Quest cart — populated": sticker cards on the left, discount and order summary on the right. */
+export default async function CartPage() {
+  const [{ items, unavailableItems, shippingFee, total }, checkout] = await Promise.all([getPricedCart(), checkoutStatus()]);
+
+  if (items.length === 0 && unavailableItems.length === 0) {
+    return <EmptyCart />;
+  }
+
+  return (
+    <main className="flex flex-1 flex-col bg-night">
+      <Container className="pb-16 pt-6 sm:pt-9">
+        <h1 className="sr-only">Your cart</h1>
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+          <div className="flex min-w-0 flex-1 flex-col gap-4">
+            {items.map((item) => (
+              <CartItemCard key={item.id} item={item} />
+            ))}
+            {unavailableItems.map((item) => (
+              <UnavailableItemCard key={item.id} item={item} />
+            ))}
+            <div className="pt-1">
+              <Link
+                href="/stickers"
+                className="inline-flex h-[52px] items-center gap-2.5 rounded-full border-[1.5px] border-well-line bg-night px-6 text-[15px] font-black text-zap transition-colors hover:border-zap"
+              >
+                Add more stickers <span aria-hidden className="text-xl font-normal">+</span>
+              </Link>
+            </div>
+          </div>
+
+          {items.length > 0 && (
+            <aside aria-label="Order summary" className="flex w-full flex-col gap-5 lg:sticky lg:top-6 lg:w-[360px] lg:shrink-0">
+              <DiscountCard />
+              <OrderSummary items={items} shippingFee={shippingFee} total={total}>
+                <CheckoutPanel {...checkout} blocked={unavailableItems.length > 0} />
+              </OrderSummary>
+            </aside>
+          )}
+        </div>
+      </Container>
     </main>
   );
 }

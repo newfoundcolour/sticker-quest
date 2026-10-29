@@ -2,11 +2,13 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { changeEmailAction, changePasswordAction, updateProfileAction } from "@/app/actions/account";
+import { updateAddressAction } from "@/app/actions/checkout";
+import { AddressFields, EMPTY_DELIVERY_VALUES, type DeliveryValues } from "@/components/checkout/DeliveryFields";
 import type { AuthFormState } from "@/lib/authForms";
 import { FormMessage, INPUT_CLASSES, PasswordField, SubmitButton, TextField } from "@/components/auth/fields";
 
-/** Exact copy requested for the Instagram field. */
-const INSTAGRAM_HELPER =
+/** Exact copy requested for the Instagram field (settings and sign up). */
+export const INSTAGRAM_HELPER =
   "We love to tag our customers for recognition and exposure when we feature our work on Instagram";
 
 function failure(state: AuthFormState) {
@@ -24,6 +26,7 @@ export type ProfileDefaults = {
   firstName: string;
   lastName: string;
   company: string;
+  phone: string;
   instagramHandle: string;
 };
 
@@ -64,6 +67,15 @@ export function ProfileForm({ defaults }: { defaults: ProfileDefaults }) {
         defaultValue={value("company")}
         error={failed?.fieldErrors?.company}
       />
+      <TextField
+        label="Phone (optional)"
+        name="phone"
+        type="tel"
+        autoComplete="tel"
+        maxLength={20}
+        defaultValue={value("phone")}
+        error={failed?.fieldErrors?.phone}
+      />
       <InstagramField defaultValue={value("instagramHandle")} error={failed?.fieldErrors?.instagramHandle} />
       <div className="sm:max-w-[240px]">
         <SubmitButton pendingText="Saving…">Save profile</SubmitButton>
@@ -101,6 +113,28 @@ function InstagramField({ defaultValue, error }: { defaultValue: string; error?:
       </p>
       {error && <p className="text-sm font-bold text-blaze">{error}</p>}
     </div>
+  );
+}
+
+// ─── Delivery address ──────────────────────────────────────────────────────
+
+export type AddressDefaults = Pick<DeliveryValues, "addressLine1" | "addressLine2" | "city" | "province" | "postalCode">;
+
+export function AddressForm({ defaults }: { defaults: AddressDefaults }) {
+  const [state, action] = useActionState(updateAddressAction, undefined);
+  const failed = failure(state);
+  const saved: DeliveryValues = { ...EMPTY_DELIVERY_VALUES, ...defaults };
+  const value = (key: keyof DeliveryValues) => failed?.values?.[key] ?? saved[key];
+  const error = (key: keyof DeliveryValues) => failed?.fieldErrors?.[key];
+
+  return (
+    <form action={action} className="flex flex-col gap-4" noValidate>
+      <StatusMessage state={state} />
+      <AddressFields value={value} error={error} />
+      <div>
+        <SubmitButton pendingText="Saving…">Save address</SubmitButton>
+      </div>
+    </form>
   );
 }
 

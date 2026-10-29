@@ -1,32 +1,15 @@
 import { z } from "zod";
 import { emailSchema, nameSchema, newPasswordSchema } from "@/lib/validation/auth";
+import { companySchema, instagramHandleSchema, phoneSchema } from "@/lib/validation/profileFields";
 
-/** Instagram handles: letters, numbers, periods and underscores, up to 30. */
-export const INSTAGRAM_HANDLE_PATTERN = /^[A-Za-z0-9._]{1,30}$/;
-
-/** Accepts "@sticker.quest" or "sticker.quest"; stores without the @. Empty means none. */
-export function normaliseInstagramHandle(raw: string): string {
-  return raw.trim().replace(/^@+/, "");
-}
-
-const optionalText = (max: number, label: string) =>
-  z
-    .string()
-    .trim()
-    .max(max, `Keep ${label} under ${max} characters.`)
-    .transform((v) => (v === "" ? null : v));
+export { INSTAGRAM_HANDLE_PATTERN, normaliseInstagramHandle } from "@/lib/validation/profileFields";
 
 export const profileSchema = z.object({
   firstName: nameSchema("first name"),
   lastName: nameSchema("last name"),
-  company: optionalText(100, "your company name"),
-  instagramHandle: z
-    .string()
-    .transform(normaliseInstagramHandle)
-    .refine((v) => v === "" || INSTAGRAM_HANDLE_PATTERN.test(v), {
-      message: "Use up to 30 letters, numbers, periods or underscores.",
-    })
-    .transform((v) => (v === "" ? null : v)),
+  company: companySchema,
+  phone: phoneSchema,
+  instagramHandle: instagramHandleSchema,
 });
 
 export const changeEmailSchema = z.object({ email: emailSchema });

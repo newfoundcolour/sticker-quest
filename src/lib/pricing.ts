@@ -65,3 +65,14 @@ export async function getPricingConfig(
     })),
   };
 }
+
+/**
+ * The flat shipping fee in rand, from PricingSetting. 0 if the row is missing,
+ * like the other settings, so a missing row never blocks checkout.
+ */
+export async function getShippingFee(): Promise<number> {
+  const row = await prisma.pricingSetting.findUnique({
+    where: { key: PRICING_SETTING_KEYS.SHIPPING_FLAT_FEE },
+  });
+  return row ? Number(row.value) : 0;
+}

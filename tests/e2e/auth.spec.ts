@@ -7,13 +7,13 @@ test("sign up, confirm, log in and log out — the nav switches each time", asyn
   const email = uniqueEmail("signup");
   trackEmail(email);
 
-  // Logged out: Log in / Sign up in the nav.
+  // Logged out: Login / Sign up in the nav.
   await page.goto("/");
-  await expect(page.getByRole("link", { name: "Log in" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Login" })).toBeVisible();
 
   await page.goto("/signup");
   await page.getByLabel("First name").fill("Sam");
-  await page.getByLabel("Last name").fill("Tester");
+  await page.getByLabel("Surname").fill("Tester");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
   await page.getByLabel("Confirm password").fill(PASSWORD);
@@ -29,12 +29,13 @@ test("sign up, confirm, log in and log out — the nav switches each time", asyn
   // Clear any session the signup may have created, then log in for real.
   await page.context().clearCookies();
   await login(page, { email, password: PASSWORD });
-  await expect(page.getByRole("button", { name: /Account menu/ })).toHaveText(/ST/);
-  await expect(page.getByRole("link", { name: "Log in" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Account menu/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Login" })).toHaveCount(0);
 
   await page.getByRole("button", { name: /Account menu/ }).click();
+  await expect(page.getByText("Hey Sam")).toBeVisible();
   await page.getByRole("menuitem", { name: "Log out" }).click();
-  await expect(page.getByRole("link", { name: "Log in" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Login" })).toBeVisible();
   await page.goto("/account");
   await expect(page).toHaveURL(/\/login\?next=%2Faccount/);
 });

@@ -72,6 +72,11 @@ async function main() {
     update: {},
     create: { key: PRICING_SETTING_KEYS.SHEET_CUTS_9_12_SURCHARGE_PERCENT, value: 10 },
   });
+  await prisma.pricingSetting.upsert({
+    where: { key: PRICING_SETTING_KEYS.SHIPPING_FLAT_FEE },
+    update: {},
+    create: { key: PRICING_SETTING_KEYS.SHIPPING_FLAT_FEE, value: 69.99 },
+  });
 
   console.log("Pricing data seeded.");
 }

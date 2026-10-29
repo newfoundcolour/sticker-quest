@@ -93,7 +93,14 @@ model Profile {
   firstName       String   @default("")
   lastName        String   @default("")
   company         String?
+  phone           String?
   instagramHandle String?
+  /// Delivery address, collected in the cart before checkout (all required to place an order).
+  addressLine1    String?
+  addressLine2    String?
+  city            String?
+  province        String?
+  postalCode      String?
   orders          Order[]
   conversations   SupportConversation[]
   createdAt       DateTime @default(now())
@@ -165,7 +172,9 @@ model Order {
 
   trackingNumber String?
   notes          String?
-  /// Sum of each item's totalPrice, captured at checkout.
+  /// Flat shipping fee charged on this order (0 for orders placed before shipping was charged).
+  shippingFee    Decimal @default(0) @db.Decimal(10, 2)
+  /// What the customer paid: the sum of each item's totalPrice plus shippingFee, captured at checkout.
   totalPrice     Decimal @db.Decimal(10, 2)
 
   createdAt DateTime @default(now())

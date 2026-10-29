@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
@@ -31,17 +32,17 @@ function CountBadge({ count, className = "" }: { count: number; className?: stri
 export function AccountNav({ account }: { account: NavAccount | null }) {
   if (!account) {
     return (
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-3">
         <Link
           href="/login"
-          className="flex h-11 items-center rounded-full border-2 border-white/[0.19] px-3.5 text-sm font-black text-white transition-colors hover:border-white/50 sm:px-5"
+          className="flex h-11 items-center rounded-full border-2 border-white/[0.19] bg-white/[0.08] px-3.5 text-sm font-bold text-white transition-colors hover:border-white/50 sm:h-[46px] sm:px-[18px]"
         >
-          Log in
+          Login
         </Link>
         {/* Sign up stays reachable from the login page on very small screens. */}
         <Link
           href="/signup"
-          className="hidden h-11 items-center rounded-full border-2 border-night bg-blaze px-5 text-sm font-black text-white shadow-pop-blaze transition-[translate] duration-150 motion-safe:hover:-translate-y-0.5 sm:flex"
+          className="hidden h-[46px] items-center rounded-full bg-linear-[152deg] from-zap via-blaze via-55% to-grape px-[18px] text-sm font-bold text-white transition-[translate] duration-150 motion-safe:hover:-translate-y-0.5 sm:flex"
         >
           Sign up
         </Link>
@@ -50,16 +51,14 @@ export function AccountNav({ account }: { account: NavAccount | null }) {
   }
 
   return (
-    <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+    <div className="flex shrink-0 items-center gap-2 sm:gap-3">
       <Link
         href="/account/support"
-        className="relative flex size-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10"
+        className="relative flex size-11 items-center justify-center rounded-full border-2 border-white/[0.19] bg-white/[0.08] transition-colors hover:border-white/50"
         aria-label={`Support messages${account.unreadSupport > 0 ? `, ${account.unreadSupport} unread` : ""}`}
       >
-        <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="size-[23px]">
-          <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12Z" />
-        </svg>
-        <CountBadge count={account.unreadSupport} className="absolute left-7 top-0.5" />
+        <Image src="/icons/message-circle.svg" alt="" width={20} height={20} />
+        <CountBadge count={account.unreadSupport} className="absolute -right-1 -top-1" />
       </Link>
       <AvatarMenu account={account} />
     </div>
@@ -154,9 +153,18 @@ function AvatarMenu({ account }: { account: NavAccount }) {
         aria-expanded={open}
         aria-controls={menuId}
         aria-label={`Account menu${hasBadge ? `, ${account.proofsAwaiting} proof${account.proofsAwaiting === 1 ? "" : "s"} to approve` : ""}`}
-        className="relative flex size-11 items-center justify-center rounded-full border-2 border-white/[0.19] bg-grape text-sm font-black text-white transition-colors hover:border-white/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zap"
+        className="relative flex h-11 items-center gap-2.5 rounded-full border-2 border-white/[0.19] bg-white/[0.08] px-1.5 text-sm font-bold text-white transition-colors hover:border-white/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zap sm:px-3"
       >
-        {account.initials}
+        {/* Everyone gets the wizard until customers can upload their own picture. */}
+        <Image
+          src="/mascot/wizard-avatar.jpg"
+          alt=""
+          width={32}
+          height={32}
+          className="size-8 rounded-full border border-white/[0.19] object-cover"
+        />
+        {/* The pill shrinks to just the avatar on phones. */}
+        <span className="hidden sm:inline">Profile</span>
         {hasBadge && <span aria-hidden className="absolute -right-0.5 -top-0.5 size-3 rounded-full border-2 border-night bg-blaze" />}
       </button>
 

@@ -15,7 +15,8 @@ Visual/design decisions must follow `DESIGN.md` in the project root.
 - **Artwork storage:** Cloudinary (customer-uploaded artwork, folder `sticker-quest/artwork`)
 - **Private files:** Supabase Storage — buckets `proofs` and `support-attachments` (private)
 - **Payments:** PayFast — charged upfront at checkout (not integrated yet; `Order` has no `paymentStatus` — see `TODO(payfast)`)
-- **Shipping:** The Courier Guy — manual booking for v1, no API integration yet
+- **Shipping:** The Courier Guy — manual booking for v1, no API integration yet. A flat fee (`PricingSetting` key `SHIPPING_FLAT_FEE`) is added once per order by `getPricedCart`; `Order.shippingFee` records it and `Order.totalPrice` includes it.
+- **Discount codes:** not built yet — the cart shows a placeholder Discount card (`src/components/cart/DiscountCard.tsx`, `TODO(discounts)`) that never changes the price
 
 ## Product configurator
 
@@ -33,10 +34,11 @@ Pricing is driven by a pricing rules table, not hardcoded — exact pricing tabl
 ## Order flow
 
 1. Customer configures product and uploads artwork (logged in or as a guest).
-2. Customer pays via PayFast at checkout (payment is upfront).
-3. Order enters `awaiting_proof` status. If a verified customer is logged in, the order gets their `userId`.
-4. Staff preflight the artwork in Illustrator and upload a proof on `/admin/orders/[id]` → order moves to `awaiting_approval`. (Staff may still send proofs by WhatsApp/email.)
-5. The customer approves (→ `approved`) or requests changes with a comment (→ back to `awaiting_proof`) at `/account/proofs`. Staff can record an approval given elsewhere ("approve on customer's behalf"), and setting an order to Approved by hand records the pending proof as staff-approved.
+2. Checkout needs a verified account. The cart's Checkout button (`CheckoutPanel`) asks guests to log in and asks for any missing name, surname, phone or delivery address in a popup, saved to their Profile (`src/lib/validation/deliveryDetails.ts`; the server re-checks before every order). It then places the order from the session + Profile, never from browser input. `/checkout` just redirects to the cart.
+3. Customer pays via PayFast (payment is upfront) — not built yet: `TODO(payfast)` in `src/app/actions/checkout.ts` is where the redirect goes.
+4. Order enters `awaiting_proof` status with the customer's `userId`.
+5. Staff preflight the artwork in Illustrator and upload a proof on `/admin/orders/[id]` → order moves to `awaiting_approval`. (Staff may still send proofs by WhatsApp/email.)
+6. The customer approves (→ `approved`) or requests changes with a comment (→ back to `awaiting_proof`) at `/account/proofs`. Staff can record an approval given elsewhere ("approve on customer's behalf"), and setting an order to Approved by hand records the pending proof as staff-approved.
 
 **Order pipeline (status values):** `awaiting_proof` → `awaiting_approval` → `approved` → `printing` → `shipped`
 
@@ -47,7 +49,7 @@ Pricing is driven by a pricing rules table, not hardcoded — exact pricing tabl
 Three roles, stored **only** in `Profile.role` (a server-side table): **customer** (default for every signup), **staff**, **admin**.
 
 - New auth users get a `CUSTOMER` Profile from a Postgres trigger on `auth.users` (also keeps `Profile.email` in sync with the verified email and deletes the Profile with the user). Staff/admin are granted by hand in the database. No form, action or API ever writes `role`.
-- **Never** use Supabase `user_metadata` for authorisation — users can edit it. It only carries first/last name at signup.
+- **Never** use Supabase `user_metadata` for authorisation — users can edit it. It only carries display details at signup (first/last name, and optional company, phone, Instagram handle), which the trigger re-checks before copying into `Profile`.
 - `/admin/*` — staff/admin only (`requireStaff()`); a logged-in customer gets a 404. `/admin/login` admits staff only.
 - `/account/*` — a logged-in user with a **verified email** (`requireVerifiedUser()`).
 - The proxy only refreshes the session, sets the CSP and redirects logged-out `/account` visits; it is not a security boundary.
@@ -61,7 +63,7 @@ Three roles, stored **only** in `Profile.role` (a server-side table): **customer
 
 ## Data model (beyond orders/pricing)
 
-- **Profile** — id = Supabase auth user id; email, role, firstName, lastName, company?, instagramHandle?
+- **Profile** — id = Supabase auth user id; email, role, firstName, lastName, company?, phone?, instagramHandle? (optional fields validated in `src/lib/validation/profileFields.ts`), and the delivery address addressLine1?, addressLine2?, city?, province?, postalCode? (required at checkout; also editable in Settings)
 - **Order.userId** (nullable) — guest orders stay valid; past guest orders are linked by email **only after Supabase has verified that email** (`linkGuestOrders`).
 - **Proof** — orderId, version (unique per order, never overwritten), storagePath, originalFilename, mimeType, sizeBytes, status (pending/approved/rejected; "superseded" is computed), customerComment, decidedAt, decidedBy, decisionSource (customer / staff_on_behalf), uploadedBy.
 - **SupportConversation** — userId, category, orderId?, status (open/resolved), lastMessageAt, resolvedAt. **SupportMessage** — sender (customer/staff), senderUserId, body (plain text ≤ 5,000), attachmentPath?, readAt.

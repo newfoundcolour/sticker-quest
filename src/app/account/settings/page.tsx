@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { StepCard } from "@/components/configurator/StepCard";
 import { FormMessage } from "@/components/auth/fields";
 import { AccountPageHeader } from "@/components/account/AccountPageHeader";
-import { EmailForm, PasswordForm, ProfileForm } from "@/components/account/SettingsForms";
+import { AddressForm, EmailForm, PasswordForm, ProfileForm } from "@/components/account/SettingsForms";
 import { prisma } from "@/lib/prisma";
 import { requireVerifiedUser } from "@/lib/auth";
+import { savedDeliveryValues } from "@/lib/deliveryDefaults";
 
 export const metadata: Metadata = { title: "Settings · Sticker Quest" };
 
@@ -17,15 +18,19 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const user = await requireVerifiedUser("/account/settings");
   const { email: emailNotice } = await searchParams;
 
-  const profile = await prisma.profile.findUnique({
-    where: { id: user.id },
-    select: { firstName: true, lastName: true, company: true, instagramHandle: true },
-  });
+  const [profile, delivery] = await Promise.all([
+    prisma.profile.findUnique({
+      where: { id: user.id },
+      select: { firstName: true, lastName: true, company: true, phone: true, instagramHandle: true },
+    }),
+    // Saved address, or the last order's if none is saved yet.
+    savedDeliveryValues(user.id),
+  ]);
   const notice = emailNotice ? EMAIL_NOTICES[emailNotice] : undefined;
 
   return (
     <>
-      <AccountPageHeader title="Settings" intro="Your details, login email and password." />
+      <AccountPageHeader title="Settings" intro="Your details, delivery address, login email and password." />
       <div className="flex max-w-[720px] flex-col gap-6">
         {notice && <FormMessage tone={notice.tone}>{notice.text}</FormMessage>}
 
@@ -36,7 +41,22 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                 firstName: profile?.firstName ?? "",
                 lastName: profile?.lastName ?? "",
                 company: profile?.company ?? "",
+                phone: profile?.phone ?? "",
                 instagramHandle: profile?.instagramHandle ?? "",
+              }}
+            />
+          </div>
+        </StepCard>
+
+        <StepCard icon="📦" title="Delivery address">
+          <div className="p-6 sm:p-7">
+            <AddressForm
+              defaults={{
+                addressLine1: delivery.addressLine1,
+                addressLine2: delivery.addressLine2,
+                city: delivery.city,
+                province: delivery.province,
+                postalCode: delivery.postalCode,
               }}
             />
           </div>

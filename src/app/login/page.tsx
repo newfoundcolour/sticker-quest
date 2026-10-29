@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AuthShell, AUTH_LINK_ON_NIGHT_CLASSES } from "@/components/auth/AuthShell";
+import { NightAuthPage } from "@/components/auth/AuthShell";
 import { LoginForm } from "@/components/auth/AuthForms";
 import { getSessionUser, isEmailVerified } from "@/lib/auth";
 import { safeRedirectPath } from "@/lib/safeRedirect";
@@ -27,19 +26,8 @@ export default async function LoginPage({
   const initialMessage = error === "link" ? MESSAGES.link : unverified ? MESSAGES.unverified : undefined;
 
   return (
-    <AuthShell
-      title="Log in"
-      intro="Welcome back, adventurer. Log in to track orders, approve proofs and reorder in a click."
-      footer={
-        <>
-          New here?{" "}
-          <Link href="/signup" className={AUTH_LINK_ON_NIGHT_CLASSES}>
-            Create an account
-          </Link>
-        </>
-      }
-    >
+    <NightAuthPage narrow>
       <LoginForm next={nextPath} initialMessage={initialMessage} />
-    </AuthShell>
+    </NightAuthPage>
   );
 }

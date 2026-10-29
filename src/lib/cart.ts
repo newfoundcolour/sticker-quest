@@ -104,6 +104,18 @@ export async function addToCart(item: Omit<CartItem, "id">): Promise<void> {
   await setCart(items);
 }
 
+/**
+ * Swaps a line for its edited version, keeping its place in the cart.
+ * Adds it as a new line if the old one has gone (e.g. removed in another tab).
+ */
+export async function replaceCartItem(itemId: string, item: Omit<CartItem, "id">): Promise<void> {
+  const items = await getCart();
+  const index = items.findIndex((i) => i.id === itemId);
+  if (index === -1) items.push({ ...item, id: randomUUID() });
+  else items[index] = { ...item, id: itemId };
+  await setCart(items);
+}
+
 export async function removeFromCart(itemId: string): Promise<void> {
   const items = await getCart();
   await setCart(items.filter((i) => i.id !== itemId));

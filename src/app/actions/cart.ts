@@ -2,7 +2,14 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { addToCart, cartItemInputSchema, removeFromCart, updateCartItemQuantity, type CartItem } from "@/lib/cart";
+import {
+  addToCart,
+  cartItemInputSchema,
+  removeFromCart,
+  replaceCartItem,
+  updateCartItemQuantity,
+  type CartItem,
+} from "@/lib/cart";
 import { clampQuantity } from "@/lib/pricingUtils";
 import {
   hasCutChoice,
@@ -19,6 +26,8 @@ import { findCustomerOrderItem } from "@/lib/customerOrders";
 export type AddToCartInput = Omit<CartItem, "id"> & {
   /** Set when the artwork is a past order item's (reorder); the server copies it. */
   reorderSourceItemId?: string;
+  /** Set when editing a cart line from /cart: the new choices replace that line. */
+  replaceCartItemId?: string;
 };
 
 /**
@@ -73,7 +82,13 @@ export async function addToCartAction(input: AddToCartInput): Promise<void> {
     whiteInk: hasWhiteInkOption(material) && item.whiteInk,
   });
   if (!line.success) return;
-  await addToCart(line.data);
+  // The cart is the visitor's own cookie, so any line id in it is theirs to replace.
+  const replaceId = input.replaceCartItemId;
+  if (typeof replaceId === "string" && replaceId.length > 0 && replaceId.length <= 64) {
+    await replaceCartItem(replaceId, line.data);
+  } else {
+    await addToCart(line.data);
+  }
   revalidatePath("/", "layout");
   redirect("/cart");
 }

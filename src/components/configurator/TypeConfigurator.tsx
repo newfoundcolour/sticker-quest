@@ -35,16 +35,23 @@ import {
   hasCutChoice,
   hasFinishChoice,
   hasWhiteInkOption,
+  productName,
   SHEET_CUTS_LABELS,
   SHEET_CUTS_VALUES,
   SHEET_MATERIALS,
 } from "@/lib/orderLabels";
 import { formatCurrency } from "@/lib/pricingUtils";
+import {
+  CUT_TYPE_HINTS,
+  QUANTITY_PRESETS,
+  SHEET_SIZE_PRESETS,
+  SIZE_PRESETS as BASE_SIZE_PRESETS,
+} from "@/lib/configuratorOptions";
 import { MAX_ARTWORK_BYTES, type UploadArtworkResult } from "@/lib/uploadConstants";
 
 const CUT_TYPES: { value: CutType; label: string; hint: string }[] = [
-  { value: "DIE", label: "Die Cut", hint: "Through the backing" },
-  { value: "KISS", label: "Kiss Cut", hint: "On a backing square" },
+  { value: "DIE", label: "Die Cut", hint: CUT_TYPE_HINTS.DIE },
+  { value: "KISS", label: "Kiss Cut", hint: CUT_TYPE_HINTS.KISS },
 ];
 
 const SHAPES: { value: Shape; label: string; image: string }[] = [
@@ -60,21 +67,15 @@ const FINISHES: { value: Finish; label: string; icon: string }[] = [
   { value: "GLOSS", label: "Gloss", icon: "/icons/gloss.png" },
 ];
 
-// Preset sizes are square, in mm.
+// Preset sizes (square, in mm) with their tile art.
 // Presets without an image fall back to a plain outline until their artwork lands.
-const SIZE_PRESETS: { key: string; label: string; mm: number; image?: string }[] = [
-  { key: "small", label: "Small", mm: 50, image: "/icons/size-small.png" },
-  { key: "medium", label: "Medium", mm: 75, image: "/icons/size-medium.png" },
-  { key: "large", label: "Large", mm: 100, image: "/icons/size-large.png" },
-  { key: "xlarge", label: "X-Large", mm: 125, image: "/icons/size-xlarge.png" },
-];
-
-// Sticker sheets come in standard A-series paper sizes (portrait, in mm).
-const SHEET_SIZE_PRESETS: { key: string; label: string; widthMm: number; heightMm: number }[] = [
-  { key: "a6", label: "A6", widthMm: 105, heightMm: 148 },
-  { key: "a5", label: "A5", widthMm: 148, heightMm: 210 },
-  { key: "a4", label: "A4", widthMm: 210, heightMm: 297 },
-];
+const SIZE_PRESET_IMAGES: Record<string, string | undefined> = {
+  small: "/icons/size-small.png",
+  medium: "/icons/size-medium.png",
+  large: "/icons/size-large.png",
+  xlarge: "/icons/size-xlarge.png",
+};
+const SIZE_PRESETS = BASE_SIZE_PRESETS.map((p) => ({ ...p, image: SIZE_PRESET_IMAGES[p.key] }));
 const DEFAULT_SHEET_SIZE = "a5";
 
 // A sheet's material tiles show a rounded swatch that looks like the material.
@@ -128,7 +129,6 @@ const HERO_IMAGES: Partial<Record<StickerType, { src: string; width: number; hei
 };
 const DEFAULT_HERO_IMAGE = { src: "/mascot/knight-helmet.png", width: 615, height: 880 };
 
-const QUANTITY_PRESETS = [50, 100, 200, 300, 500, 1000, 2000];
 
 // What a fresh configurator starts on.
 const DEFAULT_CUT_TYPE: CutType = "DIE";
@@ -225,18 +225,15 @@ function YesNoQuestion({
   );
 }
 
-/** "Vinyl" → "Vinyl Stickers"; the sheet types already say what they are. */
-function pageTitle(stickerType: StickerType): string {
-  const label = STICKER_TYPE_LABELS[stickerType];
-  return label.endsWith("Sheets") ? label : `${label} Stickers`;
-}
+const pageTitle = productName;
 
 /**
- * A past order item's choices, used to prefill the configurator for a
- * reorder. Prices are still worked out fresh from today's pricing data.
+ * Choices to prefill the configurator with: a past order item's (reorder) or
+ * a cart line's (editing it). Prices are still worked out fresh.
  */
 export type ReorderSelection = {
-  sourceItemId: string;
+  /** Reorders only: the past order item, whose artwork the server copies. */
+  sourceItemId?: string;
   cutType: CutType;
   shape: Shape;
   finish: Finish;
@@ -248,7 +245,7 @@ export type ReorderSelection = {
   quantity: number;
   sheetMaterial?: StickerType;
   sheetCuts?: SheetCuts;
-  /** The customer's own past artwork; the server copies it on add to cart. */
+  /** The item's artwork (a reorder's is copied by the server on add to cart). */
   artworkUrl: string;
   artworkFilename: string;
 };
@@ -276,13 +273,16 @@ export function TypeConfigurator({
   pricingConfig,
   materialPricingConfigs,
   initialSelection,
+  editCartItemId,
 }: {
   stickerType: StickerType;
   pricingConfig: PricingConfig;
   /** Sticker sheets only: pricing for each material a sheet can be printed on. */
   materialPricingConfigs?: Partial<Record<StickerType, PricingConfig>>;
-  /** Prefill from a past order (reorder). */
+  /** Prefill from a past order (reorder) or a cart line (editing it). */
   initialSelection?: ReorderSelection;
+  /** Editing this cart line: saving replaces it instead of adding a new one. */
+  editCartItemId?: string;
 }) {
   // Sticker sheets swap shape & cut for a material choice and a cut count.
   const isSheet = stickerType === "STICKER_SHEETS";
@@ -418,6 +418,7 @@ export function TypeConfigurator({
         artworkUrl,
         artworkFilename,
         reorderSourceItemId,
+        replaceCartItemId: editCartItemId,
       });
     });
   }
@@ -1005,7 +1006,13 @@ export function TypeConfigurator({
               "shadow-pop-blaze disabled:cursor-not-allowed disabled:opacity-40",
             ].join(" ")}
           >
-            {isAddingToCart ? "Adding to cart…" : "Add to cart"}
+            {editCartItemId
+              ? isAddingToCart
+                ? "Saving…"
+                : "Save changes"
+              : isAddingToCart
+                ? "Adding to cart…"
+                : "Add to cart"}
           </button>
         </div>
       </div>

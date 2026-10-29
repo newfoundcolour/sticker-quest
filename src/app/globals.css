@@ -23,6 +23,22 @@
   /* Raised dark surfaces on the night page (home product cards). */
   --color-dusk: #2b2542;
   --color-dusk-line: #383053;
+  /* Sign up page: the welcome panel, dark form inputs and their muted text. */
+  --color-plum: #211a38;
+  --color-well: #19142d;
+  --color-well-line: #514662;
+  --color-haze: #c0b9ce;
+  --color-haze-dim: #91879f;
+  --color-haze-line: #a69bb9;
+  /* Cart: muted text, rules and controls on the sand cards. */
+  --color-stone: #6e6579;
+  --color-stone-deep: #4d425c;
+  --color-pebble: #b6adbf;
+  --color-sand-line: #dcd4df;
+  --color-sand-well: #ede8e1;
+  --color-sand-well-line: #c8bdd5;
+  /* Quantity savings ("12% off"). A shade darker than the Figma #a855f7 so it's readable on sand. */
+  --color-orchid: #9333ea;
 
   /* Darker shades of the accents, used for a selected option's hard shadow. */
   --color-blaze-deep: #4d1e12;
@@ -49,6 +65,19 @@
   --color-lilac: var(--color-lilac);
   --color-dusk: var(--color-dusk);
   --color-dusk-line: var(--color-dusk-line);
+  --color-plum: var(--color-plum);
+  --color-well: var(--color-well);
+  --color-well-line: var(--color-well-line);
+  --color-haze: var(--color-haze);
+  --color-haze-dim: var(--color-haze-dim);
+  --color-haze-line: var(--color-haze-line);
+  --color-stone: var(--color-stone);
+  --color-stone-deep: var(--color-stone-deep);
+  --color-pebble: var(--color-pebble);
+  --color-sand-line: var(--color-sand-line);
+  --color-sand-well: var(--color-sand-well);
+  --color-sand-well-line: var(--color-sand-well-line);
+  --color-orchid: var(--color-orchid);
   --color-blaze-deep: var(--color-blaze-deep);
   --color-zap-deep: var(--color-zap-deep);
 

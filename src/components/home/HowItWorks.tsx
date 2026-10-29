@@ -4,28 +4,35 @@ import { Container } from "@/components/Container";
 const BADGE = "flex h-14 items-center justify-center text-[26px] font-black shadow-[0_4px_6px_rgba(0,0,0,0.35)]";
 const BADGE_EDGE = "border border-sand/65";
 
-/** Each step's badge is a different sticker shape: circle, square, rectangle, oval. */
+/** Numbered step badges, each a different sticker shape: circle, square, rectangle, oval. Also used on the order confirmation. */
+export const STEP_BADGES = [
+  `${BADGE} ${BADGE_EDGE} w-14 rounded-full bg-blaze text-white`,
+  `${BADGE} ${BADGE_EDGE} w-14 rounded-[4px] bg-grape text-white`,
+  `${BADGE} ${BADGE_EDGE} w-20 rounded-[4px] bg-zap text-night`,
+  // The oval's edge is drawn in the SVG, so no border here.
+  `${BADGE} w-20 rounded-full bg-[url(/how-it-works/oval-badge.svg)] bg-size-[100%_100%] text-white`,
+];
+
 const STEPS = [
   {
     title: "Upload your design",
     body: "PNG, PDF, AI, EPS, SVG. We’ll take anything.",
-    badge: `${BADGE} ${BADGE_EDGE} w-14 rounded-full bg-blaze text-white`,
+    badge: STEP_BADGES[0],
   },
   {
     title: "Approve your proof",
     body: "Sent to you quickly via email or WhatsApp.",
-    badge: `${BADGE} ${BADGE_EDGE} w-14 rounded-[4px] bg-grape text-white`,
+    badge: STEP_BADGES[1],
   },
   {
     title: "Fast shipping",
     body: "Approve your proof and we print it. It’s out the door the next business day.",
-    badge: `${BADGE} ${BADGE_EDGE} w-20 rounded-[4px] bg-zap text-night`,
+    badge: STEP_BADGES[2],
   },
   {
     title: "Shipped to your door",
-    // The oval's edge is drawn in the SVG, so no border here.
     body: "Leave us a five-star review if you love them.",
-    badge: `${BADGE} w-20 rounded-full bg-[url(/how-it-works/oval-badge.svg)] bg-size-[100%_100%] text-white`,
+    badge: STEP_BADGES[3],
   },
 ];
 

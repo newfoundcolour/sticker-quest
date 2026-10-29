@@ -80,6 +80,9 @@ export default async function AdminOrderDetailPage({
             <div>
               <dt className="inline text-ink-navy/50">Total: </dt>
               <dd className="inline font-mono">{formatCurrency(Number(order.totalPrice))}</dd>
+              {Number(order.shippingFee) > 0 && (
+                <span className="text-ink-navy/50"> (incl. {formatCurrency(Number(order.shippingFee))} shipping)</span>
+              )}
             </div>
             {order.notes && (
               <div>

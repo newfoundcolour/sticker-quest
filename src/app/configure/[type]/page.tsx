@@ -5,6 +5,7 @@ import { SHEET_MATERIALS, orderNumber } from "@/lib/orderLabels";
 import { cmToMm } from "@/lib/pricingUtils";
 import { getSessionUser, isEmailVerified } from "@/lib/auth";
 import { findCustomerOrderItem } from "@/lib/customerOrders";
+import { getCart } from "@/lib/cart";
 import { TypeConfigurator, type ReorderSelection } from "@/components/configurator/TypeConfigurator";
 import { Container } from "@/components/Container";
 import { Reviews } from "@/components/Reviews";
@@ -20,24 +21,52 @@ async function loadReorder(reorderId: string | undefined) {
   return findCustomerOrderItem(user.id, reorderId);
 }
 
+/** ?edit=<cartLineId> prefills the configurator from a line in the visitor's own cart. */
+async function loadCartLine(editId: string | undefined) {
+  if (!editId) return null;
+  const cart = await getCart();
+  return cart.find((item) => item.id === editId) ?? null;
+}
+
 export default async function ConfigureTypePage({
   params,
   searchParams,
 }: {
   params: Promise<{ type: string }>;
-  searchParams: Promise<{ reorder?: string }>;
+  searchParams: Promise<{ reorder?: string; edit?: string }>;
 }) {
   const { type } = await params;
   const stickerType = slugToStickerType(type);
   if (!stickerType) notFound();
 
-  const { reorder } = await searchParams;
-  const reorderItem = await loadReorder(reorder);
-  // Keep the URL honest if someone edits the type part of a reorder link.
+  const { reorder, edit } = await searchParams;
+  const editItem = await loadCartLine(edit);
+  // Editing a cart line wins over a reorder link.
+  const reorderItem = editItem ? null : await loadReorder(reorder);
+  // Keep the URL honest if someone edits the type part of an edit or reorder link.
+  if (editItem && editItem.stickerType !== stickerType) {
+    redirect(`/configure/${STICKER_TYPE_SLUGS[editItem.stickerType]}?edit=${encodeURIComponent(editItem.id)}`);
+  }
   if (reorderItem && reorderItem.stickerType !== stickerType) {
     redirect(`/configure/${STICKER_TYPE_SLUGS[reorderItem.stickerType]}?reorder=${encodeURIComponent(reorderItem.id)}`);
   }
-  const initialSelection: ReorderSelection | undefined = reorderItem
+  const initialSelection: ReorderSelection | undefined = editItem
+    ? {
+        cutType: editItem.cutType,
+        shape: editItem.shape,
+        finish: editItem.finish,
+        roundedCorners: editItem.roundedCorners ?? false,
+        whiteInk: editItem.whiteInk,
+        lamination: editItem.lamination,
+        widthMm: cmToMm(editItem.widthCm),
+        heightMm: cmToMm(editItem.heightCm),
+        quantity: editItem.quantity,
+        sheetMaterial: editItem.sheetMaterial,
+        sheetCuts: editItem.sheetCuts,
+        artworkUrl: editItem.artworkUrl,
+        artworkFilename: editItem.artworkFilename,
+      }
+    : reorderItem
     ? {
         sourceItemId: reorderItem.id,
         cutType: reorderItem.cutType,
@@ -69,6 +98,14 @@ export default async function ConfigureTypePage({
 
   return (
     <main className="relative isolate flex flex-1 flex-col bg-night">
+      {editItem && (
+        <Container className="pt-4">
+          <p role="status" className="rounded-[20px] border-[1.5px] border-zap bg-zap/10 px-5 py-3 text-sm text-white">
+            <span className="font-black text-zap">Editing a sticker in your cart.</span> Change anything
+            you like, then save. Your cart updates with the new choices and price.
+          </p>
+        </Container>
+      )}
       {reorderItem && (
         <Container className="pt-4">
           <p role="status" className="rounded-[20px] border-[1.5px] border-zap bg-zap/10 px-5 py-3 text-sm text-white">
@@ -79,9 +116,10 @@ export default async function ConfigureTypePage({
         </Container>
       )}
       <TypeConfigurator
-        // Remount when switching between a normal and a reorder visit.
-        key={reorderItem?.id ?? "new"}
+        // Remount when switching between a normal, edit and reorder visit.
+        key={editItem ? `edit-${editItem.id}` : (reorderItem?.id ?? "new")}
         initialSelection={initialSelection}
+        editCartItemId={editItem?.id}
         stickerType={stickerType}
         pricingConfig={pricingConfig}
         materialPricingConfigs={materialPricingConfigs}

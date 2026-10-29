@@ -5,6 +5,7 @@ import {
   isTriviallyWeak,
   passwordByteLength,
 } from "@/lib/passwordPolicy";
+import { companySchema, instagramHandleSchema, phoneSchema } from "@/lib/validation/profileFields";
 
 /** Server-side schemas for the auth forms. The forms validate too, but only these count. */
 
@@ -37,7 +38,11 @@ export const nameSchema = (label: string) =>
 export const signupSchema = z
   .object({
     firstName: nameSchema("first name"),
-    lastName: nameSchema("last name"),
+    lastName: nameSchema("surname"),
+    // Optional; a missing field (older form, scripted request) counts as empty.
+    company: companySchema.prefault(""),
+    phone: phoneSchema.prefault(""),
+    instagramHandle: instagramHandleSchema.prefault(""),
     email: emailSchema,
     password: newPasswordSchema,
     confirmPassword: z.string(),

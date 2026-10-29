@@ -39,6 +39,17 @@ export function artworkThumbnailUrl(url: string, size = 96): string {
   return url.replace("/upload/", `/upload/${transform}/`);
 }
 
+/**
+ * A larger preview that keeps the artwork's own shape and transparency
+ * (no white padding), for showing it on a coloured tile like the cart's.
+ */
+export function artworkPreviewUrl(url: string, size = 160): string {
+  if (!url.includes("res.cloudinary.com") || !url.includes("/upload/")) return url;
+  if (url.includes("/raw/upload/")) return url;
+  const transform = `c_fit,w_${size * 2},h_${size * 2},pg_1,f_png`;
+  return url.replace("/upload/", `/upload/${transform}/`);
+}
+
 /** Whether a preview can be generated at all (raw uploads like .zip can't). */
 export function hasArtworkPreview(url: string): boolean {
   return url.includes("res.cloudinary.com") && !url.includes("/raw/upload/");

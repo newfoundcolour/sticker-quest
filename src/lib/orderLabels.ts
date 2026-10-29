@@ -101,6 +101,12 @@ export function itemSpecLine(
     .join(" · ");
 }
 
+/** "Vinyl" → "Vinyl Stickers"; the sheet types already say what they are. */
+export function productName(stickerType: StickerType): string {
+  const label = STICKER_TYPE_LABELS[stickerType];
+  return label.endsWith("Sheets") ? label : `${label} Stickers`;
+}
+
 /** What one unit of an item is: a sticker sheet, or a single sticker. */
 export function unitNoun(stickerType: StickerType, count = 1): string {
   const noun = stickerType === "STICKER_SHEETS" ? "sheet" : "sticker";
@@ -228,4 +234,20 @@ export function itemSummary(
   ]
     .filter(Boolean)
     .join(" · ");
+}
+
+/**
+ * A design's name for the order summary, from its artwork filename:
+ * "quest-wizard.png" → "Quest wizard". Null when there's nothing usable.
+ */
+export function designName(filename: string | null | undefined): string | null {
+  if (!filename) return null;
+  const base = filename
+    .replace(/\.[a-z0-9]{1,5}$/i, "")
+    .replace(/[-_.]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!base) return null;
+  const name = base.length > 32 ? `${base.slice(0, 31).trimEnd()}…` : base;
+  return name.charAt(0).toUpperCase() + name.slice(1);
 }
