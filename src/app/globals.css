@@ -23,6 +23,12 @@
   /* Raised dark surfaces on the night page (home product cards). */
   --color-dusk: #2b2542;
   --color-dusk-line: #383053;
+  /* Configurator on dusk cards: idle option tiles, their hint text, card notes
+     and the per-unit price pill. */
+  --color-dusk-tile: #3b3453;
+  --color-dusk-hint: #c6c0d2;
+  --color-dusk-note: #bdb5cd;
+  --color-dusk-pill: #3d3660;
   /* Sign up page: the welcome panel, dark form inputs and their muted text. */
   --color-plum: #211a38;
   --color-well: #19142d;
@@ -65,6 +71,10 @@
   --color-lilac: var(--color-lilac);
   --color-dusk: var(--color-dusk);
   --color-dusk-line: var(--color-dusk-line);
+  --color-dusk-tile: var(--color-dusk-tile);
+  --color-dusk-hint: var(--color-dusk-hint);
+  --color-dusk-note: var(--color-dusk-note);
+  --color-dusk-pill: var(--color-dusk-pill);
   --color-plum: var(--color-plum);
   --color-well: var(--color-well);
   --color-well-line: var(--color-well-line);

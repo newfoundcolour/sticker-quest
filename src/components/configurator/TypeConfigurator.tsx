@@ -26,6 +26,7 @@ import {
   LIFT_ON_HOVER_ANY,
   OPTION_TRANSITION,
   TILT_ON_HOVER,
+  hintClass,
 } from "./StepCard";
 import { PriceReadout } from "./PriceReadout";
 import { ShapeImage } from "./ShapeImage";
@@ -194,8 +195,8 @@ function YesNoQuestion({
   return (
     <div className={`flex flex-col gap-2.5 ${className}`}>
       <div>
-        <p className="text-sm font-black text-night">{question}</p>
-        {hint && <p className="text-[10px] text-quiet">{hint}</p>}
+        <p className="text-sm font-black text-sand">{question}</p>
+        {hint && <p className="pt-2.5 text-[10px] text-dusk-note">{hint}</p>}
       </div>
       <div className="flex gap-2.5">
         {[
@@ -448,17 +449,17 @@ export function TypeConfigurator({
   }
 
   const inputClass =
-    "rounded-lg border border-grape bg-white px-3 py-2 text-sm font-black text-night outline-none focus:border-blaze";
+    "rounded-lg border border-well-line bg-well px-3 py-2 text-sm font-black text-sand outline-none focus:border-zap";
 
   return (
     <Container className="pb-8 pt-4">
       <Link
         href="/stickers"
-        className="mb-2 inline-block text-base font-bold text-blaze transition-colors hover:text-grape"
+        className="mb-3 inline-block text-sm font-bold text-blaze transition-colors hover:text-zap"
       >
         &lt; {pageTitle(stickerType)}
       </Link>
-      <div className="flex items-center gap-5 overflow-hidden rounded-[20px] bg-linear-[167deg] from-zap via-blaze via-55% to-grape px-5 py-4 sm:px-8 md:h-[208px] md:py-0 lg:px-12">
+      <div className="flex items-center gap-5 overflow-hidden rounded-[20px] bg-linear-[171deg] from-zap via-blaze via-55% to-grape px-5 py-4 sm:px-8 md:h-[208px] md:py-0 lg:px-12">
         <Image
           src={heroImage.src}
           alt=""
@@ -467,7 +468,7 @@ export function TypeConfigurator({
           className="hidden h-28 w-auto shrink-0 drop-shadow-[4px_4px_0_rgba(22,18,42,0.45)] sm:block md:h-40"
         />
         <div className="min-w-0 flex-1">
-          <h1 className="break-words text-[28px] font-black leading-none text-sand uppercase lg:text-[40px] xl:text-[64px]">
+          <h1 className="break-words font-headline text-[32px] font-bold leading-none text-sand uppercase lg:text-[48px] xl:text-[64px]">
             {pageTitle(stickerType)}
           </h1>
           <p className="pt-3 text-sm leading-[1.5] text-sand md:text-base">
@@ -479,7 +480,7 @@ export function TypeConfigurator({
       <div className="mt-6 flex flex-col gap-6">
         {/* On mobile this sits just under the upload, which moves to the top. */}
         {isSheet && (
-          <StepCard
+          <StepCard tone="dusk"
             icon="✂️"
             title="How many cuts?"
             description="How many individual stickers are on your sheet?"
@@ -497,7 +498,7 @@ export function TypeConfigurator({
                       className="h-14 gap-0.5"
                     >
                       <span className="text-sm font-black">{SHEET_CUTS_LABELS[c]}</span>
-                      <span className={selected ? "text-[10px]" : "text-[10px] text-grape"}>
+                      <span className={`text-[10px] ${hintClass(selected)}`}>
                         {percent > 0 ? `+${percent}% pricing` : "Standard pricing"}
                       </span>
                     </OptionTile>
@@ -510,7 +511,7 @@ export function TypeConfigurator({
 
         <div className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1.5fr]">
           {isSheet ? (
-            <StepCard step={1} mobileStep={2} title="Material">
+            <StepCard tone="dusk" step={1} mobileStep={2} title="Material">
               <div className="grid auto-rows-[148px] grid-cols-2 gap-2.5 p-6">
                 {SHEET_MATERIALS.map((m) => (
                   <OptionTile
@@ -530,10 +531,10 @@ export function TypeConfigurator({
               </div>
             </StepCard>
           ) : (
-            <StepCard step={1} mobileStep={2} title={showCutChoice ? "Shape & Cut" : "Shape"}>
+            <StepCard tone="dusk" step={1} mobileStep={2} title={showCutChoice ? "Shape & Cut" : "Shape"}>
               <div className="flex flex-1 flex-col gap-2.5 p-6">
                 {showCutChoice && (
-                <div className="flex gap-1 rounded-[14px] border border-grape bg-grape/25 p-1">
+                <div className="flex gap-1 rounded-[14px] bg-well p-1">
                   {CUT_TYPES.map((c) => {
                     const selected = cutType === c.value;
                     return (
@@ -546,11 +547,11 @@ export function TypeConfigurator({
                           "flex flex-1 flex-col items-center rounded-[10px] border py-2.5",
                           OPTION_TRANSITION,
                           LIFT_ON_HOVER,
-                          selected ? SELECTED_CLASSES : `${IDLE_CLASSES} text-grape`,
+                          selected ? SELECTED_CLASSES : IDLE_CLASSES,
                         ].join(" ")}
                       >
                         <span className="text-xs font-black">{c.label}</span>
-                        <span className={selected ? "text-[10px]" : "text-[10px] text-grape/70"}>
+                        <span className={`text-[10px] ${hintClass(selected)}`}>
                           {c.hint}
                         </span>
                       </button>
@@ -607,7 +608,7 @@ export function TypeConfigurator({
             </StepCard>
           )}
 
-          <StepCard
+          <StepCard tone="dusk"
             step={2}
             mobileStep={3}
             title={isSheet ? "Finish" : "Material"}
@@ -634,7 +635,7 @@ export function TypeConfigurator({
                 ))}
               </div>
 
-              <div className="mt-4 flex flex-col gap-4 border-t border-grape/30 pt-4">
+              <div className="mt-4 flex flex-col gap-4">
                 {showWhiteInk && (
                   <YesNoQuestion
                     question="White ink?"
@@ -657,7 +658,7 @@ export function TypeConfigurator({
             </div>
           </StepCard>
 
-          <StepCard
+          <StepCard tone="dusk"
             step={3}
             mobileStep={4}
             title="Size"
@@ -676,7 +677,7 @@ export function TypeConfigurator({
                       className="h-16 px-2"
                     >
                       <span className="text-sm font-black">{p.label}</span>
-                      <span className={selected ? "text-[10px] text-night/60" : "text-[10px] text-night/50"}>
+                      <span className={`text-[10px] ${hintClass(selected)}`}>
                         {formatMmValue(p.widthMm)} mm × {formatMmValue(p.heightMm)} mm
                       </span>
                     </OptionTile>
@@ -702,17 +703,15 @@ export function TypeConfigurator({
                       ) : (
                         <span
                           className={[
-                            "h-[30px] w-9 rounded-[6px] border-night",
-                            selected ? "border-[1.5px] bg-night/15" : "border",
+                            "h-[30px] w-9 rounded-[6px] border-current",
+                            selected ? "border-[1.5px] bg-night/15" : "border opacity-60",
                           ].join(" ")}
                         />
                       )}
                       <span className="text-center">
                         <span className="block text-sm font-black">{p.label}</span>
                         <span
-                          className={["block text-[10px]", selected ? "text-night/60" : "text-night/50"].join(
-                            " ",
-                          )}
+                          className={`block text-[10px] ${hintClass(selected)}`}
                         >
                           {formatMmValue(p.mm)} × {formatMmValue(p.mm)} mm
                         </span>
@@ -731,7 +730,7 @@ export function TypeConfigurator({
                         "col-span-full flex h-[62px] flex-col items-center justify-center rounded-[14px] border",
                         OPTION_TRANSITION,
                         LIFT_ON_HOVER,
-                        selected ? SELECTED_CLASSES : `${IDLE_CLASSES} border-dashed`,
+                        selected ? SELECTED_CLASSES : IDLE_CLASSES,
                       ].join(" ")}
                     >
                       <span className="flex items-center gap-2 text-sm font-black">
@@ -745,7 +744,7 @@ export function TypeConfigurator({
 
               {sizeChoice === "custom" && (
                 <div className="mt-4 flex gap-4">
-                  <label className="flex flex-col gap-1 text-xs font-black text-quiet">
+                  <label className="flex flex-col gap-1 text-xs font-black text-dusk-note">
                     Height (mm)
                     <input
                       type="number"
@@ -761,7 +760,7 @@ export function TypeConfigurator({
                       className={`w-full ${inputClass}`}
                     />
                   </label>
-                  <label className="flex flex-col gap-1 text-xs font-black text-quiet">
+                  <label className="flex flex-col gap-1 text-xs font-black text-dusk-note">
                     Width (mm)
                     <input
                       type="number"
@@ -780,7 +779,7 @@ export function TypeConfigurator({
                 </div>
               )}
 
-              <p className="mt-3 text-xs text-quiet">
+              <p className="mt-3 text-[11px] text-dusk-note">
                 {sizeChoice === "custom"
                   ? `Both dimensions must be between ${MIN_SIZE_MM} mm and ${MAX_SIZE_MM} mm.`
                   : isSheet
@@ -790,7 +789,7 @@ export function TypeConfigurator({
             </div>
           </StepCard>
 
-          <StepCard step={4} mobileStep={5} title="Quantity">
+          <StepCard tone="dusk" step={4} mobileStep={5} title="Quantity">
             <div className="flex flex-col gap-3 p-6">
               {quantityChoice === "custom" ? (
                 <input
@@ -819,14 +818,13 @@ export function TypeConfigurator({
                   onClick={() => setQuantityChoice("custom")}
                   aria-pressed={false}
                   className={[
-                    "flex h-12 items-center justify-between rounded-[10px] border px-3.5 text-lg font-black",
+                    "flex h-12 items-center justify-between rounded-[10px] border px-3.5 text-[15px] font-black",
                     OPTION_TRANSITION,
                     LIFT_ON_HOVER,
                     IDLE_CLASSES,
                   ].join(" ")}
                 >
                   <span>Custom</span>
-                  <span className="text-xs font-bold text-grape">Enter qty →</span>
                 </button>
               )}
 
@@ -841,7 +839,7 @@ export function TypeConfigurator({
                     disabled={!hasSize}
                     aria-pressed={selected}
                     className={[
-                      "flex h-12 items-center justify-between rounded-[10px] border px-3.5 text-lg font-black disabled:cursor-not-allowed disabled:opacity-40",
+                      "flex h-12 items-center justify-between rounded-[10px] border px-3.5 text-[15px] font-black disabled:cursor-not-allowed disabled:opacity-40",
                       OPTION_TRANSITION,
                       LIFT_ON_HOVER,
                       selected ? SELECTED_CLASSES : IDLE_CLASSES,
@@ -849,10 +847,10 @@ export function TypeConfigurator({
                   >
                     <span>{q.toLocaleString("en-ZA")}</span>
                     {preview && (
-                      <span className="flex items-center gap-1.5">
-                        <span>{formatCurrency(preview.totalPrice)}</span>
+                      <span className="flex items-center gap-2">
+                        <span className="text-lg">{formatCurrency(preview.totalPrice)}</span>
                         {preview.discountPercent > 0 && (
-                          <span className="text-sm text-grape">
+                          <span className={`text-sm ${selected ? "text-grape" : "text-dusk-hint"}`}>
                             Save {preview.discountPercent}%
                           </span>
                         )}
@@ -863,7 +861,7 @@ export function TypeConfigurator({
               })}
 
               {!hasSize && (
-                <p className="px-1 pt-1 text-xs text-quiet">
+                <p className="px-1 pt-1 text-xs text-dusk-note">
                   Pick a size first to see pricing per quantity.
                 </p>
               )}
@@ -881,7 +879,7 @@ export function TypeConfigurator({
         </div>
 
         {/* On mobile, artwork comes first so customers start with their design. */}
-        <StepCard step={5} mobileStep={1} title="Upload" className="max-md:order-first">
+        <StepCard tone="dusk" step={5} mobileStep={1} title="Upload" className="max-md:order-first">
           <div className="p-5">
             <input
               ref={fileInputRef}
@@ -915,11 +913,9 @@ export function TypeConfigurator({
                 if (file) handleFile(file);
               }}
               className={[
-                "flex h-[190px] cursor-pointer flex-col items-center justify-center gap-2.5 rounded-[16px] border-[1.5px] border-dashed px-6 text-center",
+                "flex h-[190px] cursor-pointer flex-col items-center justify-center gap-2.5 rounded-[16px] border border-dashed px-6 text-center",
                 OPTION_TRANSITION,
-                isDraggingOver
-                  ? "border-blaze bg-blaze/5 shadow-pop-blaze"
-                  : "border-grape bg-sand shadow-pop-grape-soft",
+                isDraggingOver ? "border-grape bg-grape/15" : "border-grape bg-well",
               ].join(" ")}
             >
               {uploadStatus === "uploading" ? (
@@ -927,13 +923,13 @@ export function TypeConfigurator({
                   <span aria-hidden className="animate-pulse text-2xl">
                     ⬆️
                   </span>
-                  <p className="text-sm font-black text-night">
+                  <p className="text-sm font-black text-sand">
                     {uploadProgress >= 100 ? "Finishing up…" : `Uploading… ${uploadProgress}%`}
                   </p>
-                  <div className="h-2 w-full max-w-xs overflow-hidden rounded-full bg-night/10">
+                  <div className="h-2 w-full max-w-xs overflow-hidden rounded-full bg-white/10">
                     <div
                       className={[
-                        "h-full rounded-full bg-blaze transition-[width] duration-150",
+                        "h-full rounded-full bg-grape transition-[width] duration-150",
                         uploadProgress >= 100 ? "animate-pulse" : "",
                       ].join(" ")}
                       style={{ width: `${uploadProgress}%` }}
@@ -946,7 +942,7 @@ export function TypeConfigurator({
                     ⚠️
                   </span>
                   <p className="font-black text-blaze">File Too Large</p>
-                  <p className="max-w-sm text-sm text-quiet">
+                  <p className="max-w-sm text-sm text-dusk-note">
                     Please compress your image or use a smaller file (max 25MB)
                   </p>
                 </>
@@ -964,21 +960,21 @@ export function TypeConfigurator({
                   >
                     <path d="M4 10.5l4 4 8-9" />
                   </svg>
-                  <p className="max-w-sm text-sm text-night">
+                  <p className="max-w-sm text-sm text-sand">
                     <span className="font-black">{artworkFilename}</span> uploaded
                   </p>
-                  <p className="text-xs text-quiet">Click or drop a file to replace it</p>
+                  <p className="text-xs text-dusk-note">Click or drop a file to replace it</p>
                 </>
               ) : (
                 <>
                   <span
                     aria-hidden
-                    className="flex size-[52px] items-center justify-center rounded-[14px] border-[1.5px] border-blaze bg-blaze/15 text-2xl"
+                    className="flex size-[52px] items-center justify-center text-3xl"
                   >
                     ⬆️
                   </span>
-                  <p className="text-sm font-black text-night">Drag or click to upload your file</p>
-                  <p className="text-xs text-quiet">All formats supported. 25MB max · 1 design max</p>
+                  <p className="text-sm font-black text-sand">Drag or click to upload your file</p>
+                  <p className="text-xs text-dusk-note">All formats supported. 25MB max · 1 design max</p>
                 </>
               )}
             </div>
@@ -990,7 +986,7 @@ export function TypeConfigurator({
 
         <div className="flex flex-wrap items-center justify-end gap-4">
           {!allComplete && (
-            <p className="text-sm text-sand/60">
+            <p className="text-sm text-sand">
               {/* Every other step starts filled in, so artwork is usually what's missing. */}
               {artworkUrl ? "Finish all five steps to add to cart" : "Upload your artwork to add to cart"}
             </p>
@@ -1000,7 +996,7 @@ export function TypeConfigurator({
             onClick={handleAddToCart}
             disabled={!allComplete || isAddingToCart}
             className={[
-              "ml-auto rounded-full border-2 border-night bg-blaze px-8 py-3.5 text-base font-black uppercase tracking-wide text-white",
+              "rounded-full border-2 border-night bg-blaze px-8 py-3.5 text-base font-black uppercase tracking-wide text-white",
               OPTION_TRANSITION,
               LIFT_ON_HOVER_ANY,
               "shadow-pop-blaze disabled:cursor-not-allowed disabled:opacity-40",

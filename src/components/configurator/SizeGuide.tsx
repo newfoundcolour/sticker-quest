@@ -44,7 +44,7 @@ export function SizeGuide() {
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-controls={panelId}
-        className="rounded-full border-[1.5px] border-blaze-deep bg-blaze px-3 py-1.5 text-[11px] font-bold text-sand shadow-[2px_2px_0_0_var(--color-blaze-deep)] transition-[translate] duration-150 motion-safe:hover:-translate-y-0.5"
+        className="rounded-full bg-blaze px-3 py-[5px] text-[11px] font-bold text-night transition-[translate] duration-150 motion-safe:hover:-translate-y-0.5"
       >
         Size guide ↗
       </button>

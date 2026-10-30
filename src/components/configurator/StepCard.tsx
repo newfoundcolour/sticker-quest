@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 
 /**
- * A step's card: cream body, thick grape border, a solid grape header bar
- * with a lime step badge. Every step uses the same colours now — only the
- * step number changes.
+ * A step's card. The default "sand" tone (account pages) has a cream body, a
+ * grape border and a solid grape header bar with a lime step badge. The
+ * "dusk" tone (configurator) is one dark card with a grape step badge.
  */
 export function StepCard({
   step,
@@ -12,6 +12,7 @@ export function StepCard({
   title,
   description,
   action,
+  tone = "sand",
   className = "",
   children,
 }: {
@@ -26,19 +27,35 @@ export function StepCard({
   description?: string;
   /** Extra control on the right of the header bar (e.g. the size guide). */
   action?: ReactNode;
+  tone?: "sand" | "dusk";
   className?: string;
   children: ReactNode;
 }) {
+  const dusk = tone === "dusk";
+  const titleColour = dusk ? "text-sand" : "text-white";
   return (
     <section
       className={[
-        "flex flex-col overflow-hidden rounded-[20px] border-[1.5px] border-grape bg-sand",
+        "flex flex-col overflow-hidden rounded-[20px]",
+        dusk ? "bg-dusk" : "border-[1.5px] border-grape bg-sand",
         className,
       ].join(" ")}
     >
-      <div className="flex min-h-[60px] shrink-0 items-center gap-2.5 bg-grape px-[18px] py-2 shadow-pop-grape-soft">
+      <div
+        className={[
+          "flex shrink-0 items-center gap-2.5 px-[18px]",
+          // Dusk: a tight header, pulled 12px into the body's top padding so the
+          // options sit close under the title.
+          dusk ? "-mb-3 pt-[18px]" : "min-h-[60px] bg-grape py-2 shadow-pop-grape-soft",
+        ].join(" ")}
+      >
         {step !== undefined && (
-          <span className="flex size-[30px] shrink-0 items-center justify-center rounded-full border-[1.5px] border-night bg-zap text-xs font-black text-night">
+          <span
+            className={[
+              "flex size-[30px] shrink-0 items-center justify-center rounded-full text-xs font-black",
+              dusk ? "bg-grape text-sand" : "border-[1.5px] border-night bg-zap text-night",
+            ].join(" ")}
+          >
             {mobileStep === undefined ? (
               step
             ) : (
@@ -56,11 +73,11 @@ export function StepCard({
         )}
         {description ? (
           <div className="flex flex-wrap items-baseline gap-x-3">
-            <h2 className="text-lg font-black text-white">{title}</h2>
-            <p className="text-sm text-white/75">{description}</p>
+            <h2 className={`text-lg font-black ${titleColour}`}>{title}</h2>
+            <p className={`text-sm opacity-75 ${titleColour}`}>{description}</p>
           </div>
         ) : (
-          <h2 className="text-lg font-black text-white">{title}</h2>
+          <h2 className={`text-lg font-black ${titleColour}`}>{title}</h2>
         )}
         {action && <div className="ml-auto">{action}</div>}
       </div>
@@ -88,15 +105,17 @@ export const OPTION_TRANSITION =
   "transition-[color,background-color,border-color,box-shadow,translate] duration-150";
 
 /**
- * Cream and grape-bordered when idle, lime with an olive hard shadow when
- * chosen — every step shares this one look now. Exported so hand-rolled
- * controls (cut-mode buttons, quantity rows) that don't fit OptionTile's
- * shape can reuse the same colours.
+ * Configurator options on dusk cards: a raised dark tile when idle, solid lime
+ * when chosen. Exported so hand-rolled controls (cut-mode buttons, quantity
+ * rows) that don't fit OptionTile's shape can reuse the same colours. Hover
+ * only lifts the tile; there's no hover stroke.
  */
-export const SELECTED_CLASSES = "border-[#595c10] bg-zap text-night shadow-pop-zap";
-export const IDLE_CLASSES = "border-grape bg-sand text-night hover:border-night/40";
+export const SELECTED_CLASSES = "border-transparent bg-zap text-night";
+export const IDLE_CLASSES = "border-transparent bg-dusk-tile text-sand";
+/** Small hint text under an option label. */
+export const hintClass = (selected: boolean) => (selected ? "text-night" : "text-dusk-hint");
 
-/** A selectable tile — every step now shares one selected look (lime + hard shadow). */
+/** A selectable tile — every step shares one selected look (solid lime). */
 export function OptionTile({
   selected,
   onClick,
