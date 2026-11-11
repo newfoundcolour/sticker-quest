@@ -34,7 +34,7 @@ export function ArtworkPreview({ url, filename }: { url: string; filename: strin
           </span>
         )}
       </div>
-      <figcaption className="w-full truncate text-center text-[11px] text-stone" title={filename}>
+      <figcaption className="w-full truncate text-center text-[11px] text-dusk-note" title={filename}>
         {filename}
       </figcaption>
     </figure>

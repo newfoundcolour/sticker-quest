@@ -34,11 +34,12 @@ export function DarkFields({ children }: { children: ReactNode }) {
   return <FieldTone.Provider value="dark">{children}</FieldTone.Provider>;
 }
 
-function useDark() {
+/** True inside <DarkFields>, for custom fields that sit beside TextField. */
+export function useDark() {
   return useContext(FieldTone) === "dark";
 }
 
-function FieldLabel({ htmlFor, label, optional }: { htmlFor: string; label: string; optional?: boolean }) {
+export function FieldLabel({ htmlFor, label, optional }: { htmlFor: string; label: string; optional?: boolean }) {
   const dark = useDark();
   return (
     <label htmlFor={htmlFor} className={dark ? "text-sm font-bold text-sand" : "text-sm font-black text-night"}>

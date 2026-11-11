@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { StepCard } from "@/components/configurator/StepCard";
-import { PRIMARY_BUTTON_CLASSES } from "@/components/auth/fields";
+import {
+  ACCOUNT_ACTION_CLASSES,
+  AccountCard,
+  CARD_LIST_CLASSES,
+  ROW_ACTION_CLASSES,
+} from "@/components/account/AccountCard";
 import { AccountPageHeader } from "@/components/account/AccountPageHeader";
 import { ArtworkThumb } from "@/components/account/ArtworkThumb";
 import { EmptyState, formatOrderDate } from "@/components/account/OrderBits";
@@ -24,50 +28,49 @@ export default async function ReorderPage() {
       />
 
       {orders.length === 0 ? (
-        <StepCard icon="🔁" title="Nothing to reorder yet">
-          <EmptyState
-            title="Your favourites will live here"
-            action={
-              <Link href="/stickers" className={`${PRIMARY_BUTTON_CLASSES} inline-block w-auto px-7 text-center`}>
-                Make some stickers
-              </Link>
-            }
-          >
-            Once you&apos;ve placed an order, you can reorder it from here in a click.
-          </EmptyState>
-        </StepCard>
+        <AccountCard title="Nothing to reorder yet">
+          <div className="border-t border-white/[0.06]">
+            <EmptyState
+              dark
+              title="Your favourites will live here"
+              action={
+                <Link href="/stickers" className={ACCOUNT_ACTION_CLASSES}>
+                  Make some stickers
+                </Link>
+              }
+            >
+              Once you&apos;ve placed an order, you can reorder it from here in a click.
+            </EmptyState>
+          </div>
+        </AccountCard>
       ) : (
         <ul className="grid gap-4 xl:grid-cols-2">
           {orders.map((order) => (
             <li key={order.id}>
-              <StepCard
-                icon="📦"
+              <AccountCard
                 title={`Order ${orderNumber(order.id)}`}
                 description={formatOrderDate(order.createdAt)}
                 className="h-full"
               >
-                <ul className="divide-y divide-grape/20">
+                <ul className={CARD_LIST_CLASSES}>
                   {order.items.map((item) => {
                     const href = reorderHref(item);
                     return (
-                      <li key={item.id} className="flex items-center gap-4 p-4 sm:p-5">
-                        <ArtworkThumb url={item.artworkUrl} size={64} />
-                        <p className="min-w-0 flex-1 text-sm text-ink">{itemSummary(item)}</p>
+                      <li key={item.id} className="flex items-center gap-4 px-6 py-4">
+                        <ArtworkThumb url={item.artworkUrl} size={44} />
+                        <p className="min-w-0 flex-1 text-[13px] text-dusk-note">{itemSummary(item)}</p>
                         {href ? (
-                          <Link
-                            href={href}
-                            className="shrink-0 rounded-full border-2 border-night bg-blaze px-4 py-2 text-xs font-black uppercase text-white shadow-pop-blaze transition-[translate] duration-150 motion-safe:hover:-translate-y-0.5"
-                          >
+                          <Link href={href} className={ROW_ACTION_CLASSES}>
                             Reorder
                           </Link>
                         ) : (
-                          <span className="shrink-0 text-xs font-bold text-quiet">No longer available</span>
+                          <span className="shrink-0 text-xs text-white/[0.31]">No longer available</span>
                         )}
                       </li>
                     );
                   })}
                 </ul>
-              </StepCard>
+              </AccountCard>
             </li>
           ))}
         </ul>

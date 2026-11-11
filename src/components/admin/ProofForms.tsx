@@ -2,12 +2,17 @@
 
 import { useActionState, useRef, useEffect, useState } from "react";
 import { approveOnBehalfAction, uploadProofAction, type ProofActionState } from "@/app/actions/proofs";
+import { AdminIcon, PRIMARY_BUTTON, SMALL_SECONDARY_BUTTON } from "@/components/admin/ui";
 
 const MAX_BYTES = 20 * 1024 * 1024;
 
 function Message({ state }: { state: ProofActionState }) {
   if (!state) return null;
-  return <p className={`text-sm ${state.ok ? "text-trail-teal" : "text-coral-signal"}`}>{state.message}</p>;
+  return (
+    <p role={state.ok ? "status" : "alert"} className={`text-sm font-medium ${state.ok ? "text-trail-teal" : "text-coral-signal"}`}>
+      {state.message}
+    </p>
+  );
 }
 
 /** Upload a new proof version. The server re-checks size and file type from the bytes. */
@@ -24,27 +29,31 @@ export function ProofUploadForm({ orderId, accept }: { orderId: string; accept: 
   }, [state]);
 
   return (
-    <form ref={formRef} action={action} className="flex flex-col gap-3 sm:flex-row sm:items-end">
-      <label className="flex flex-1 flex-col gap-1.5 text-sm text-ink-navy/70">
-        New proof (PNG, JPG, WebP or PDF, max 20 MB)
+    <form ref={formRef} action={action} className="flex flex-col gap-3">
+      <label className="flex flex-col gap-2 rounded-xl border border-dashed border-admin-line bg-admin-canvas/50 px-4 py-4 text-sm text-admin-muted transition-colors hover:border-grape/40">
+        <span className="flex items-center gap-2 font-medium text-admin-ink">
+          <AdminIcon name="upload" className="size-4 text-grape" />
+          New proof
+          <span className="font-normal text-admin-muted">PNG, JPG, WebP or PDF, up to 20 MB</span>
+        </span>
         <input
           type="file"
           name="file"
           accept={accept}
           required
           onChange={(e) => setTooBig((e.target.files?.[0]?.size ?? 0) > MAX_BYTES)}
-          className="rounded-lg border border-ink-navy/15 bg-white px-3 py-2 text-sm text-ink-navy file:mr-3 file:rounded-md file:border-0 file:bg-ink-navy/5 file:px-3 file:py-1 file:text-sm"
+          className="text-sm text-admin-ink file:mr-3 file:h-8 file:cursor-pointer file:rounded-lg file:border file:border-solid file:border-admin-line file:bg-white file:px-3 file:text-xs file:font-semibold file:text-admin-ink hover:file:bg-admin-canvas"
         />
       </label>
-      <div className="flex flex-col items-start gap-2">
-        <button
-          type="submit"
-          disabled={pending || tooBig}
-          className="rounded-xl bg-coral-signal px-5 py-2.5 text-sm font-medium text-paper transition-colors hover:bg-coral-signal/90 disabled:cursor-not-allowed disabled:opacity-40"
-        >
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="submit" disabled={pending || tooBig} className={PRIMARY_BUTTON}>
           {pending ? "Uploading…" : "Upload & send to customer"}
         </button>
-        {tooBig && <p className="text-sm text-coral-signal">That file is over 20 MB.</p>}
+        {tooBig && (
+          <p role="alert" className="text-sm font-medium text-coral-signal">
+            That file is over 20 MB.
+          </p>
+        )}
         <Message state={state} />
       </div>
     </form>
@@ -59,26 +68,27 @@ export function ApproveOnBehalfButton({ proofId }: { proofId: string }) {
   if (state?.ok) return <Message state={state} />;
 
   return (
-    <div className="flex flex-col items-start gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       {!confirming ? (
-        <button
-          type="button"
-          onClick={() => setConfirming(true)}
-          className="rounded-lg border border-ink-navy/15 px-3 py-1.5 text-sm font-medium text-ink-navy hover:bg-ink-navy/5"
-        >
+        <button type="button" onClick={() => setConfirming(true)} className={SMALL_SECONDARY_BUTTON}>
+          <AdminIcon name="check" className="size-3.5" />
           Approve on customer&apos;s behalf
         </button>
       ) : (
-        <form action={action} className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-ink-navy/70">Customer approved elsewhere (e.g. WhatsApp)?</span>
+        <form action={action} className="flex flex-wrap items-center gap-2 rounded-lg bg-admin-canvas px-3 py-2">
+          <span className="text-sm text-admin-ink">Customer approved elsewhere (e.g. WhatsApp)?</span>
           <button
             type="submit"
             disabled={pending}
-            className="rounded-lg bg-trail-teal px-3 py-1.5 text-sm font-medium text-ink-navy disabled:opacity-50"
+            className="inline-flex h-8 items-center rounded-lg bg-trail-teal px-3 text-xs font-semibold text-admin-ink disabled:opacity-50"
           >
             {pending ? "Saving…" : "Yes, record approval"}
           </button>
-          <button type="button" onClick={() => setConfirming(false)} className="px-2 text-sm text-ink-navy/60 hover:text-ink-navy">
+          <button
+            type="button"
+            onClick={() => setConfirming(false)}
+            className="px-2 text-xs font-medium text-admin-muted hover:text-admin-ink"
+          >
             Cancel
           </button>
         </form>

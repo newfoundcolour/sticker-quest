@@ -49,6 +49,31 @@
   /* Darker shades of the accents, used for a selected option's hard shadow. */
   --color-blaze-deep: #4d1e12;
   --color-zap-deep: #595c10;
+  /* Customer orders page: the "Shipped" status pill. */
+  --color-leaf: #34a853;
+  /* Account sidebar rows (Figma "Account navigation"): idle and active tiles,
+     section labels, the count badge, and one icon colour per row. */
+  --color-nav-tile: #211a3c;
+  --color-nav-tile-line: #393052;
+  --color-nav-active: #202970;
+  --color-nav-active-line: #518cff;
+  --color-nav-label: #aaa5c4;
+  --color-mint: #25d8a3;
+  --color-nav-count-ink: #101328;
+  --color-icon-violet: #a37aff;
+  --color-icon-sky: #2acbff;
+  --color-icon-amber: #ffac52;
+  --color-icon-blue: #6696ff;
+  --color-icon-pink: #f18add;
+  --color-icon-rose: #ff808e;
+  /* Admin (staff back office): a light workspace beside a night sidebar.
+     Grape is the action colour; status dots reuse the brand accents. */
+  --color-admin-canvas: #f4f3f8;
+  --color-admin-line: #e5e2ed;
+  --color-admin-ink: #1c1830;
+  --color-admin-muted: #6b6580;
+  --color-admin-faint: #9b95ac;
+  --color-grape-deep: #564d93;
 }
 
 @theme inline {
@@ -90,6 +115,26 @@
   --color-orchid: var(--color-orchid);
   --color-blaze-deep: var(--color-blaze-deep);
   --color-zap-deep: var(--color-zap-deep);
+  --color-leaf: var(--color-leaf);
+  --color-nav-tile: var(--color-nav-tile);
+  --color-nav-tile-line: var(--color-nav-tile-line);
+  --color-nav-active: var(--color-nav-active);
+  --color-nav-active-line: var(--color-nav-active-line);
+  --color-nav-label: var(--color-nav-label);
+  --color-mint: var(--color-mint);
+  --color-nav-count-ink: var(--color-nav-count-ink);
+  --color-icon-violet: var(--color-icon-violet);
+  --color-icon-sky: var(--color-icon-sky);
+  --color-icon-amber: var(--color-icon-amber);
+  --color-icon-blue: var(--color-icon-blue);
+  --color-icon-pink: var(--color-icon-pink);
+  --color-icon-rose: var(--color-icon-rose);
+  --color-admin-canvas: var(--color-admin-canvas);
+  --color-admin-line: var(--color-admin-line);
+  --color-admin-ink: var(--color-admin-ink);
+  --color-admin-muted: var(--color-admin-muted);
+  --color-admin-faint: var(--color-admin-faint);
+  --color-grape-deep: var(--color-grape-deep);
 
   /* Hard, un-blurred bottom-right shadow marking a chosen option (always lime)
      or the "Add to cart" CTA (orange). */

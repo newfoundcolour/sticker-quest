@@ -97,3 +97,29 @@ export async function copyArtwork(sourceUrl: string): Promise<{ url: string; pub
 export function toArtworkDownloadUrl(url: string): string {
   return url.replace("/upload/", "/upload/fl_attachment/");
 }
+
+/**
+ * Uploads a blog cover image (already checked by magic bytes) to the blog
+ * folder. Images only, so Cloudinary never treats it as a raw file.
+ */
+export async function uploadBlogCover(buffer: Buffer, filename: string): Promise<{ url: string }> {
+  const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("Cloudinary upload timed out")), CLOUDINARY_UPLOAD_TIMEOUT_MS);
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: "sticker-quest/blog",
+        resource_type: "image",
+        filename_override: filename,
+        use_filename: true,
+        unique_filename: true,
+      },
+      (error, result) => {
+        clearTimeout(timer);
+        if (error || !result) reject(error ?? new Error("Cloudinary upload failed"));
+        else resolve(result);
+      },
+    );
+    stream.end(buffer);
+  });
+  return { url: result.secure_url };
+}

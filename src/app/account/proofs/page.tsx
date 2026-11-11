@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { StepCard } from "@/components/configurator/StepCard";
+import { AccountCard, CARD_LIST_CLASSES, CARD_ROW_HOVER_CLASSES } from "@/components/account/AccountCard";
 import { AccountPageHeader } from "@/components/account/AccountPageHeader";
 import { EmptyState, formatOrderDate } from "@/components/account/OrderBits";
-import { ProofStatusPill, proofFileIcon } from "@/components/account/ProofBits";
+import { ProofStatusChip, proofFileIcon } from "@/components/account/ProofBits";
 import { requireVerifiedUser } from "@/lib/auth";
 import { listCustomerProofs } from "@/lib/proofs";
 import { itemSummary, orderNumber } from "@/lib/orderLabels";
@@ -14,31 +14,34 @@ type ProofRow = Awaited<ReturnType<typeof listCustomerProofs>>[number];
 
 function ProofList({ proofs, highlight }: { proofs: ProofRow[]; highlight?: boolean }) {
   return (
-    <ul className="divide-y divide-grape/20">
+    <ul className={CARD_LIST_CLASSES}>
       {proofs.map((proof) => {
         const firstItem = proof.order.items[0];
         return (
           <li key={proof.id}>
             <Link
               href={`/account/proofs/${proof.id}`}
-              className="flex items-center gap-4 p-4 transition-colors hover:bg-white/60 sm:p-5"
+              className={`flex items-center gap-4 px-6 py-4 ${CARD_ROW_HOVER_CLASSES}`}
             >
-              <span aria-hidden className="flex size-12 shrink-0 items-center justify-center rounded-xl border-[1.5px] border-grape/40 bg-white text-2xl">
+              <span
+                aria-hidden
+                className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/[0.08] text-xl"
+              >
                 {proofFileIcon(proof.mimeType)}
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block font-black text-night">
+              <span className="flex min-w-0 flex-1 flex-col gap-1">
+                <span className="text-[13px] font-semibold text-sand">
                   Order {orderNumber(proof.order.id)} · Version {proof.version}
                 </span>
-                <span className="block truncate text-sm text-quiet">
+                <span className="truncate text-xs text-dusk-note">
                   {firstItem ? itemSummary(firstItem) : ""}
                   {proof.order.items.length > 1 && ` + ${proof.order.items.length - 1} more`}
                 </span>
-                <span className="block text-xs text-quiet">Sent {formatOrderDate(proof.createdAt)}</span>
+                <span className="text-[11px] text-white/[0.31]">Sent {formatOrderDate(proof.createdAt)}</span>
               </span>
               <span className="flex shrink-0 flex-col items-end gap-2">
-                <ProofStatusPill status={proof.shownStatus} />
-                {highlight && <span className="text-xs font-black text-blaze">Review now →</span>}
+                <ProofStatusChip status={proof.shownStatus} />
+                {highlight && <span className="text-xs font-semibold text-zap">Review now →</span>}
               </span>
             </Link>
           </li>
@@ -62,24 +65,25 @@ export default async function ProofsPage() {
       />
 
       <div className="flex flex-col gap-6">
-        <StepCard
-          icon="👀"
+        <AccountCard
           title="Waiting for you"
-          description={waiting.length > 0 ? `${waiting.length} to review` : undefined}
+          description={waiting.length > 0 ? `${waiting.length} to review` : "Nothing to review right now."}
         >
           {waiting.length > 0 ? (
             <ProofList proofs={waiting} highlight />
           ) : (
-            <EmptyState title="You're all caught up">
-              When we send you a new proof, it&apos;ll pop up right here.
-            </EmptyState>
+            <div className="border-t border-white/[0.06]">
+              <EmptyState dark title="You're all caught up">
+                When we send you a new proof, it&apos;ll pop up right here.
+              </EmptyState>
+            </div>
           )}
-        </StepCard>
+        </AccountCard>
 
         {history.length > 0 && (
-          <StepCard icon="🗂️" title="History">
+          <AccountCard title="History" description="Proofs you've already decided on.">
             <ProofList proofs={history} />
-          </StepCard>
+          </AccountCard>
         )}
       </div>
     </>

@@ -5,7 +5,16 @@ import { changeEmailAction, changePasswordAction, updateProfileAction } from "@/
 import { updateAddressAction } from "@/app/actions/checkout";
 import { AddressFields, EMPTY_DELIVERY_VALUES, type DeliveryValues } from "@/components/checkout/DeliveryFields";
 import type { AuthFormState } from "@/lib/authForms";
-import { FormMessage, INPUT_CLASSES, PasswordField, SubmitButton, TextField } from "@/components/auth/fields";
+import {
+  DARK_INPUT_CLASSES,
+  FieldLabel,
+  FormMessage,
+  INPUT_CLASSES,
+  PasswordField,
+  SubmitButton,
+  TextField,
+  useDark,
+} from "@/components/auth/fields";
 
 /** Exact copy requested for the Instagram field (settings and sign up). */
 export const INSTAGRAM_HELPER =
@@ -85,13 +94,15 @@ export function ProfileForm({ defaults }: { defaults: ProfileDefaults }) {
 }
 
 function InstagramField({ defaultValue, error }: { defaultValue: string; error?: string }) {
+  const dark = useDark();
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor="instagramHandle" className="text-sm font-black text-night">
-        Instagram handle (optional)
-      </label>
+    <div className={dark ? "flex flex-col gap-2" : "flex flex-col gap-1.5"}>
+      <FieldLabel htmlFor="instagramHandle" label="Instagram handle" optional />
       <div className="relative">
-        <span aria-hidden className="pointer-events-none absolute inset-y-0 left-3 flex items-center font-black text-quiet">
+        <span
+          aria-hidden
+          className={`pointer-events-none absolute inset-y-0 flex items-center font-black ${dark ? "left-4 text-haze-dim" : "left-3 text-quiet"}`}
+        >
           @
         </span>
         <input
@@ -105,10 +116,10 @@ function InstagramField({ defaultValue, error }: { defaultValue: string; error?:
           pattern="@?[A-Za-z0-9._]{1,30}"
           aria-invalid={error ? true : undefined}
           aria-describedby="instagramHandle-hint"
-          className={`${INPUT_CLASSES} pl-8`}
+          className={dark ? `${DARK_INPUT_CLASSES} pl-9` : `${INPUT_CLASSES} pl-8`}
         />
       </div>
-      <p id="instagramHandle-hint" className="text-xs text-quiet">
+      <p id="instagramHandle-hint" className={dark ? "text-[13px] leading-normal text-haze" : "text-xs text-quiet"}>
         {INSTAGRAM_HELPER}
       </p>
       {error && <p className="text-sm font-bold text-blaze">{error}</p>}
@@ -131,7 +142,7 @@ export function AddressForm({ defaults }: { defaults: AddressDefaults }) {
     <form action={action} className="flex flex-col gap-4" noValidate>
       <StatusMessage state={state} />
       <AddressFields value={value} error={error} />
-      <div>
+      <div className="sm:max-w-[240px]">
         <SubmitButton pendingText="Saving…">Save address</SubmitButton>
       </div>
     </form>
@@ -143,11 +154,12 @@ export function AddressForm({ defaults }: { defaults: AddressDefaults }) {
 export function EmailForm({ currentEmail, pendingEmail }: { currentEmail: string; pendingEmail?: string }) {
   const [state, action] = useActionState(changeEmailAction, undefined);
   const failed = failure(state);
+  const dark = useDark();
 
   return (
     <form action={action} className="flex flex-col gap-4" noValidate>
-      <p className="text-sm text-ink">
-        You log in with <span className="font-black">{currentEmail}</span>.
+      <p className={`text-sm ${dark ? "text-haze" : "text-ink"}`}>
+        You log in with <span className={dark ? "font-bold text-sand" : "font-black"}>{currentEmail}</span>.
       </p>
       {pendingEmail && !state?.ok && (
         <FormMessage tone="info">

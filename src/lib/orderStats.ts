@@ -13,6 +13,8 @@ export type OrderStats = {
   revenueToday: number;
   revenueTodayTrendPercent: number | null;
   averageOrderValue: number;
+  /** Orders in each status — the counts on the admin Orders tabs. */
+  statusCounts: Record<OrderStatus, number>;
 };
 
 function startOfDay(date: Date): Date {
@@ -84,5 +86,12 @@ export async function getOrderStats(): Promise<OrderStats> {
     revenueToday: revenueTodayAmount,
     revenueTodayTrendPercent: percentChange(revenueTodayAmount, revenueYesterdayAmount),
     averageOrderValue: Number(overall._avg.totalPrice ?? 0),
+    statusCounts: {
+      AWAITING_PROOF: countByStatus.AWAITING_PROOF ?? 0,
+      AWAITING_APPROVAL: countByStatus.AWAITING_APPROVAL ?? 0,
+      APPROVED: countByStatus.APPROVED ?? 0,
+      PRINTING: countByStatus.PRINTING ?? 0,
+      SHIPPED: countByStatus.SHIPPED ?? 0,
+    },
   };
 }

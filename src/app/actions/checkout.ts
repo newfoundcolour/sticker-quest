@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { prisma } from "@/lib/prisma";
 import { getPricedCart } from "@/lib/cartPricing";
+import { checkDiscount } from "@/lib/discounts";
 import { clearCart, setLastOrderCookie } from "@/lib/cart";
 import { getSessionUser, isEmailVerified, requireVerifiedUser } from "@/lib/auth";
 import { keepValues, type AuthFormState } from "@/lib/authForms";
@@ -37,51 +38,75 @@ type CartProblem = { ok: false; reason: "cart"; message: string };
  * up yet, so the order goes straight to `awaiting_proof`.
  */
 async function placeOrder(user: User, details: DeliveryDetails): Promise<CartProblem> {
-  const { items, unavailableItemIds, subtotal, shippingFee, total } = await getPricedCart();
+  const { items, unavailableItemIds, subtotal, discount, discountProblem, shippingFee, total } = await getPricedCart();
   if (items.length === 0) {
     return { ok: false, reason: "cart", message: "Your cart is empty." };
   }
   if (unavailableItemIds.length > 0) {
     return { ok: false, reason: "cart", message: "Some stickers in your cart can't be ordered any more. Remove them to continue." };
   }
+  // Don't quietly charge full price for a code the customer thinks they have.
+  if (discountProblem) {
+    return { ok: false, reason: "cart", message: `${discountProblem.message} Remove the code to check out at full price.` };
+  }
   // Belt and braces: a valid cart always has a positive price.
   if (!(subtotal > 0) || items.some((i) => !(i.totalPrice > 0))) {
     return { ok: false, reason: "cart", message: "Something's off with your cart. Please remove the item and add it again." };
   }
 
-  const order = await prisma.order.create({
-    data: {
-      // Everything about the customer comes from the verified session and
-      // their saved profile — nothing from the browser.
-      userId: user.id,
-      customerName: `${details.firstName} ${details.lastName}`,
-      email: user.email ?? "",
-      phone: details.phone,
-      shippingAddress: formatAddress(details),
-      shippingFee,
-      totalPrice: total,
-      items: {
-        create: items.map((item) => ({
-          stickerType: item.stickerType,
-          cutType: item.cutType,
-          shape: item.shape,
-          finish: item.finish,
-          roundedCorners: item.roundedCorners ?? false,
-          whiteInk: item.whiteInk,
-          lamination: item.lamination,
-          widthCm: item.widthCm,
-          heightCm: item.heightCm,
-          quantity: item.quantity,
-          sheetMaterial: item.sheetMaterial ?? null,
-          sheetCuts: item.sheetCuts ?? null,
-          artworkUrl: item.artworkUrl,
-          artworkFilename: item.artworkFilename,
-          pricePerUnit: item.pricePerUnit,
-          totalPrice: item.totalPrice,
-        })),
-      },
+  const orderData = {
+    // Everything about the customer comes from the verified session and
+    // their saved profile — nothing from the browser.
+    userId: user.id,
+    customerName: `${details.firstName} ${details.lastName}`,
+    email: user.email ?? "",
+    phone: details.phone,
+    shippingAddress: formatAddress(details),
+    shippingFee,
+    discountAmount: discount?.amount ?? 0,
+    discountCodeText: discount?.code ?? null,
+    totalPrice: total,
+    items: {
+      create: items.map((item) => ({
+        stickerType: item.stickerType,
+        cutType: item.cutType,
+        shape: item.shape,
+        finish: item.finish,
+        roundedCorners: item.roundedCorners ?? false,
+        whiteInk: item.whiteInk,
+        lamination: item.lamination,
+        widthCm: item.widthCm,
+        heightCm: item.heightCm,
+        quantity: item.quantity,
+        sheetMaterial: item.sheetMaterial ?? null,
+        sheetCuts: item.sheetCuts ?? null,
+        artworkUrl: item.artworkUrl,
+        artworkFilename: item.artworkFilename,
+        pricePerUnit: item.pricePerUnit,
+        totalPrice: item.totalPrice,
+      })),
     },
+  };
+
+  // With a code, lock its row and check it again inside the transaction, so
+  // two checkouts can't both take the last use (or a customer's one use).
+  type Placed = { id: string } | { problem: string };
+  const placed: Placed = await prisma.$transaction(async (tx) => {
+    let discountCodeId: string | null = null;
+    if (discount) {
+      await tx.$queryRaw`SELECT "id" FROM "DiscountCode" WHERE "code" = ${discount.code} FOR UPDATE`;
+      const check = await checkDiscount(discount.code, { subtotal, userId: user.id, db: tx });
+      if (!check.ok) return { problem: check.message };
+      if (check.amount !== discount.amount) return { problem: "Your discount changed. Check the new total and try again." };
+      discountCodeId = check.code.id;
+    }
+    const created = await tx.order.create({ data: { ...orderData, discountCodeId } });
+    return { id: created.id };
   });
+  if ("problem" in placed) {
+    return { ok: false, reason: "cart", message: placed.problem };
+  }
+  const order = placed;
 
   await clearCart();
   await setLastOrderCookie(order.id);

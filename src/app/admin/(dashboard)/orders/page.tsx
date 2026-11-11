@@ -2,34 +2,28 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireStaff } from "@/lib/auth";
 import { STICKER_TYPE_LABELS } from "@/lib/stickerTypeSlug";
-import {
-  ORDER_STATUS_LABELS,
-  ORDER_STATUS_VALUES,
-  formatAddOns,
-  itemSpecLine,
-} from "@/lib/orderLabels";
-import { formatSizeMm } from "@/lib/pricingUtils";
+import { ORDER_STATUS_LABELS, ORDER_STATUS_VALUES, itemSpecLine, orderNumber } from "@/lib/orderLabels";
+import { formatCurrency } from "@/lib/pricingUtils";
 import { getOrderStats } from "@/lib/orderStats";
 import { QuickStats } from "@/components/admin/QuickStats";
 import { OrderStatusSelect } from "@/components/admin/OrderStatusSelect";
-import { toArtworkDownloadUrl } from "@/lib/cloudinary";
+import { ArtworkThumb } from "@/components/account/ArtworkThumb";
+import {
+  AdminIcon,
+  AdminPageHeader,
+  AdminPagination,
+  AdminTabs,
+  Avatar,
+  CARD_CLASSES,
+  EmptyMessage,
+  formatAdminDate,
+} from "@/components/admin/ui";
 import type { OrderStatus } from "@/generated/prisma/client";
 
 const PAGE_SIZE = 20;
 
 function isOrderStatus(value: string): value is OrderStatus {
   return (ORDER_STATUS_VALUES as string[]).includes(value);
-}
-
-function getInitials(name: string): string {
-  const initials = name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-  return initials || "?";
 }
 
 function ordersHref(status: OrderStatus | undefined, page: number): string {
@@ -48,7 +42,7 @@ export default async function AdminOrdersPage({
   await requireStaff();
   const { status, page: pageParam } = await searchParams;
   const activeStatus = status && isOrderStatus(status) ? status : undefined;
-  const page = Math.max(1, Number(pageParam) || 1);
+  const page = Math.max(1, Math.min(1000, Number(pageParam) || 1));
   const where = activeStatus ? { status: activeStatus } : undefined;
 
   const [orders, totalCount, stats] = await Promise.all([
@@ -68,224 +62,129 @@ export default async function AdminOrdersPage({
   const rangeEnd = Math.min(page * PAGE_SIZE, totalCount);
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-6 py-10">
-      <h1 className="font-display text-2xl font-semibold text-ink-navy">Orders</h1>
+    <>
+      <AdminPageHeader
+        title="Orders"
+        description="Every order, newest first. Change a status straight from the list, or open an order to upload proofs."
+      />
 
-      <div className="mt-6">
-        <QuickStats stats={stats} />
-      </div>
+      <QuickStats stats={stats} />
 
-      <div className="mt-6 flex flex-wrap gap-2">
-        <FilterPill href="/admin/orders" active={!activeStatus}>
-          All
-        </FilterPill>
-        {ORDER_STATUS_VALUES.map((s) => (
-          <FilterPill key={s} href={ordersHref(s, 1)} active={activeStatus === s}>
-            {ORDER_STATUS_LABELS[s]}
-          </FilterPill>
-        ))}
-      </div>
+      <section className={`${CARD_CLASSES} mt-6 overflow-hidden`}>
+        <AdminTabs
+          label="Filter by status"
+          tabs={[
+            { href: ordersHref(undefined, 1), label: "All", count: stats.totalOrders, active: !activeStatus },
+            ...ORDER_STATUS_VALUES.map((s) => ({
+              href: ordersHref(s, 1),
+              label: ORDER_STATUS_LABELS[s],
+              count: stats.statusCounts[s],
+              active: activeStatus === s,
+            })),
+          ]}
+        />
 
-      <div className="mt-6 overflow-x-auto rounded-2xl border border-ink-navy/10 bg-white/70">
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="border-b border-ink-navy/10 text-xs uppercase tracking-wide text-ink-navy/50">
-              <th className="px-4 py-3 font-medium">Customer</th>
-              <th className="px-4 py-3 font-medium">
-                <span className="sr-only">Artwork</span>
-              </th>
-              <th className="px-4 py-3 font-medium">Type</th>
-              <th className="px-4 py-3 font-medium">Configuration</th>
-              <th className="px-4 py-3 font-medium text-right">Qty</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((order, orderIndex) => {
-              const href = `/admin/orders/${order.id}`;
-              // Every order has at least one item by the time checkout completes, but
-              // fall back to a single placeholder row so a malformed order still renders.
-              const rows = order.items.length > 0 ? order.items : [null];
-
-              return rows.map((item, itemIndex) => {
-                const isFirstRow = itemIndex === 0;
-                const addOns = item ? formatAddOns(item) : "";
-                const sizeLine = item
-                  ? `${formatSizeMm(Number(item.widthCm))} x ${formatSizeMm(Number(item.heightCm))}${addOns ? ` · ${addOns}` : ""}`
-                  : "";
-
-                return (
-                  <tr
-                    key={item ? item.id : order.id}
-                    className={`border-b border-ink-navy/5 last:border-0 hover:bg-ink-navy/[0.03] ${
-                      isFirstRow && orderIndex > 0 ? "border-t border-t-ink-navy/10" : ""
-                    }`}
-                  >
-                    {isFirstRow && (
-                      <td className="px-0 py-0 align-top" rowSpan={rows.length}>
-                        <Link href={href} className="flex items-center gap-3 px-4 py-3">
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink-navy/10 text-xs font-semibold text-ink-navy">
-                            {getInitials(order.customerName)}
-                          </span>
+        {orders.length === 0 ? (
+          <EmptyMessage>
+            {activeStatus ? `No orders are ${ORDER_STATUS_LABELS[activeStatus].toLowerCase()} right now.` : "No orders yet."}
+          </EmptyMessage>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[920px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-admin-line bg-admin-canvas/60 text-xs font-medium text-admin-muted">
+                  <th scope="col" className="px-5 py-3 font-medium">Order</th>
+                  <th scope="col" className="px-5 py-3 font-medium">Customer</th>
+                  <th scope="col" className="px-5 py-3 font-medium">Items</th>
+                  <th scope="col" className="px-5 py-3 text-right font-medium">Qty</th>
+                  <th scope="col" className="px-5 py-3 text-right font-medium">Total</th>
+                  <th scope="col" className="px-5 py-3 font-medium">Status</th>
+                  <th scope="col" className="w-12 px-5 py-3">
+                    <span className="sr-only">Open</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-admin-line">
+                {orders.map((order) => {
+                  const href = `/admin/orders/${order.id}`;
+                  const first = order.items[0];
+                  const totalQty = order.items.reduce((sum, i) => sum + i.quantity, 0);
+                  return (
+                    <tr key={order.id} className="transition-colors hover:bg-admin-canvas/60">
+                      <td className="px-5 py-3.5 align-middle">
+                        <Link href={href} className="flex flex-col gap-0.5">
+                          <span className="font-mono text-[13px] font-semibold text-admin-ink">{orderNumber(order.id)}</span>
+                          <span className="text-xs text-admin-muted">{formatAdminDate(order.createdAt)}</span>
+                        </Link>
+                      </td>
+                      <td className="px-5 py-3.5 align-middle">
+                        <Link href={href} className="flex items-center gap-3">
+                          <Avatar name={order.customerName} />
                           <span className="min-w-0">
-                            <span className="block truncate font-medium text-ink-navy">
-                              {order.customerName}
-                            </span>
-                            <span className="block truncate text-xs text-ink-navy/50">
-                              {order.email}
-                            </span>
+                            <span className="block max-w-[200px] truncate font-medium text-admin-ink">{order.customerName}</span>
+                            <span className="block max-w-[200px] truncate text-xs text-admin-muted">{order.email}</span>
                           </span>
                         </Link>
                       </td>
-                    )}
-                    <td className="px-4 py-3">
-                      {item ? (
-                        <div className="flex items-center gap-2">
-                          {/* eslint-disable-next-line @next/next/no-img-element -- Cloudinary URL, no next/image remote pattern configured */}
-                          <img
-                            src={item.artworkUrl}
-                            alt=""
-                            className="h-10 w-10 shrink-0 rounded-lg border border-ink-navy/10 object-cover"
-                          />
-                          <a
-                            href={toArtworkDownloadUrl(item.artworkUrl)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs font-medium text-coral-signal underline underline-offset-2 hover:text-coral-signal/80"
-                          >
-                            Download
-                          </a>
-                        </div>
-                      ) : (
-                        <span className="text-ink-navy/30">—</span>
-                      )}
-                    </td>
-                    <td className="px-0 py-0">
-                      <Link href={href} className="block px-4 py-3 text-ink-navy/70">
-                        {item ? STICKER_TYPE_LABELS[item.stickerType] : "—"}
-                      </Link>
-                    </td>
-                    <td className="px-0 py-0">
-                      <Link href={href} className="block px-4 py-3">
-                        <span className="block text-ink-navy/70">
-                          {item
-                            ? itemSpecLine(item)
-                            : "—"}
-                        </span>
-                        {sizeLine && (
-                          <span className="block text-xs text-ink-navy/50">{sizeLine}</span>
-                        )}
-                      </Link>
-                    </td>
-                    <td className="px-0 py-0">
-                      <Link
-                        href={href}
-                        className="block px-4 py-3 text-right font-mono text-ink-navy/70"
-                      >
-                        {item ? item.quantity.toLocaleString("en-ZA") : "—"}
-                      </Link>
-                    </td>
-                    {isFirstRow && (
-                      <td className="px-4 py-3 align-top" rowSpan={rows.length}>
+                      <td className="px-5 py-3.5 align-middle">
+                        <Link href={href} className="flex items-center gap-3">
+                          <span className="flex shrink-0 -space-x-3">
+                            {order.items.slice(0, 3).map((item) => (
+                              <ArtworkThumb key={item.id} url={item.artworkUrl} size={40} checker className="ring-2 ring-white" />
+                            ))}
+                          </span>
+                          {first ? (
+                            <span className="min-w-0">
+                              <span className="block max-w-[240px] truncate font-medium text-admin-ink">
+                                {STICKER_TYPE_LABELS[first.stickerType]}
+                                {order.items.length > 1 && (
+                                  <span className="font-normal text-admin-muted"> + {order.items.length - 1} more</span>
+                                )}
+                              </span>
+                              <span className="block max-w-[240px] truncate text-xs text-admin-muted">{itemSpecLine(first)}</span>
+                            </span>
+                          ) : (
+                            <span className="text-admin-faint">No items</span>
+                          )}
+                        </Link>
+                      </td>
+                      <td className="px-5 py-3.5 text-right align-middle tabular-nums text-admin-ink">
+                        {totalQty.toLocaleString("en-ZA")}
+                      </td>
+                      <td className="px-5 py-3.5 text-right align-middle font-medium tabular-nums text-admin-ink">
+                        {formatCurrency(Number(order.totalPrice))}
+                      </td>
+                      <td className="px-5 py-3.5 align-middle">
                         <OrderStatusSelect orderId={order.id} status={order.status} />
                       </td>
-                    )}
-                    {isFirstRow && (
-                      <td className="px-0 py-0 align-top" rowSpan={rows.length}>
+                      <td className="px-5 py-3.5 align-middle">
                         <Link
                           href={href}
-                          className="block px-4 py-3 font-mono text-xs text-ink-navy/60"
+                          aria-label={`Open order ${orderNumber(order.id)}`}
+                          className="flex size-8 items-center justify-center rounded-lg text-admin-faint hover:bg-admin-canvas hover:text-admin-ink"
                         >
-                          {order.createdAt.toLocaleDateString("en-ZA", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
+                          <AdminIcon name="chevron-right" className="size-4" />
                         </Link>
                       </td>
-                    )}
-                  </tr>
-                );
-              });
-            })}
-            {orders.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-ink-navy/50">
-                  No orders {activeStatus ? `with status "${ORDER_STATUS_LABELS[activeStatus]}"` : "yet"}.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {totalCount > 0 && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-ink-navy/60">
-          <p>
-            Showing <span className="font-mono text-ink-navy">{rangeStart}</span>–
-            <span className="font-mono text-ink-navy">{rangeEnd}</span> of{" "}
-            <span className="font-mono text-ink-navy">{totalCount}</span> orders
-          </p>
-          <div className="flex gap-2">
-            <PageLink href={ordersHref(activeStatus, page - 1)} disabled={page <= 1}>
-              Prev
-            </PageLink>
-            <PageLink href={ordersHref(activeStatus, page + 1)} disabled={page >= totalPages}>
-              Next
-            </PageLink>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-        </div>
-      )}
-    </main>
-  );
-}
+        )}
 
-function FilterPill({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-        active
-          ? "border-coral-signal bg-coral-signal text-paper"
-          : "border-ink-navy/15 text-ink-navy/70 hover:border-ink-navy/30"
-      }`}
-    >
-      {children}
-    </Link>
-  );
-}
-
-function PageLink({
-  href,
-  disabled,
-  children,
-}: {
-  href: string;
-  disabled: boolean;
-  children: React.ReactNode;
-}) {
-  if (disabled) {
-    return (
-      <span className="cursor-not-allowed rounded-lg border border-ink-navy/10 px-3 py-1.5 text-ink-navy/30">
-        {children}
-      </span>
-    );
-  }
-  return (
-    <Link
-      href={href}
-      className="rounded-lg border border-ink-navy/15 px-3 py-1.5 text-ink-navy/70 hover:border-ink-navy/30 hover:text-ink-navy"
-    >
-      {children}
-    </Link>
+        {totalCount > 0 && (
+          <AdminPagination
+            start={rangeStart}
+            end={rangeEnd}
+            total={totalCount}
+            noun={totalCount === 1 ? "order" : "orders"}
+            prevHref={page > 1 ? ordersHref(activeStatus, page - 1) : undefined}
+            nextHref={page < totalPages ? ordersHref(activeStatus, page + 1) : undefined}
+          />
+        )}
+      </section>
+    </>
   );
 }

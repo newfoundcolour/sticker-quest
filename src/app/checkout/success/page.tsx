@@ -51,6 +51,7 @@ export default async function CheckoutSuccessPage({
 
   const firstName = order.customerName.split(" ")[0];
   const shippingFee = Number(order.shippingFee);
+  const discountAmount = Number(order.discountAmount);
 
   return (
     <main className="relative isolate flex flex-1 flex-col bg-night">
@@ -126,6 +127,12 @@ export default async function CheckoutSuccessPage({
               </ul>
 
               <div className="flex flex-col gap-2 border-y border-sand-line py-3 text-sm">
+                {discountAmount > 0 && (
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="font-bold text-night">Discount{order.discountCodeText ? ` (${order.discountCodeText})` : ""}</span>
+                    <span className="shrink-0 font-extrabold text-orchid tabular-nums">−{formatCurrency(discountAmount)}</span>
+                  </div>
+                )}
                 <div className="flex items-start justify-between gap-4">
                   <span className="font-bold text-night">Shipping</span>
                   <span className="shrink-0 font-extrabold text-night tabular-nums">

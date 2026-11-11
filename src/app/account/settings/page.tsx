@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { StepCard } from "@/components/configurator/StepCard";
-import { FormMessage } from "@/components/auth/fields";
+import { DarkFields, FormMessage } from "@/components/auth/fields";
+import { AccountCard } from "@/components/account/AccountCard";
 import { AccountPageHeader } from "@/components/account/AccountPageHeader";
 import { AddressForm, EmailForm, PasswordForm, ProfileForm } from "@/components/account/SettingsForms";
 import { prisma } from "@/lib/prisma";
@@ -13,6 +13,9 @@ const EMAIL_NOTICES: Record<string, { tone: "success" | "info"; text: string }> 
   updated: { tone: "success", text: "All done. Your new email is the one you log in with now." },
   half: { tone: "info", text: "One down! Now click the link we sent to your other inbox to finish the switch." },
 };
+
+/** Card body padding, below the title row. */
+const BODY = "border-t border-white/[0.06] px-6 pb-6 pt-5";
 
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ email?: string }> }) {
   const user = await requireVerifiedUser("/account/settings");
@@ -31,49 +34,51 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <AccountPageHeader title="Settings" intro="Your details, delivery address, login email and password." />
-      <div className="flex max-w-[720px] flex-col gap-6">
-        {notice && <FormMessage tone={notice.tone}>{notice.text}</FormMessage>}
+      <DarkFields>
+        <div className="flex max-w-[720px] flex-col gap-6">
+          {notice && <FormMessage tone={notice.tone}>{notice.text}</FormMessage>}
 
-        <StepCard icon="🙂" title="Profile">
-          <div className="p-6 sm:p-7">
-            <ProfileForm
-              defaults={{
-                firstName: profile?.firstName ?? "",
-                lastName: profile?.lastName ?? "",
-                company: profile?.company ?? "",
-                phone: profile?.phone ?? "",
-                instagramHandle: profile?.instagramHandle ?? "",
-              }}
-            />
-          </div>
-        </StepCard>
+          <AccountCard title="Profile" description="Who we're making stickers for.">
+            <div className={BODY}>
+              <ProfileForm
+                defaults={{
+                  firstName: profile?.firstName ?? "",
+                  lastName: profile?.lastName ?? "",
+                  company: profile?.company ?? "",
+                  phone: profile?.phone ?? "",
+                  instagramHandle: profile?.instagramHandle ?? "",
+                }}
+              />
+            </div>
+          </AccountCard>
 
-        <StepCard icon="📦" title="Delivery address">
-          <div className="p-6 sm:p-7">
-            <AddressForm
-              defaults={{
-                addressLine1: delivery.addressLine1,
-                addressLine2: delivery.addressLine2,
-                city: delivery.city,
-                province: delivery.province,
-                postalCode: delivery.postalCode,
-              }}
-            />
-          </div>
-        </StepCard>
+          <AccountCard title="Delivery address" description="Where your orders get shipped.">
+            <div className={BODY}>
+              <AddressForm
+                defaults={{
+                  addressLine1: delivery.addressLine1,
+                  addressLine2: delivery.addressLine2,
+                  city: delivery.city,
+                  province: delivery.province,
+                  postalCode: delivery.postalCode,
+                }}
+              />
+            </div>
+          </AccountCard>
 
-        <StepCard icon="✉️" title="Email">
-          <div className="p-6 sm:p-7">
-            <EmailForm currentEmail={user.email ?? ""} pendingEmail={user.new_email} />
-          </div>
-        </StepCard>
+          <AccountCard title="Email" description="The address you log in with.">
+            <div className={BODY}>
+              <EmailForm currentEmail={user.email ?? ""} pendingEmail={user.new_email} />
+            </div>
+          </AccountCard>
 
-        <StepCard icon="🔒" title="Account security">
-          <div className="p-6 sm:p-7">
-            <PasswordForm />
-          </div>
-        </StepCard>
-      </div>
+          <AccountCard title="Account security" description="Change your password.">
+            <div className={BODY}>
+              <PasswordForm />
+            </div>
+          </AccountCard>
+        </div>
+      </DarkFields>
     </>
   );
 }

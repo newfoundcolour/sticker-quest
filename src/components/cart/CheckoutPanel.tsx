@@ -1,10 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useActionState, useCallback, useEffect, useRef, useState } from "react";
 import { checkoutAction, saveDeliveryDetailsAction, type CheckoutState } from "@/app/actions/checkout";
-import { ZAP_BUTTON_CLASSES } from "@/components/buttonStyles";
-import { FormMessage } from "@/components/auth/fields";
+import { ZAP_BUTTON_CLASSES, ZAP_BUTTON_SLIM_CLASSES } from "@/components/buttonStyles";
+import { DarkFields, FormMessage } from "@/components/auth/fields";
 import { AddressFields, ContactFields, type DeliveryValues } from "@/components/checkout/DeliveryFields";
 
 /** Where the customer stands, worked out by the cart page (and re-checked by the server). */
@@ -114,15 +115,19 @@ export function CheckoutPanel({
 
   return (
     <>
-      {state?.reason === "cart" && <FormMessage tone="error">{state.message}</FormMessage>}
+      {state?.reason === "cart" && (
+        <DarkFields>
+          <FormMessage tone="error">{state.message}</FormMessage>
+        </DarkFields>
+      )}
 
       {blocked ? (
-        <p role="status" className="rounded-xl border-[1.5px] border-blaze bg-blaze/10 px-4 py-3 text-sm font-bold text-night">
+        <p role="status" className="rounded-xl border-[1.5px] border-blaze bg-blaze/15 px-4 py-3 text-sm font-bold text-sand">
           Remove the stickers that can&apos;t be ordered any more to carry on.
         </p>
       ) : current === "ready" ? (
         <form action={checkout}>
-          <button type="submit" disabled={placing} className={`${ZAP_BUTTON_CLASSES} w-full`}>
+          <button type="submit" disabled={placing} className={`${ZAP_BUTTON_SLIM_CLASSES} w-full`}>
             {placing ? (
               "Placing your order…"
             ) : (
@@ -133,15 +138,15 @@ export function CheckoutPanel({
           </button>
         </form>
       ) : (
-        <button type="button" onClick={() => open("checkout")} aria-haspopup="dialog" className={`${ZAP_BUTTON_CLASSES} w-full`}>
+        <button type="button" onClick={() => open("checkout")} aria-haspopup="dialog" className={`${ZAP_BUTTON_SLIM_CLASSES} w-full`}>
           Checkout <span aria-hidden className="text-xl font-normal">→</span>
         </button>
       )}
 
       {current === "ready" && (
-        <div className="flex items-start justify-between gap-3 rounded-xl bg-sand-well px-4 py-3 text-[13px] leading-normal">
-          <p className="min-w-0 text-stone-deep">
-            <span className="block font-bold text-night">Delivering to</span>
+        <div className="flex items-start justify-between gap-3 rounded-xl border border-grape bg-well px-4 py-3 text-[13px] leading-normal">
+          <p className="min-w-0 text-dusk-note">
+            <span className="block font-bold text-sand">Delivering to</span>
             {saved.firstName} {saved.lastName} · {saved.phone}
             <br />
             {[saved.addressLine1, saved.addressLine2, saved.city, saved.province, saved.postalCode].filter(Boolean).join(", ")}
@@ -150,7 +155,7 @@ export function CheckoutPanel({
             type="button"
             onClick={() => open("edit")}
             aria-haspopup="dialog"
-            className="shrink-0 text-xs font-bold text-night underline underline-offset-2 hover:text-grape"
+            className="shrink-0 text-xs font-bold text-sand underline underline-offset-2 hover:text-zap"
           >
             Change
           </button>
@@ -158,11 +163,30 @@ export function CheckoutPanel({
       )}
 
       {email ? (
-        <p className="truncate text-center text-xs text-stone">
-          Logged in as <span className="font-bold text-night">{email}</span>
+        // Figma "Account status – logged in"
+        <p className="flex min-w-0 items-center justify-center gap-1.5 text-xs text-dusk-note">
+          <span aria-hidden className="flex size-[18px] shrink-0 items-center justify-center rounded-full bg-grape">
+            <Image src="/icons/check.svg" alt="" width={10} height={10} />
+          </span>
+          <span className="truncate">
+            Logged in as <span className="font-bold">{email}</span>
+          </span>
         </p>
       ) : (
-        <p className="text-center text-xs text-stone">You&apos;ll need a free account to check out.</p>
+        // Figma "Guest checkout state"
+        <div className="flex flex-col gap-2 rounded-xl border border-grape bg-well p-3">
+          <p className="flex items-center gap-1.5 text-xs font-bold text-sand">
+            <Image src="/icons/lock.svg" alt="" width={14} height={14} className="shrink-0" />
+            Create an account to checkout
+          </p>
+          <p className="text-[11px] leading-[1.4] text-dusk-note">An account is required before checkout.</p>
+          <Link
+            href="/signup"
+            className="flex items-center justify-center rounded-full bg-grape px-4 py-2 text-[13px] font-black text-sand transition-colors hover:bg-grape/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zap"
+          >
+            Create an account <span aria-hidden>&nbsp;→</span>
+          </Link>
+        </div>
       )}
 
       <dialog

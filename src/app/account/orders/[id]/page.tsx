@@ -133,6 +133,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               );
             })}
           </ul>
+          {Number(order.discountAmount) > 0 && (
+            <div className="flex items-center justify-between border-t-[1.5px] border-grape/30 px-5 py-3 text-sm sm:px-6">
+              <span className="text-quiet">Discount{order.discountCodeText ? ` (${order.discountCodeText})` : ""}</span>
+              <span className="font-extrabold text-orchid">−{formatCurrency(Number(order.discountAmount))}</span>
+            </div>
+          )}
           {Number(order.shippingFee) > 0 && (
             <div className="flex items-center justify-between border-t-[1.5px] border-grape/30 px-5 py-3 text-sm sm:px-6">
               <span className="text-quiet">Shipping (The Courier Guy)</span>

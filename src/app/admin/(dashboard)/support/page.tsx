@@ -1,9 +1,19 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
 import { requireStaff } from "@/lib/auth";
-import { ADMIN_SUPPORT_PAGE_SIZE, listConversationsForAdmin } from "@/lib/support";
+import { ADMIN_SUPPORT_PAGE_SIZE, getSupportCountsForStaff, listConversationsForAdmin } from "@/lib/support";
 import { orderNumber } from "@/lib/orderLabels";
 import { CONVERSATION_STATUS_LABELS, SUPPORT_CATEGORY_LABELS } from "@/lib/supportLabels";
+import {
+  AdminIcon,
+  AdminPageHeader,
+  AdminPagination,
+  AdminTabs,
+  Avatar,
+  CARD_CLASSES,
+  ConversationStatusBadge,
+  EmptyMessage,
+  LINK_CLASSES,
+} from "@/components/admin/ui";
 import type { ConversationStatus } from "@/generated/prisma/client";
 
 function isStatus(v: string | undefined): v is ConversationStatus {
@@ -18,8 +28,8 @@ function inboxHref(status: ConversationStatus | undefined, page: number) {
   return `/admin/support${qs ? `?${qs}` : ""}`;
 }
 
-function initials(first: string, last: string, email: string) {
-  return (`${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase() || email[0]?.toUpperCase()) ?? "?";
+function formatActivity(date: Date): string {
+  return date.toLocaleString("en-ZA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
 export default async function AdminSupportPage({
@@ -31,138 +41,101 @@ export default async function AdminSupportPage({
   const { status: statusParam, page: pageParam } = await searchParams;
   const status = isStatus(statusParam) ? statusParam : undefined;
   const page = Math.max(1, Math.min(1000, Number(pageParam) || 1));
-  const { conversations, totalCount } = await listConversationsForAdmin({ status, page });
+  const [{ conversations, totalCount }, counts] = await Promise.all([
+    listConversationsForAdmin({ status, page }),
+    getSupportCountsForStaff(),
+  ]);
   const totalPages = Math.max(1, Math.ceil(totalCount / ADMIN_SUPPORT_PAGE_SIZE));
+  const rangeStart = totalCount === 0 ? 0 : (page - 1) * ADMIN_SUPPORT_PAGE_SIZE + 1;
+  const rangeEnd = Math.min(page * ADMIN_SUPPORT_PAGE_SIZE, totalCount);
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-6 py-10">
-      <h1 className="font-display text-2xl font-semibold text-ink-navy">Support</h1>
+    <>
+      <AdminPageHeader
+        title="Support"
+        description={
+          counts.unreadConversations > 0
+            ? `${counts.unreadConversations} ${counts.unreadConversations === 1 ? "conversation needs" : "conversations need"} a reply. Open ones are listed first.`
+            : "You're all caught up. Open conversations are listed first."
+        }
+      />
 
-      <div className="mt-6 flex flex-wrap gap-2">
-        <FilterPill href={inboxHref(undefined, 1)} active={!status}>
-          All
-        </FilterPill>
-        <FilterPill href={inboxHref("OPEN", 1)} active={status === "OPEN"}>
-          Open
-        </FilterPill>
-        <FilterPill href={inboxHref("RESOLVED", 1)} active={status === "RESOLVED"}>
-          Resolved
-        </FilterPill>
-      </div>
+      <section className={`${CARD_CLASSES} overflow-hidden`}>
+        <AdminTabs
+          label="Filter by status"
+          tabs={[
+            { href: inboxHref(undefined, 1), label: "All", active: !status },
+            { href: inboxHref("OPEN", 1), label: "Open", count: counts.open, active: status === "OPEN" },
+            { href: inboxHref("RESOLVED", 1), label: "Resolved", active: status === "RESOLVED" },
+          ]}
+        />
 
-      <div className="mt-6 overflow-x-auto rounded-2xl border border-ink-navy/10 bg-white/70">
-        <table className="w-full min-w-[760px] text-left text-sm">
-          <thead>
-            <tr className="border-b border-ink-navy/10 text-xs uppercase tracking-wide text-ink-navy/50">
-              <th className="px-4 py-3 font-medium">Customer</th>
-              <th className="px-4 py-3 font-medium">Category</th>
-              <th className="px-4 py-3 font-medium">Last message</th>
-              <th className="px-4 py-3 font-medium">Order</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Last activity</th>
-            </tr>
-          </thead>
-          <tbody>
+        {conversations.length === 0 ? (
+          <EmptyMessage>No {status ? CONVERSATION_STATUS_LABELS[status].toLowerCase() : ""} conversations.</EmptyMessage>
+        ) : (
+          <ul className="divide-y divide-admin-line">
             {conversations.map((c) => {
               const href = `/admin/support/${c.id}`;
               const unread = c.unread > 0;
               const name = `${c.user.firstName} ${c.user.lastName}`.trim() || c.user.email;
               return (
-                <tr
-                  key={c.id}
-                  className={`border-b border-ink-navy/5 last:border-0 hover:bg-ink-navy/[0.03] ${unread ? "bg-waypoint-gold/10" : ""}`}
-                >
-                  <td className="px-0 py-0">
-                    <Link href={href} className="flex items-center gap-3 px-4 py-3">
-                      <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink-navy/10 text-xs font-semibold text-ink-navy">
-                        {initials(c.user.firstName, c.user.lastName, c.user.email)}
-                        {unread && (
-                          <span className="absolute -right-0.5 -top-0.5 size-3 rounded-full border-2 border-paper bg-coral-signal">
-                            <span className="sr-only">Unread</span>
-                          </span>
+                <li key={c.id} className={`relative transition-colors hover:bg-admin-canvas/60 ${unread ? "bg-grape/[0.04]" : ""}`}>
+                  {unread && <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-grape" />}
+                  <div className="flex items-center gap-4 px-5 py-4">
+                    <Link href={href} className="flex min-w-0 flex-1 items-center gap-4">
+                      <Avatar name={name} />
+                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <span className="flex flex-wrap items-center gap-x-2">
+                          <span className={`truncate text-admin-ink ${unread ? "font-semibold" : "font-medium"}`}>{name}</span>
+                          <span className="text-xs text-admin-muted">· {SUPPORT_CATEGORY_LABELS[c.category]}</span>
+                          {unread && (
+                            <span className="rounded-full bg-grape px-1.5 text-[11px] font-semibold leading-[18px] text-white">
+                              New
+                            </span>
+                          )}
+                        </span>
+                        <span className={`truncate text-sm ${unread ? "text-admin-ink" : "text-admin-muted"}`}>
+                          {c.lastMessage?.sender === "STAFF" ? "You: " : ""}
+                          {c.lastMessage?.body ?? ""}
+                        </span>
+                      </span>
+                    </Link>
+                    <div className="hidden shrink-0 flex-col items-end gap-1.5 sm:flex">
+                      <span className="text-xs text-admin-muted tabular-nums">{formatActivity(c.lastMessageAt)}</span>
+                      <div className="flex items-center gap-2">
+                        {c.order && (
+                          <Link href={`/admin/orders/${c.order.id}`} className={`font-mono text-xs ${LINK_CLASSES}`}>
+                            {orderNumber(c.order.id)}
+                          </Link>
                         )}
-                      </span>
-                      <span className="min-w-0">
-                        <span className={`block truncate text-ink-navy ${unread ? "font-semibold" : "font-medium"}`}>{name}</span>
-                        <span className="block truncate text-xs text-ink-navy/50">{c.user.email}</span>
-                      </span>
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-ink-navy/70">{SUPPORT_CATEGORY_LABELS[c.category]}</td>
-                  <td className="max-w-[320px] px-0 py-0">
-                    <Link href={href} className={`block truncate px-4 py-3 ${unread ? "font-semibold text-ink-navy" : "text-ink-navy/60"}`}>
-                      {c.lastMessage?.sender === "STAFF" ? "You: " : ""}
-                      {c.lastMessage?.body ?? ""}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 font-mono text-xs">
-                    {c.order ? (
-                      <Link href={`/admin/orders/${c.order.id}`} className="text-coral-signal underline underline-offset-2">
-                        {orderNumber(c.order.id)}
-                      </Link>
-                    ) : (
-                      <span className="text-ink-navy/30">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                        c.status === "OPEN" ? "bg-trail-teal/15 text-trail-teal" : "bg-ink-navy/10 text-ink-navy/60"
-                      }`}
+                        <ConversationStatusBadge status={c.status} />
+                      </div>
+                    </div>
+                    <Link
+                      href={href}
+                      aria-label={`Open conversation with ${name}`}
+                      className="flex size-8 shrink-0 items-center justify-center rounded-lg text-admin-faint hover:bg-admin-canvas hover:text-admin-ink"
                     >
-                      {CONVERSATION_STATUS_LABELS[c.status]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 font-mono text-xs text-ink-navy/60">
-                    {c.lastMessageAt.toLocaleString("en-ZA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                  </td>
-                </tr>
+                      <AdminIcon name="chevron-right" className="size-4" />
+                    </Link>
+                  </div>
+                </li>
               );
             })}
-            {conversations.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-ink-navy/50">
-                  No {status ? CONVERSATION_STATUS_LABELS[status].toLowerCase() : ""} conversations.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+          </ul>
+        )}
 
-      {totalCount > ADMIN_SUPPORT_PAGE_SIZE && (
-        <div className="mt-4 flex items-center justify-between text-sm text-ink-navy/60">
-          <p>
-            Page <span className="font-mono text-ink-navy">{page}</span> of{" "}
-            <span className="font-mono text-ink-navy">{totalPages}</span>
-          </p>
-          <div className="flex gap-2">
-            {page > 1 && (
-              <Link href={inboxHref(status, page - 1)} className="rounded-lg border border-ink-navy/15 px-3 py-1.5 hover:border-ink-navy/30">
-                Prev
-              </Link>
-            )}
-            {page < totalPages && (
-              <Link href={inboxHref(status, page + 1)} className="rounded-lg border border-ink-navy/15 px-3 py-1.5 hover:border-ink-navy/30">
-                Next
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
-    </main>
-  );
-}
-
-function FilterPill({ href, active, children }: { href: string; active: boolean; children: ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-        active ? "border-coral-signal bg-coral-signal text-paper" : "border-ink-navy/15 text-ink-navy/70 hover:border-ink-navy/30"
-      }`}
-    >
-      {children}
-    </Link>
+        {totalCount > 0 && (
+          <AdminPagination
+            start={rangeStart}
+            end={rangeEnd}
+            total={totalCount}
+            noun={totalCount === 1 ? "conversation" : "conversations"}
+            prevHref={page > 1 ? inboxHref(status, page - 1) : undefined}
+            nextHref={page < totalPages ? inboxHref(status, page + 1) : undefined}
+          />
+        )}
+      </section>
+    </>
   );
 }

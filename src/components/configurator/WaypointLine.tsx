@@ -1,4 +1,4 @@
-import { Mascot } from "./Mascot";
+import { Character } from "@/components/Character";
 
 export type WaypointStep = {
   key: string;
@@ -23,7 +23,7 @@ export function WaypointLine({
         className="absolute left-0 top-14 -translate-y-1/2 transition-[left] duration-500 ease-out"
         style={{ left: `${mascotLeft}%` }}
       >
-        <Mascot className="w-12 h-12 -translate-x-1/2 drop-shadow-sm" />
+        <Character name="wizard" size={56} className="-translate-x-1/2 -translate-y-3" />
       </div>
 
       <div className="relative grid" style={{ gridTemplateColumns: `repeat(${steps.length}, 1fr)` }}>

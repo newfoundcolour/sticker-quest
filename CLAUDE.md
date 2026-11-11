@@ -16,7 +16,7 @@ Visual/design decisions must follow `DESIGN.md` in the project root.
 - **Private files:** Supabase Storage — buckets `proofs` and `support-attachments` (private)
 - **Payments:** PayFast — charged upfront at checkout (not integrated yet; `Order` has no `paymentStatus` — see `TODO(payfast)`)
 - **Shipping:** The Courier Guy — manual booking for v1, no API integration yet. A flat fee (`PricingSetting` key `SHIPPING_FLAT_FEE`) is added once per order by `getPricedCart`; `Order.shippingFee` records it and `Order.totalPrice` includes it.
-- **Discount codes:** not built yet — the cart shows a placeholder Discount card (`src/components/cart/DiscountCard.tsx`, `TODO(discounts)`) that never changes the price
+- **Discount codes:** staff manage them at `/admin/discounts`; customers apply one in the cart's Discount card. Percentage or fixed rand off the **items subtotal only** (never shipping), with optional start/end dates (SA calendar days), total uses, once per customer and minimum order. Only the code text lives in a cookie (`sq_discount`); `getPricedCart` re-checks it on every read (`checkDiscount` in `src/lib/discounts.ts`), and checkout re-checks it inside a transaction with the `DiscountCode` row locked (`FOR UPDATE`) so usage limits hold under concurrent checkouts. A code that stops applying blocks checkout until it's removed (never a silent full-price charge). Applying is rate-limited per IP.
 
 ## Product configurator
 
@@ -59,7 +59,8 @@ Three roles, stored **only** in `Profile.role` (a server-side table): **customer
 - **Auth:** `/signup`, `/login`, `/forgot-password`, `/reset-password`, `/auth/confirm` (Supabase email links: `token_hash` + `type`, or PKCE `code`), `/terms`, `/privacy` (placeholders)
 - **Account:** `/account` (dashboard), `/account/orders`, `/account/orders/[id]`, `/account/reorder`, `/account/proofs`, `/account/proofs/[id]`, `/account/proofs/[id]/file`, `/account/support`, `/account/support/new`, `/account/support/[id]`, `/account/support/attachments/[messageId]`, `/account/settings`
 - **Reorder:** `/configure/[type]?reorder=<orderItemId>` prefills the configurator from the customer's own item
-- **Admin:** `/admin/login`, `/admin/orders`, `/admin/orders/[id]` (with Proofs panel), `/admin/proofs/[id]/file`, `/admin/support`, `/admin/support/[id]`, `/admin/support/attachments/[messageId]`
+- **Admin:** `/admin/login`, `/admin/orders`, `/admin/orders/[id]` (with Proofs panel), `/admin/proofs/[id]/file`, `/admin/support`, `/admin/support/[id]`, `/admin/support/attachments/[messageId]`, `/admin/discounts`, `/admin/discounts/new`, `/admin/discounts/[id]`, `/admin/blog`, `/admin/blog/new`, `/admin/blog/[id]`
+- **Blog:** `/blog` (published posts, newest first), `/blog/[slug]`
 
 ## Data model (beyond orders/pricing)
 
@@ -67,6 +68,8 @@ Three roles, stored **only** in `Profile.role` (a server-side table): **customer
 - **Order.userId** (nullable) — guest orders stay valid; past guest orders are linked by email **only after Supabase has verified that email** (`linkGuestOrders`).
 - **Proof** — orderId, version (unique per order, never overwritten), storagePath, originalFilename, mimeType, sizeBytes, status (pending/approved/rejected; "superseded" is computed), customerComment, decidedAt, decidedBy, decisionSource (customer / staff_on_behalf), uploadedBy.
 - **SupportConversation** — userId, category, orderId?, status (open/resolved), lastMessageAt, resolvedAt. **SupportMessage** — sender (customer/staff), senderUserId, body (plain text ≤ 5,000), attachmentPath?, readAt.
+- **DiscountCode** — code (unique, upper-case), description?, type (PERCENT/FIXED), value, minOrderTotal?, startsAt?, endsAt?, maxUses?, oncePerCustomer, active. A used code can be turned off but not deleted or renamed. **Order** keeps discountCodeId? (SetNull), discountCodeText and discountAmount; `totalPrice` = items − discount + shipping.
+- **BlogPost** — slug (unique, fixed once first published), title, excerpt, body (Markdown), coverImageUrl? (our Cloudinary `sticker-quest/blog` folder only, `isOwnBlogImageUrl`), coverImageAlt?, status (draft/submitted/published), authorId? (SetNull), submittedAt, publishedAt (first time live), reviewNote. Staff see and edit only their own drafts and submit them; once submitted they're locked until an admin publishes or sends them back with a note. Only admins publish, unpublish, edit live posts and see everyone's posts (`canEditPost` / `canViewPost` in `src/lib/blog.ts`; every action re-checks). Bodies render with react-markdown (`src/components/blog/Markdown.tsx`): no raw HTML, no images in the body, unsafe link targets stripped.
 - **RateLimit** — fixed-window counters for our own actions (`src/lib/rateLimit.ts`).
 
 ## Security rules (keep these when adding features)

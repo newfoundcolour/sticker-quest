@@ -7,8 +7,12 @@ import { MIN_QUANTITY } from "@/lib/pricingUtils";
 
 const CUSTOM = "custom";
 
-const CONTROL_CLASSES =
-  "h-9 rounded-[9px] border-[1.5px] border-pebble bg-transparent px-3.5 text-sm font-extrabold text-night outline-none focus-visible:border-grape focus-visible:ring-2 focus-visible:ring-grape/30";
+/** Figma "Qty selector": a grape pill. */
+const PILL_CLASSES =
+  "h-9 rounded-full bg-grape px-3.5 text-sm font-extrabold text-white outline-none transition-colors hover:bg-grape/85 focus-visible:ring-2 focus-visible:ring-zap focus-visible:ring-offset-2 focus-visible:ring-offset-dusk";
+
+const INPUT_CLASSES =
+  "h-9 w-28 rounded-full border-[1.5px] border-grape bg-well px-3.5 text-sm font-extrabold text-sand outline-none focus-visible:border-zap";
 
 /**
  * A cart line's quantity: the configurator's presets in a dropdown (saved as
@@ -54,59 +58,45 @@ export function QuantityPicker({ itemId, quantity, unit }: { itemId: string; qua
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             autoFocus
-            className={`${CONTROL_CLASSES} w-28`}
+            className={INPUT_CLASSES}
           />
           <button
             type="submit"
             disabled={pending}
-            className="h-9 rounded-[9px] bg-night px-3 text-xs font-black text-white disabled:opacity-60"
+            className="h-9 rounded-full bg-zap px-3.5 text-xs font-black text-night disabled:opacity-60"
           >
             {pending ? "Saving…" : "Update"}
           </button>
           <button
             type="button"
             onClick={() => setCustom(false)}
-            className="text-xs font-bold text-stone underline underline-offset-2 hover:text-night"
+            className="text-xs font-bold text-dusk-note underline underline-offset-2 hover:text-sand"
           >
             Cancel
           </button>
         </form>
       ) : (
-        <div className="relative">
-          <select
-            id={id}
-            value={quantity}
-            disabled={pending}
-            onChange={(e) => {
-              if (e.target.value === CUSTOM) {
-                setDraft(String(quantity));
-                setCustom(true);
-              } else {
-                save(Number(e.target.value));
-              }
-            }}
-            className={`${CONTROL_CLASSES} cursor-pointer appearance-none pr-9 disabled:opacity-60`}
-          >
-            {options.map((q) => (
-              <option key={q} value={q}>
-                {q.toLocaleString("en-ZA")} {unit}
-              </option>
-            ))}
-            <option value={CUSTOM}>Other amount…</option>
-          </select>
-          <svg
-            aria-hidden
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="pointer-events-none absolute right-3 top-1/2 size-3.5 -translate-y-1/2 text-grape"
-          >
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </div>
+        <select
+          id={id}
+          value={quantity}
+          disabled={pending}
+          onChange={(e) => {
+            if (e.target.value === CUSTOM) {
+              setDraft(String(quantity));
+              setCustom(true);
+            } else {
+              save(Number(e.target.value));
+            }
+          }}
+          className={`${PILL_CLASSES} field-sizing-content cursor-pointer appearance-none disabled:opacity-60 [&_option]:bg-dusk [&_option]:text-sand`}
+        >
+          {options.map((q) => (
+            <option key={q} value={q}>
+              {q.toLocaleString("en-ZA")} {unit}
+            </option>
+          ))}
+          <option value={CUSTOM}>Other amount…</option>
+        </select>
       )}
     </div>
   );

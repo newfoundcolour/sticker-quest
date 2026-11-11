@@ -1,7 +1,7 @@
 "use client";
 
 import { useId } from "react";
-import { INPUT_CLASSES, TextField } from "@/components/auth/fields";
+import { DARK_INPUT_CLASSES, FieldLabel, INPUT_CLASSES, TextField, useDark } from "@/components/auth/fields";
 import { PROVINCES } from "@/lib/validation/deliveryDetails";
 
 export type DeliveryValues = {
@@ -74,6 +74,7 @@ export function ContactFields({ value, error }: Props) {
 export function AddressFields({ value, error }: Props) {
   const provinceId = useId();
   const provinceError = error("province");
+  const dark = useDark();
 
   return (
     <>
@@ -105,10 +106,8 @@ export function AddressFields({ value, error }: Props) {
           defaultValue={value("city")}
           error={error("city")}
         />
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor={provinceId} className="text-sm font-black text-night">
-            Province
-          </label>
+        <div className={dark ? "flex flex-col gap-2" : "flex flex-col gap-1.5"}>
+          <FieldLabel htmlFor={provinceId} label="Province" />
           <select
             // Remount with the refilled value: a form reset doesn't pick up a <select>'s new defaultValue.
             key={value("province")}
@@ -119,7 +118,7 @@ export function AddressFields({ value, error }: Props) {
             defaultValue={value("province")}
             aria-invalid={provinceError ? true : undefined}
             aria-describedby={provinceError ? `${provinceId}-error` : undefined}
-            className={`${INPUT_CLASSES} h-[46px] cursor-pointer`}
+            className={dark ? `${DARK_INPUT_CLASSES} cursor-pointer [color-scheme:dark]` : `${INPUT_CLASSES} h-[46px] cursor-pointer`}
           >
             <option value="" disabled>
               Select…

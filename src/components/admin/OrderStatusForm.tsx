@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { updateOrderAction, type UpdateOrderResult } from "@/app/actions/orders";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_VALUES } from "@/lib/orderLabels";
+import { INPUT_CLASSES, LABEL_CLASSES, PRIMARY_BUTTON } from "@/components/admin/ui";
 import type { OrderStatus } from "@/generated/prisma/client";
 
 export function OrderStatusForm({
@@ -20,22 +21,15 @@ export function OrderStatusForm({
   );
 
   return (
-    <form action={formAction} className="flex flex-col gap-4 sm:flex-row sm:items-end">
-      <label className="flex flex-1 flex-col gap-1.5 text-sm text-ink-navy/70">
+    <form action={formAction} className="flex flex-col gap-4">
+      <label className={LABEL_CLASSES}>
         Status
         {/*
-          Keyed on `status` so the uncontrolled <select> remounts (and picks
-          up the new defaultValue) once a save succeeds and fresh order data
-          flows back in — otherwise React leaves the DOM's stale
-          initial-mount selection in place even though the badge above has
-          already moved on.
+          Keyed on `status` so the uncontrolled <select> remounts (and picks up
+          the new defaultValue) once a save succeeds and fresh order data flows
+          back in — otherwise React keeps the stale initial selection.
         */}
-        <select
-          key={status}
-          name="status"
-          defaultValue={status}
-          className="rounded-lg border border-ink-navy/15 bg-white px-3 py-2 text-sm text-ink-navy outline-none focus:border-coral-signal"
-        >
+        <select key={status} name="status" defaultValue={status} className={`${INPUT_CLASSES} cursor-pointer`}>
           {ORDER_STATUS_VALUES.map((s) => (
             <option key={s} value={s}>
               {ORDER_STATUS_LABELS[s]}
@@ -44,28 +38,32 @@ export function OrderStatusForm({
         </select>
       </label>
 
-      <label className="flex flex-1 flex-col gap-1.5 text-sm text-ink-navy/70">
+      <label className={LABEL_CLASSES}>
         Tracking number
         <input
           key={trackingNumber ?? ""}
           type="text"
           name="trackingNumber"
           defaultValue={trackingNumber ?? ""}
-          placeholder="Paste The Courier Guy tracking number once shipped"
-          className="rounded-lg border border-ink-navy/15 px-3 py-2 font-mono text-sm text-ink-navy outline-none focus:border-coral-signal"
+          placeholder="Add once shipped"
+          className={`${INPUT_CLASSES} font-mono`}
         />
       </label>
 
-      <div className="flex flex-col items-start gap-2">
-        <button
-          type="submit"
-          disabled={isPending}
-          className="rounded-xl bg-coral-signal px-5 py-2.5 text-sm font-medium text-paper transition-colors hover:bg-coral-signal/90 disabled:cursor-not-allowed disabled:opacity-40"
-        >
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="submit" disabled={isPending} className={PRIMARY_BUTTON}>
           {isPending ? "Saving…" : "Save changes"}
         </button>
-        {state && !state.ok && <p className="text-sm text-coral-signal">{state.error}</p>}
-        {state?.ok && <p className="text-sm text-trail-teal">Saved.</p>}
+        {state && !state.ok && (
+          <p role="alert" className="text-sm font-medium text-coral-signal">
+            {state.error}
+          </p>
+        )}
+        {state?.ok && (
+          <p role="status" className="text-sm font-medium text-trail-teal">
+            Saved.
+          </p>
+        )}
       </div>
     </form>
   );

@@ -4,7 +4,7 @@ This is a starting direction, not final branding. Swap the palette once the logo
 
 ## Configurator redesign (current direction)
 
-The configurator was redesigned in Figma ("Sticker Quest 1.0" — https://www.figma.com/design/mygkYHOSgoPwBo98GkIg1c/Sticker-Quest-1.0 — desktop frame `1:2`, vinyl page) and that design is the look and layout going forward. Where it conflicts with the sections below (palette, type, Waypoint Line/Mascot on the configurator), **the Figma wins**; the older sections still describe pages not yet migrated (cart, checkout, admin). The type picker ("Pick your sticker type", now at `/stickers`) uses the configurator's shell, banner and cards. The home page follows the "Sticker Quest Home page" frame in the same file: gradient banner, "Ideal for:" ticker, product cards, reviews, how-it-works steps and a "Made in Cape Town" map — it replaces the "Layout concept — homepage" sketch below. `/signup` follows the "Sticker Quest sign up" frame: a `plum` welcome panel (headline, wizard, perks) beside a dark form (`well` inputs, zap "Create account" button); the copy was rewritten rather than taken from the mock. `/login` follows the "Sticker Quest login" frame: the same heading, dark fields and zap button in a single 688px column. `/forgot-password` follows the "Sticker Quest forgot password" frame (same column, goblin sticker beside the heading, hidden on phones). These pages share `NightAuthPage`, as does `/reset-password` (knight helmet beside the heading; an expired link gets its own "Link expired." state). After a reset link is sent, forgot password switches to "Check your email." `/cart` follows the "Sticker Quest cart — populated" and "— empty" frames: one sand card per line (artwork, a grape Averia heading, then every choice the configurator asked for that type — `itemChoices` in `src/lib/itemChoices.ts`, the mock only shows four — a quantity dropdown, the line total with a trash button and the quantity saving as "N% off" in `orchid`), and a sticky sidebar with a Discount card (placeholder until discount codes exist) and the Order Summary (design names from the artwork filenames, flat Courier Guy shipping, total, logged-in/guest status). The empty cart is a centred hero (cart icon, "Your cart is empty.", zap "Get custom stickers") above the home page's product cards (`ProductCardGrid`). There is no separate checkout page: the cart's Checkout button opens a sand popup (`<dialog>`) to log in or complete delivery details, then places the order. The order confirmation (`/checkout/success`) uses the empty cart's hero (zap check, "Your quest has begun"), "What happens next." steps with the home page's step badges (`STEP_BADGES`), and the order in a sand summary card.
+The configurator was redesigned in Figma ("Sticker Quest 1.0" — https://www.figma.com/design/mygkYHOSgoPwBo98GkIg1c/Sticker-Quest-1.0 — desktop frame `1:2`, vinyl page) and that design is the look and layout going forward. Where it conflicts with the sections below (palette, type, Waypoint Line/Mascot on the configurator), **the Figma wins**; the older sections still describe pages not yet migrated (cart, checkout); the admin has its own light look, described under "Admin (staff back office)". The type picker ("Pick your sticker type", now at `/stickers`) uses the configurator's shell, banner and cards. The home page follows the "Sticker Quest Home page" frame in the same file: gradient banner, "Ideal for:" ticker, product cards, reviews, how-it-works steps and a "Made in Cape Town" map — it replaces the "Layout concept — homepage" sketch below. `/signup` follows the "Sticker Quest sign up" frame: a `plum` welcome panel (headline, wizard, perks) beside a dark form (`well` inputs, zap "Create account" button); the copy was rewritten rather than taken from the mock. `/login` follows the "Sticker Quest login" frame: the same heading, dark fields and zap button in a single 688px column. `/forgot-password` follows the "Sticker Quest forgot password" frame (same column, goblin sticker beside the heading, hidden on phones). These pages share `NightAuthPage`, as does `/reset-password` (knight helmet beside the heading; an expired link gets its own "Link expired." state). After a reset link is sent, forgot password switches to "Check your email." `/cart` follows the "Sticker Quest cart — populated" and "— empty" frames: one sand card per line (artwork, a grape Averia heading, then every choice the configurator asked for that type — `itemChoices` in `src/lib/itemChoices.ts`, the mock only shows four — a quantity dropdown, the line total with a trash button and the quantity saving as "N% off" in `orchid`), and a sticky sidebar with a Discount card (placeholder until discount codes exist) and the Order Summary (design names from the artwork filenames, flat Courier Guy shipping, total, logged-in/guest status). The empty cart is a centred hero (cart icon, "Your cart is empty.", zap "Get custom stickers") above the home page's product cards (`ProductCardGrid`). There is no separate checkout page: the cart's Checkout button opens a sand popup (`<dialog>`) to log in or complete delivery details, then places the order. The order confirmation (`/checkout/success`) uses the empty cart's hero (zap check, "Your quest has begun"), "What happens next." steps with the home page's step badges (`STEP_BADGES`), and the order in a sand summary card.
 
 - **Shell:** dark `night` page, full-width nav (logo, pill search "Select sticker type...", account actions, cart with count badge), gradient header banner, dark footer. Account actions: logged out shows a glass "Login" pill and a brand-gradient "Sign up" pill; logged in (frame "Logged-in navigation alternative") shows a round glass messages button and a glass "Profile" pill with the wizard avatar, which opens the account menu.
 - **Layout:** four dark `dusk` cards in a row (frame `240:128`, "site-matched alternative") — 1 Shape & Cut, 2 Material, 3 Size, 4 Quantity (with the `night` total pill at its foot, total in `zap`) — then a full-width 5 Upload card with a `well` drop zone. Numbered `grape` step badges replace the Waypoint Line on this page. These use `StepCard tone="dusk"`; account pages keep the default sand tone.
@@ -34,15 +34,13 @@ A horizontal line with a dot for each step.
 - **In the configurator:** Type → Cut → Shape → Finish → Size → Quantity, dots filling in as the customer completes each choice, live price ticking up at the end.
 - **In order tracking:** the same line, now showing Awaiting Proof → Approved → Printing → Shipped, current stage highlighted.
 
-### The Mascot
+### The characters (replaces the old mascot)
 
-A small character whose body is a sticker: a rounded rectangle or circle shape with one peeling corner lifted off its backing, simple friendly face.
-
-This is deliberately **not** an animal or alien — it's a character built from the actual product, which is harder to mistake for anyone else's and stays distinctive even as the rest of the visual system evolves. (Avoids reading as a copy of Sticker Shuttle's alien or Sticker Mule's mule.)
+The cast is the **wizard, dragon, goblin and knight**, drawn as die cut stickers (`public/mascot/`, rendered through `src/components/Character.tsx`). The old orange sticker-body mascot with the peeling corner is **retired — don't use it anywhere**.
 
 ### How they work together
 
-The mascot stands at or walks along the current position on the Waypoint Line — guiding the customer through the configurator, and later showing up at the current stage of their order tracking. It can also appear in empty states (empty cart, no orders yet) and near the upload prompt, holding/pointing at the drop zone.
+A character (the wizard) stands at the current stage of the Waypoint Line in order tracking. Empty states (no orders, no proofs, etc.) are copy only — a heading, a line of text and an action, no image.
 
 **This combination is the one place to spend visual boldness. Everything else stays quiet and disciplined around it.**
 
@@ -99,48 +97,20 @@ A few things Sticker Shuttle does well that are genuinely good UX, independent o
 
 The homepage's only job is getting people into the configurator fast. Resist the urge to add a traditional marketing hero above it.
 
-## Admin Dashboard UI Inspiration
+## Admin (staff back office)
 
-Structural patterns worth adopting for `/admin`, sourced from a reference admin order-management dashboard screenshot — the *structure* is worth copying, not the reference's own branding or colors. Everything below still runs on Sticker Quest's existing palette (Paper / Ink Navy / Coral Signal / Waypoint Gold / Trail Teal) and type system (Clash Display for the odd headline, General Sans for UI text, mono for anything numeric) — no new colors, no new typefaces.
+The admin is a light work tool, not part of the shop's night look: staff spend long stretches in it, so it favours calm and legibility. It shares one set of building blocks in `src/components/admin/ui.tsx` — use those rather than restyling per page.
 
-### Quick Stats row
-
-A row of small cards at the top of `/admin/orders`, one glance at shop health before scrolling to the table:
-
-- Total Orders, Awaiting Proof, Approved, Printing, Shipped Today, Revenue Today, Average Order Value.
-- Each card: a small icon in a muted Ink Navy circle, the number in mono (same "precise readout" logic as configurator pricing), the label in small uppercase Ink Navy/50.
-- A trend indicator only where a day-over-day comparison is actually meaningful — Shipped Today and Revenue Today compare against yesterday; the pipeline-stage counts (Awaiting Proof, Approved, Printing) don't get one, since "up" or "down" doesn't mean good or bad for a queue depth.
-- Trend up = Trail Teal (the success color already reserved for this). Trend down = muted Ink Navy, not Coral Signal — Coral is the CTA/urgent color elsewhere in the system, and using it for "orders dipped" would read as more alarming than an internal stats card should.
-
-### Status pills
-
-Order status renders as a colored pill in the orders table, not plain text — reusing the same four-stage vocabulary as the Waypoint Line rather than inventing a new color per status:
-
-| Status | Pill |
-|---|---|
-| Awaiting Proof | Waypoint Gold (muted) |
-| Awaiting Approval | Waypoint Gold (outlined, Paper fill) — a proof is with the customer |
-| Approved | Trail Teal (muted) |
-| Printing | Coral Signal (muted) |
-| Shipped | Ink Navy (solid) |
-
-Shipped gets the solid treatment — it's the terminal state, and standing out as "done" is the point.
-
-### Filter pills
-
-`All / Awaiting Proof / Awaiting Approval / Approved / Printing / Shipped` as pill buttons above the table, not a `<select>` — staff narrow the view in one click. Active pill: solid Coral Signal. Inactive: outlined Ink Navy/15. Same pill shape as the status badges, just larger and interactive.
-
-### Customer identity in the table
-
-Each row's customer cell stacks an avatar placeholder (initials in an Ink Navy/10 circle), the name, and the email — not just a bare name — so staff can recognize a repeat customer without opening the order.
-
-### Pagination
-
-Once the table grows past one screen: "Showing 1–20 of 134 orders" plus Prev/Next, numerals in mono. No page-number list — staff work through orders roughly in order, not by jumping to page 7.
-
-### Sidebar navigation (once admin grows beyond Orders)
-
-Today's top nav (`Sticker Quest Admin — Orders — Log out`) is fine for a single section. Once more admin surfaces exist (pricing rules, staff accounts, discount tiers), switch to a left sidebar with labeled groups — e.g. a `COMMERCE` group holding Orders, Pricing Rules, Discount Tiers — small uppercase Ink Navy/40 tracking-wide group labels, current page highlighted with a Coral Signal left border and a light Ink Navy/5 background. Not worth building until there's a second group to justify it.
+- **Shell:** the shop's header and footer are hidden on `/admin` (`HideOnAdmin` in the root layout). A `night` sidebar holds the logo with an "Admin" tag, the sections (Orders with the awaiting-proof count, Support with the unread count, as lime `zap` badges), "View shop", and the signed-in staff member with Log out. On phones it becomes a top bar. The workspace beside it is `admin-canvas` with white cards (`CARD_CLASSES`).
+- **Colour:** `admin-ink` / `admin-muted` / `admin-faint` text on white, `admin-line` borders. `grape` is the one action colour (primary buttons, links, active tab, unread marker); `coral-signal` only for errors, `trail-teal` for success.
+- **Type:** Inter throughout; numbers use `tabular-nums`. Mono only for order numbers, IDs and tracking numbers.
+- **Status:** a coloured dot in a quiet white pill — Awaiting Proof `waypoint-gold`, Awaiting Approval `blaze`, Approved `grape`, Printing `trail-teal`, Shipped `leaf`. The orders table's inline status `<select>` looks the same.
+- **Orders list:** four stat cards (Revenue today and Shipped today with a vs-yesterday trend, teal when up and grey when down; Average order; Open support, linking to the inbox), then one card holding underlined status tabs with counts, a table with **one row per order** (order number and date, customer with initials, stacked artwork thumbnails with the first item's type and spec, total quantity, total, status select) and "Showing 1–20 of N" pagination.
+- **Order page:** two columns. Main: the items (artwork, spec, quantity × unit price, an Artwork download button) with the items/shipping/total breakdown, then Proofs (upload box, then versions newest first). Side: Fulfilment (status and tracking), Customer, any customer notes.
+- **Artwork thumbnails** sit on a transparency checkerboard (`ArtworkThumb checker`) so white artwork stays visible when preflighting.
+- **Discounts** (`/admin/discounts`): a table of codes with status tabs (Active, Scheduled, Ended, Off); a code's page has the edit form beside Usage and Recent orders cards.
+- **Blog** (`/admin/blog`): a list of posts with cover thumbnails and status tabs; a post's page is the editor (title, link, summary, cover, a Markdown box with a formatting toolbar and a Preview tab that renders on `night` exactly as the public post) beside a Status card with the review buttons. The public `/blog` uses the shop's night look: Averia headlines, `dusk` cards, the newest post as a wide feature card.
+- **Support:** the inbox is a list (unread rows get a grape edge and a "New" tag); a conversation is the thread and reply box beside Customer and Linked order cards, with Mark as resolved in the page header.
 
 ## Voice, in the interface
 

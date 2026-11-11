@@ -41,11 +41,11 @@ export function MessageThread({
               ? "bg-grape text-white"
               : "bg-white text-ink border-[1.5px] border-grape/30"
             : mine
-              ? "bg-ink-navy text-paper"
-              : "bg-white text-ink-navy border border-ink-navy/10";
+              ? "bg-grape text-white"
+              : "bg-admin-canvas text-admin-ink border border-admin-line";
         return (
           <li key={m.id} className={`flex flex-col gap-1 ${mine ? "items-end" : "items-start"}`}>
-            <span className={`text-xs ${theme === "account" ? "text-quiet" : "text-ink-navy/50"}`}>
+            <span className={`text-xs ${theme === "account" ? "text-quiet" : "text-admin-muted"}`}>
               {mine ? "You" : who} · {formatWhen(m.createdAt)}
             </span>
             <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${bubble}`}>

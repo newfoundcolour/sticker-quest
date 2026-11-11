@@ -129,6 +129,36 @@ export async function updateCartItemQuantity(itemId: string, quantity: number): 
 export async function clearCart(): Promise<void> {
   const store = await cookies();
   store.delete(CART_COOKIE);
+  store.delete(DISCOUNT_COOKIE);
+}
+
+const DISCOUNT_COOKIE = "sq_discount";
+
+/**
+ * The discount code the customer applied in the cart. Only the code text is
+ * stored; whether it's valid and how much it takes off are re-checked on
+ * every cart read (see getPricedCart), so editing the cookie gains nothing.
+ */
+export async function getAppliedDiscountCode(): Promise<string | undefined> {
+  const store = await cookies();
+  const raw = store.get(DISCOUNT_COOKIE)?.value;
+  return raw && /^[A-Z0-9_-]{1,40}$/.test(raw) ? raw : undefined;
+}
+
+export async function setAppliedDiscountCode(code: string): Promise<void> {
+  const store = await cookies();
+  store.set(DISCOUNT_COOKIE, code, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: CART_COOKIE_MAX_AGE,
+  });
+}
+
+export async function clearAppliedDiscountCode(): Promise<void> {
+  const store = await cookies();
+  store.delete(DISCOUNT_COOKIE);
 }
 
 const LAST_ORDER_COOKIE = "sq_last_order";

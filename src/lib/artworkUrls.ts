@@ -54,3 +54,28 @@ export function artworkPreviewUrl(url: string, size = 160): string {
 export function hasArtworkPreview(url: string): boolean {
   return url.includes("res.cloudinary.com") && !url.includes("/raw/upload/");
 }
+
+const BLOG_FOLDER = "sticker-quest/blog/";
+
+/** True only for blog cover images we uploaded (same checks as isOwnArtworkUrl, blog folder). */
+export function isOwnBlogImageUrl(url: unknown, cloudName = process.env.CLOUDINARY_CLOUD_NAME): boolean {
+  if (typeof url !== "string" || !cloudName) return false;
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  return (
+    parsed.protocol === "https:" &&
+    parsed.hostname === "res.cloudinary.com" &&
+    parsed.pathname.startsWith(`/${cloudName}/image/upload/`) &&
+    parsed.pathname.includes(`/${BLOG_FOLDER}`)
+  );
+}
+
+/** A cover image resized for display (Cloudinary does the cropping). */
+export function blogCoverUrl(url: string, width: number, height: number): string {
+  if (!url.includes("res.cloudinary.com") || !url.includes("/image/upload/")) return url;
+  return url.replace("/image/upload/", `/image/upload/c_fill,g_auto,w_${width},h_${height},f_auto,q_auto/`);
+}

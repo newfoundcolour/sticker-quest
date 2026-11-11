@@ -20,6 +20,8 @@ export const RATE_LIMITS = {
   staffUploadPerUser: { limit: 120, windowSeconds: 60 * 60 },
   supportNewConversationPerUser: { limit: 10, windowSeconds: 60 * 60 },
   supportMessagePerUser: { limit: 40, windowSeconds: 60 * 60 },
+  /** Stops guessing discount codes by trying many in a row. */
+  discountApplyPerIp: { limit: 15, windowSeconds: 15 * 60 },
 } as const;
 
 type Rule = { limit: number; windowSeconds: number };

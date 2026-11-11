@@ -103,6 +103,7 @@ model Profile {
   postalCode      String?
   orders          Order[]
   conversations   SupportConversation[]
+  blogPosts       BlogPost[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -174,7 +175,16 @@ model Order {
   notes          String?
   /// Flat shipping fee charged on this order (0 for orders placed before shipping was charged).
   shippingFee    Decimal @default(0) @db.Decimal(10, 2)
-  /// What the customer paid: the sum of each item's totalPrice plus shippingFee, captured at checkout.
+  /// The discount code used, if any. Null if none was used, or the code was later deleted
+  /// (discountCodeText and discountAmount still record what was applied).
+  discountCodeId   String?
+  discountCode     DiscountCode? @relation(fields: [discountCodeId], references: [id], onDelete: SetNull)
+  /// The code as the customer entered it, kept even if the DiscountCode row goes.
+  discountCodeText String?
+  /// Rand taken off the items at checkout (0 when no code was used).
+  discountAmount   Decimal @default(0) @db.Decimal(10, 2)
+  /// What the customer paid: the sum of each item's totalPrice, minus discountAmount,
+  /// plus shippingFee, captured at checkout.
   totalPrice     Decimal @db.Decimal(10, 2)
 
   createdAt DateTime @default(now())
@@ -183,6 +193,46 @@ model Order {
   @@index([status])
   @@index([userId, createdAt])
   @@index([email])
+  @@index([discountCodeId, userId])
+}
+
+enum DiscountType {
+  /// `value` is a percentage of the items subtotal (1–100).
+  PERCENT
+  /// `value` is rand off the items subtotal, never taking it below 0.
+  FIXED
+}
+
+/// A discount code staff create in /admin/discounts. It comes off the items
+/// subtotal only (never shipping), and is re-checked server-side on every cart
+/// read and again, with the row locked, when the order is placed.
+model DiscountCode {
+  id          String       @id @default(cuid())
+  /// Stored upper-case; customers can type it in any case.
+  code        String       @unique
+  /// Staff-only note, e.g. "Instagram giveaway, Nov 2026".
+  description String?
+  type        DiscountType
+  value       Decimal      @db.Decimal(10, 2)
+  /// Items subtotal the cart must reach (null = no minimum).
+  minOrderTotal   Decimal? @db.Decimal(10, 2)
+  /// The code works from startsAt up to (not including) endsAt. Null = no limit that side.
+  startsAt        DateTime?
+  endsAt          DateTime?
+  /// Orders that may use the code in total (null = unlimited).
+  maxUses         Int?
+  /// Each customer account can use the code on one order only.
+  oncePerCustomer Boolean  @default(false)
+  /// Staff can switch a code off without deleting it.
+  active          Boolean  @default(true)
+  createdById     String?
+
+  orders Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active])
 }
 
 /// One configured sticker line within an order — a cart line item that
@@ -319,4 +369,46 @@ model SupportMessage {
 
   @@index([conversationId, createdAt])
   @@index([conversationId, sender, readAt])
+}
+
+enum BlogPostStatus {
+  /// Being written; only its author (and admins) can see or edit it.
+  DRAFT
+  /// Sent for review; the author can't edit it until an admin publishes it or sends it back.
+  SUBMITTED
+  /// Live on /blog.
+  PUBLISHED
+}
+
+/// A blog post written in /admin/blog. Staff write and submit; only admins
+/// publish. The body is Markdown, rendered without raw HTML (react-markdown).
+model BlogPost {
+  id      String         @id @default(cuid())
+  /// The URL: /blog/<slug>. Fixed once the post has been published.
+  slug    String         @unique
+  title   String
+  /// One or two sentences for the blog list and link previews.
+  excerpt String
+  /// Markdown.
+  body    String
+  /// In our Cloudinary blog folder (see isOwnBlogImageUrl).
+  coverImageUrl String?
+  coverImageAlt String?
+  status  BlogPostStatus @default(DRAFT)
+
+  /// The staff member who wrote it. Null if their account was deleted.
+  authorId String?
+  author   Profile? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  submittedAt DateTime?
+  /// First time it went live; kept if it's later unpublished (it then keeps its slug).
+  publishedAt DateTime?
+  /// An admin's note when sending a submitted post back to its author.
+  reviewNote  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([authorId])
 }

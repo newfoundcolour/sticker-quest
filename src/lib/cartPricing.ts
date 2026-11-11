@@ -1,4 +1,6 @@
-import { getCart, type CartItem } from "@/lib/cart";
+import { getAppliedDiscountCode, getCart, type CartItem } from "@/lib/cart";
+import { getSessionUser } from "@/lib/auth";
+import { checkDiscount, describeDiscount } from "@/lib/discounts";
 import { getPricingConfig, getShippingFee, MissingPricingRuleError } from "@/lib/pricing";
 import { calculateStickerPricing } from "@/lib/pricingUtils";
 import { DISCONTINUED_STICKER_TYPES } from "@/lib/stickerTypeSlug";
@@ -24,9 +26,13 @@ export type PricedCart = {
   unavailableItems: CartItem[];
   /** Sum of the available lines. */
   subtotal: number;
+  /** The applied code, when it still gives a discount on this cart. */
+  discount: { code: string; label: string; amount: number } | null;
+  /** The applied code when it no longer does, and why (shown in the Discount card). */
+  discountProblem: { code: string; message: string } | null;
   /** Flat shipping fee (0 when nothing can be ordered). */
   shippingFee: number;
-  /** subtotal + shippingFee — what the customer pays. */
+  /** subtotal - discount + shippingFee — what the customer pays. */
   total: number;
 };
 
@@ -38,7 +44,16 @@ export type PricedCart = {
 export async function getPricedCart(): Promise<PricedCart> {
   const cartItems = await getCart();
   if (cartItems.length === 0) {
-    return { items: [], unavailableItemIds: [], unavailableItems: [], subtotal: 0, shippingFee: 0, total: 0 };
+    return {
+      items: [],
+      unavailableItemIds: [],
+      unavailableItems: [],
+      subtotal: 0,
+      discount: null,
+      discountProblem: null,
+      shippingFee: 0,
+      total: 0,
+    };
   }
 
   // A sticker sheet is priced on its material's rate; everything else on its own type's.
@@ -96,12 +111,28 @@ export async function getPricedCart(): Promise<PricedCart> {
   const subtotal = round2(items.reduce((sum, i) => sum + i.totalPrice, 0));
   const shippingFee = items.length > 0 ? await getShippingFee() : 0;
 
+  // The discount code is re-checked against the live DiscountCode row every time.
+  let discount: PricedCart["discount"] = null;
+  let discountProblem: PricedCart["discountProblem"] = null;
+  const appliedCode = await getAppliedDiscountCode();
+  if (appliedCode && items.length > 0) {
+    const user = await getSessionUser();
+    const check = await checkDiscount(appliedCode, { subtotal, userId: user?.id });
+    if (check.ok) {
+      discount = { code: check.code.code, label: describeDiscount(check.code), amount: check.amount };
+    } else {
+      discountProblem = { code: appliedCode, message: check.message };
+    }
+  }
+
   return {
     items,
     unavailableItemIds: unavailableItems.map((i) => i.id),
     unavailableItems,
     subtotal,
+    discount,
+    discountProblem,
     shippingFee,
-    total: round2(subtotal + shippingFee),
+    total: round2(subtotal - (discount?.amount ?? 0) + shippingFee),
   };
 }

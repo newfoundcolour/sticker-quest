@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Averia_Libre, Bricolage_Grotesque, Geist, Inter, JetBrains_Mono } from "next/font/google";
 import { NavBar } from "@/components/NavBar";
 import { Footer } from "@/components/Footer";
+import { HideOnAdmin } from "@/components/HideOnAdmin";
 import { getCart } from "@/lib/cart";
 import { getNavAccount } from "@/lib/navAccount";
 import "./globals.css";
@@ -59,9 +60,13 @@ export default async function RootLayout({
       className={`${inter.variable} ${averiaLibre.variable} ${geistSans.variable} ${bricolageGrotesque.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-paper text-ink-navy">
-        <NavBar cartCount={cart.length} account={account} />
+        <HideOnAdmin>
+          <NavBar cartCount={cart.length} account={account} />
+        </HideOnAdmin>
         {children}
-        <Footer />
+        <HideOnAdmin>
+          <Footer />
+        </HideOnAdmin>
       </body>
     </html>
   );

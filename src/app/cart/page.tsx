@@ -64,14 +64,17 @@ async function checkoutStatus(): Promise<{ status: CheckoutStatus; email: string
 
 /** Figma "Sticker Quest cart — populated": sticker cards on the left, discount and order summary on the right. */
 export default async function CartPage() {
-  const [{ items, unavailableItems, shippingFee, total }, checkout] = await Promise.all([getPricedCart(), checkoutStatus()]);
+  const [{ items, unavailableItems, discount, discountProblem, shippingFee, total }, checkout] = await Promise.all([
+    getPricedCart(),
+    checkoutStatus(),
+  ]);
 
   if (items.length === 0 && unavailableItems.length === 0) {
     return <EmptyCart />;
   }
 
   return (
-    <main className="flex flex-1 flex-col bg-night">
+    <main className="relative isolate flex flex-1 flex-col bg-night">
       <Container className="pb-16 pt-6 sm:pt-9">
         <h1 className="sr-only">Your cart</h1>
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
@@ -85,7 +88,7 @@ export default async function CartPage() {
             <div className="pt-1">
               <Link
                 href="/stickers"
-                className="inline-flex h-[52px] items-center gap-2.5 rounded-full border-[1.5px] border-well-line bg-night px-6 text-[15px] font-black text-zap transition-colors hover:border-zap"
+                className="inline-flex h-[52px] items-center gap-2.5 rounded-full border-[1.5px] border-grape bg-well px-6 text-[15px] font-black text-sand transition-colors hover:border-zap focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-zap"
               >
                 Add more stickers <span aria-hidden className="text-xl font-normal">+</span>
               </Link>
@@ -94,14 +97,20 @@ export default async function CartPage() {
 
           {items.length > 0 && (
             <aside aria-label="Order summary" className="flex w-full flex-col gap-5 lg:sticky lg:top-6 lg:w-[360px] lg:shrink-0">
-              <DiscountCard />
-              <OrderSummary items={items} shippingFee={shippingFee} total={total}>
+              <DiscountCard applied={discount} problem={discountProblem} />
+              <OrderSummary items={items} discount={discount} shippingFee={shippingFee} total={total}>
                 <CheckoutPanel {...checkout} blocked={unavailableItems.length > 0} />
               </OrderSummary>
             </aside>
           )}
         </div>
       </Container>
+
+      {/* Figma "Background gradient": the grape glow in both bottom corners, as on the configurator. */}
+      <div aria-hidden="true" className="pointer-events-none sticky bottom-0 -z-10 h-0">
+        <div className="page-glow-left absolute bottom-0 left-0 h-[85vh] w-[70%]" />
+        <div className="page-glow-right absolute bottom-0 right-0 h-[85vh] w-[70%]" />
+      </div>
     </main>
   );
 }

@@ -2,7 +2,7 @@ import "server-only";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ACTIVE_ORDER_STATUSES } from "@/lib/orderLabels";
-import type { OrderStatus } from "@/generated/prisma/client";
+import type { OrderStatus, Prisma } from "@/generated/prisma/client";
 
 /**
  * Every query a customer can trigger about orders lives here, and every one
@@ -15,6 +15,22 @@ export const CUSTOMER_ORDERS_PAGE_SIZE = 10;
 
 const itemsInOrder = { items: { orderBy: { createdAt: "asc" as const } } };
 
+/** What an order table row needs: the items, plus the proof waiting on the customer ("Review proof"). */
+const orderRowInclude = {
+  ...itemsInOrder,
+  proofs: {
+    where: { status: "PENDING" as const },
+    orderBy: { version: "desc" as const },
+    take: 1,
+    select: { id: true },
+  },
+} satisfies Prisma.OrderInclude;
+
+export type CustomerOrderRow = Prisma.OrderGetPayload<{ include: typeof orderRowInclude }>;
+
+/** Most unshipped orders the Dashboard lists; more than this links to the Orders page. */
+export const DASHBOARD_ACTIVE_ORDERS_LIMIT = 20;
+
 export async function getCustomerOrderStats(userId: string) {
   const [totalOrders, stickers, activeOrders] = await Promise.all([
     prisma.order.count({ where: { userId } }),
@@ -24,12 +40,50 @@ export async function getCustomerOrderStats(userId: string) {
   return { totalOrders, totalStickers: stickers._sum.quantity ?? 0, activeOrders };
 }
 
-export async function listCustomerOrders(userId: string, opts: { status?: OrderStatus; page: number }) {
-  const where = { userId, ...(opts.status && { status: opts.status }) };
+/** Longest search the Orders page accepts; anything longer is cut. */
+export const ORDER_SEARCH_MAX_LENGTH = 60;
+
+/**
+ * Matches an order number ("#K3J9X2QZ" is the end of the id) or a design's
+ * artwork filename. Always combined with the userId filter by callers.
+ */
+function orderSearchWhere(search: string | undefined): Prisma.OrderWhereInput {
+  const q = search?.trim().slice(0, ORDER_SEARCH_MAX_LENGTH);
+  if (!q) return {};
+  const idPart = q.replace(/^#/, "").toLowerCase();
+  return {
+    OR: [
+      ...(idPart ? [{ id: { contains: idPart } }] : []),
+      { items: { some: { artworkFilename: { contains: q, mode: "insensitive" } } } },
+    ],
+  };
+}
+
+/** How many of the customer's orders are in each status (for the filter pills). */
+export async function getCustomerOrderStatusCounts(userId: string, search?: string) {
+  const rows = await prisma.order.groupBy({
+    by: ["status"],
+    where: { userId, ...orderSearchWhere(search) },
+    _count: { _all: true },
+  });
+  const counts = Object.fromEntries(rows.map((r) => [r.status, r._count._all])) as Partial<Record<OrderStatus, number>>;
+  const all = rows.reduce((sum, r) => sum + r._count._all, 0);
+  return { all, byStatus: counts };
+}
+
+export async function listCustomerOrders(
+  userId: string,
+  opts: { status?: OrderStatus; search?: string; page: number },
+) {
+  const where: Prisma.OrderWhereInput = {
+    userId,
+    ...(opts.status && { status: opts.status }),
+    ...orderSearchWhere(opts.search),
+  };
   const [orders, totalCount] = await Promise.all([
     prisma.order.findMany({
       where,
-      include: itemsInOrder,
+      include: orderRowInclude,
       orderBy: { createdAt: "desc" },
       skip: (opts.page - 1) * CUSTOMER_ORDERS_PAGE_SIZE,
       take: CUSTOMER_ORDERS_PAGE_SIZE,
@@ -39,13 +93,14 @@ export async function listCustomerOrders(userId: string, opts: { status?: OrderS
   return { orders, totalCount };
 }
 
-export async function getActiveCustomerOrders(userId: string, take = 5) {
-  return prisma.order.findMany({
-    where: { userId, status: { in: ACTIVE_ORDER_STATUSES } },
-    include: itemsInOrder,
-    orderBy: { createdAt: "desc" },
-    take,
-  });
+/** Orders that haven't shipped yet, newest first, with how many there are in total. */
+export async function getActiveCustomerOrders(userId: string, take = DASHBOARD_ACTIVE_ORDERS_LIMIT) {
+  const where = { userId, status: { in: ACTIVE_ORDER_STATUSES } };
+  const [orders, totalCount] = await Promise.all([
+    prisma.order.findMany({ where, include: orderRowInclude, orderBy: { createdAt: "desc" }, take }),
+    prisma.order.count({ where }),
+  ]);
+  return { orders, totalCount };
 }
 
 export async function getLatestCustomerOrder(userId: string) {

@@ -8,6 +8,9 @@ import { countUnreadForCustomer } from "@/lib/support";
 /** What the nav bar needs to know about the signed-in customer. Safe to pass to the client. */
 export type NavAccount = {
   firstName: string;
+  lastName: string;
+  /** The verified sign-in email, for the account sidebar. */
+  email: string;
   /** Unread staff replies in support conversations. */
   unreadSupport: number;
   /** Proofs waiting for the customer's approval. */
@@ -22,7 +25,7 @@ export const getNavAccount = cache(async (): Promise<NavAccount | null> => {
   const [profile, proofsAwaiting, unreadSupport] = await Promise.all([
     prisma.profile.findUnique({
       where: { id: user.id },
-      select: { firstName: true },
+      select: { firstName: true, lastName: true, email: true },
     }),
     countProofsAwaiting(user.id),
     countUnreadForCustomer(user.id),
@@ -30,6 +33,8 @@ export const getNavAccount = cache(async (): Promise<NavAccount | null> => {
 
   return {
     firstName: profile?.firstName ?? "",
+    lastName: profile?.lastName ?? "",
+    email: profile?.email ?? user.email ?? "",
     unreadSupport,
     proofsAwaiting,
   };

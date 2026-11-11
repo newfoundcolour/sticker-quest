@@ -57,13 +57,13 @@ export function Composer({
         className={
           account
             ? "w-full rounded-lg border border-grape bg-white px-3 py-2.5 text-base text-night outline-none placeholder:text-quiet focus:border-blaze focus-visible:ring-2 focus-visible:ring-blaze/30"
-            : "w-full rounded-lg border border-ink-navy/15 bg-white px-3 py-2 text-sm text-ink-navy outline-none focus:border-coral-signal"
+            : "w-full rounded-lg border border-admin-line bg-white px-3 py-2.5 text-sm text-admin-ink outline-none placeholder:text-admin-faint focus:border-grape focus:ring-2 focus:ring-grape/20"
         }
       />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-col gap-1">
           {allowAttachment && (
-            <label className={`text-xs ${account ? "text-quiet" : "text-ink-navy/60"}`}>
+            <label className={`text-xs ${account ? "text-quiet" : "text-admin-muted"}`}>
               <span className="mr-2 font-bold">Add one image (optional, JPG/PNG/WebP, max 5 MB)</span>
               <input
                 type="file"
@@ -77,7 +77,7 @@ export function Composer({
               />
             </label>
           )}
-          <span className={`text-xs ${tooLong ? "font-bold text-blaze" : account ? "text-quiet" : "text-ink-navy/50"}`}>
+          <span className={`text-xs ${tooLong ? "font-bold text-blaze" : account ? "text-quiet" : "text-admin-faint"}`}>
             {body.length.toLocaleString("en-ZA")} / {MESSAGE_MAX_LENGTH.toLocaleString("en-ZA")}
           </span>
         </div>
@@ -87,7 +87,7 @@ export function Composer({
           className={
             account
               ? "rounded-full border-2 border-night bg-blaze px-7 py-3 text-sm font-black uppercase tracking-wide text-white shadow-pop-blaze transition-[translate] duration-150 motion-safe:hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
-              : "rounded-xl bg-coral-signal px-5 py-2.5 text-sm font-medium text-paper hover:bg-coral-signal/90 disabled:cursor-not-allowed disabled:opacity-40"
+              : "inline-flex h-10 items-center rounded-lg bg-grape px-4 text-sm font-semibold text-white transition-colors hover:bg-grape-deep disabled:cursor-not-allowed disabled:opacity-50"
           }
         >
           {pending ? "Sending…" : submitLabel}
